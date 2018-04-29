@@ -38,7 +38,7 @@ import com.serenegiant.janus.JanusRESTRTCClient;
 import org.appspot.apprtc.AppRTCAudioManager;
 import org.appspot.apprtc.AppRTCAudioManager.AudioDevice;
 import org.appspot.apprtc.AppRTCAudioManager.AudioManagerEvents;
-import org.appspot.apprtc.AppRTCClient;
+import com.serenegiant.janus.JanusClient;
 import org.appspot.apprtc.RoomConnectionParameters;
 import org.appspot.apprtc.SignalingParameters;
 import org.appspot.apprtc.PeerConnectionClient;
@@ -189,7 +189,7 @@ public class CallActivity extends BaseActivity
 	@Nullable
 	private PeerConnectionClient peerConnectionClient = null;
 	@Nullable
-	private AppRTCClient appRtcClient;
+	private JanusClient janusClient;
 	@Nullable
 	private SignalingParameters signalingParameters;
 	@Nullable
@@ -372,7 +372,7 @@ public class CallActivity extends BaseActivity
 		// Create connection client. Use org.appspot.apprtc.DirectRTCClient if room name is an IP otherwise use the
 		// standard org.appspot.apprtc.WebSocketRTCClient.
 
-		appRtcClient = new JanusRESTRTCClient(this,
+		janusClient = new JanusRESTRTCClient(this,
 			mJanusCallback, roomUri.toString());
 		// Create connection parameters.
 		final String urlParameters = intent.getStringExtra(EXTRA_URLPARAMETERS);
@@ -619,8 +619,8 @@ public class CallActivity extends BaseActivity
 	}
 
 	private void startCall() {
-		if (DEBUG) Log.v(TAG, "startCall:appRtcClient=" + appRtcClient);
-		if (appRtcClient == null) {
+		if (DEBUG) Log.v(TAG, "startCall:janusClient=" + janusClient);
+		if (janusClient == null) {
 			Log.e(TAG, "AppRTC client is not allocated for a call.");
 			return;
 		}
@@ -628,7 +628,7 @@ public class CallActivity extends BaseActivity
 
 		// Start room connection.
 		logAndToast(getString(R.string.connecting_to, roomConnectionParameters.roomUrl));
-		appRtcClient.connectToRoom(roomConnectionParameters);
+		janusClient.connectToRoom(roomConnectionParameters);
 
 		// Create and audio manager that will take care of audio routing,
 		// audio modes, audio device enumeration etc.
@@ -678,9 +678,9 @@ public class CallActivity extends BaseActivity
 		activityRunning = false;
 		remoteProxyRenderer.setTarget(null);
 		localProxyVideoSink.setTarget(null);
-		if (appRtcClient != null) {
-			appRtcClient.disconnectFromRoom();
-			appRtcClient = null;
+		if (janusClient != null) {
+			janusClient.disconnectFromRoom();
+			janusClient = null;
 		}
 		if (pipRenderer != null) {
 			pipRenderer.release();
@@ -797,7 +797,7 @@ public class CallActivity extends BaseActivity
 		pipRenderer.setMirror(!isSwappedFeeds);
 	}
 
-	// -----Implementation of org.appspot.apprtc.AppRTCClient.AppRTCSignalingEvents ---------------
+	// -----Implementation of com.serenegiant.janus.JanusClient.AppRTCSignalingEvents ---------------
 	// All callbacks are invoked from websocket signaling looper thread and
 	// are routed to UI thread.
 	private void onConnectedToRoomInternal(final SignalingParameters params) {
@@ -944,12 +944,12 @@ public class CallActivity extends BaseActivity
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					if (appRtcClient != null) {
+					if (janusClient != null) {
 						logAndToast("Sending " + sdp.type + ", delay=" + delta + "ms");
 						if (signalingParameters.initiator) {
-							appRtcClient.sendOfferSdp(sdp);
+							janusClient.sendOfferSdp(sdp);
 						} else {
-							appRtcClient.sendAnswerSdp(sdp);
+							janusClient.sendAnswerSdp(sdp);
 						}
 					}
 					if (peerConnectionParameters.videoMaxBitrate > 0) {
@@ -968,8 +968,8 @@ public class CallActivity extends BaseActivity
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					if (appRtcClient != null) {
-						appRtcClient.sendLocalIceCandidate(candidate);
+					if (janusClient != null) {
+						janusClient.sendLocalIceCandidate(candidate);
 					}
 				}
 			});
@@ -981,8 +981,8 @@ public class CallActivity extends BaseActivity
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					if (appRtcClient != null) {
-						appRtcClient.sendLocalIceCandidateRemovals(candidates);
+					if (janusClient != null) {
+						janusClient.sendLocalIceCandidateRemovals(candidates);
 					}
 				}
 			});

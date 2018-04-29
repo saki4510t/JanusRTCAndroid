@@ -1,4 +1,4 @@
-package org.appspot.apprtc;/*
+package com.serenegiant.janus;/*
  *  Copyright 2013 The WebRTC Project Authors. All rights reserved.
  *
  *  Use of this source code is governed by a BSD-style license
@@ -8,20 +8,21 @@ package org.appspot.apprtc;/*
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+import org.appspot.apprtc.RoomConnectionParameters;
 import org.webrtc.IceCandidate;
 import org.webrtc.SessionDescription;
 
 /**
- * org.appspot.apprtc.AppRTCClient is the interface representing an AppRTC client.
+ * com.serenegiant.janus.JanusClient is the interface representing an AppRTC client.
  */
-public interface AppRTCClient {
+public interface JanusClient {
 	
 	/**
 	 * Asynchronously connect to an AppRTC room URL using supplied connection
 	 * parameters. Once connection is established onConnectedToRoom()
 	 * callback with room parameters is invoked.
 	 */
-	void connectToRoom(RoomConnectionParameters connectionParameters);
+	void connectToRoom(final RoomConnectionParameters connectionParameters);
 	
 	/**
 	 * Send offer SDP to the other participant.

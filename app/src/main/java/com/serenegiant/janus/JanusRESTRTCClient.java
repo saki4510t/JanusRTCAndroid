@@ -17,7 +17,6 @@ import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
 import com.serenegiant.utils.HandlerThreadHandler;
 
-import org.appspot.apprtc.AppRTCClient;
 import org.appspot.apprtc.RoomConnectionParameters;
 import org.appspot.apprtc.SignalingParameters;
 import org.json.JSONException;
@@ -48,7 +47,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 import static com.serenegiant.janus.Const.*;
 
-public class JanusRESTRTCClient implements AppRTCClient {
+public class JanusRESTRTCClient implements JanusClient {
 	private static final boolean DEBUG = true;	// set false on production
 	private static final String TAG = JanusRESTRTCClient.class.getSimpleName();
 	
@@ -100,7 +99,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	}
 
 //================================================================================
-// implementations of org.appspot.apprtc.AppRTCClient interface
+// implementations of com.serenegiant.janus.JanusClient interface
 	@Override
 	public void connectToRoom(final RoomConnectionParameters connectionParameters) {
 		if (DEBUG) Log.v(TAG, "connectToRoom:");
