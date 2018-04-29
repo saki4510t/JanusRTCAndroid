@@ -100,9 +100,13 @@ public class PeerConnectionClient {
 	private final PCObserver pcObserver = new PCObserver();
 	private final SDPObserver sdpObserver = new SDPObserver();
 	private final Timer statsTimer = new Timer();
+	@NonNull
 	private final EglBase rootEglBase;
+	@NonNull
 	private final Context appContext;
+	@NonNull
 	private final PeerConnectionParameters peerConnectionParameters;
+	@NonNull
 	private final PeerConnectionEvents events;
 	
 	@Nullable
@@ -170,9 +174,9 @@ public class PeerConnectionClient {
 	 * org.appspot.apprtc.PeerConnectionClient takes ownership of |eglBase|.
 	 */
 	public PeerConnectionClient(@NonNull final Context appContext,
-		final EglBase eglBase,
-		final PeerConnectionParameters peerConnectionParameters,
-		final PeerConnectionEvents events) {
+		@NonNull final EglBase eglBase,
+		@NonNull final PeerConnectionParameters peerConnectionParameters,
+		@NonNull final PeerConnectionEvents events) {
 
 		this.rootEglBase = eglBase;
 		this.appContext = appContext;
@@ -200,7 +204,9 @@ public class PeerConnectionClient {
 	/**
 	 * This function should only be called once.
 	 */
-	public void createPeerConnectionFactory(PeerConnectionFactory.Options options) {
+	public void createPeerConnectionFactory(
+		@Nullable final PeerConnectionFactory.Options options) {
+
 		if (factory != null) {
 			throw new IllegalStateException("PeerConnectionFactory has already been constructed");
 		}
@@ -208,8 +214,9 @@ public class PeerConnectionClient {
 	}
 	
 	public void createPeerConnection(final VideoSink localRender,
-									 final VideoRenderer.Callbacks remoteRender, final VideoCapturer videoCapturer,
-									 final SignalingParameters signalingParameters) {
+		final VideoRenderer.Callbacks remoteRender, final VideoCapturer videoCapturer,
+		final SignalingParameters signalingParameters) {
+
 		if (peerConnectionParameters.videoCallEnabled && videoCapturer == null) {
 			Log.w(TAG, "Video call enabled but no video capturer provided.");
 		}
@@ -218,12 +225,9 @@ public class PeerConnectionClient {
 	}
 	
 	public void createPeerConnection(final VideoSink localRender,
-									 final List<VideoRenderer.Callbacks> remoteRenders, final VideoCapturer videoCapturer,
-									 final SignalingParameters signalingParameters) {
-		if (peerConnectionParameters == null) {
-			Log.e(TAG, "Creating peer connection without initializing factory.");
-			return;
-		}
+		final List<VideoRenderer.Callbacks> remoteRenders, final VideoCapturer videoCapturer,
+		final SignalingParameters signalingParameters) {
+
 		this.localRender = localRender;
 		this.remoteRenders = remoteRenders;
 		this.videoCapturer = videoCapturer;
@@ -246,10 +250,13 @@ public class PeerConnectionClient {
 	}
 	
 	private boolean isVideoCallEnabled() {
-		return peerConnectionParameters.videoCallEnabled && videoCapturer != null;
+		return peerConnectionParameters.videoCallEnabled
+			&& (videoCapturer != null);
 	}
 	
-	private void createPeerConnectionFactoryInternal(PeerConnectionFactory.Options options) {
+	private void createPeerConnectionFactoryInternal(
+		@Nullable final PeerConnectionFactory.Options options) {
+
 		if (DEBUG) Log.v(TAG, "createPeerConnectionFactoryInternal:");
 		isError = false;
 		
@@ -310,6 +317,7 @@ public class PeerConnectionClient {
 		if (DEBUG) Log.d(TAG, "Peer connection factory created.");
 	}
 	
+	@SuppressWarnings("deprecation")
 	private AudioDeviceModule createLegacyAudioDevice() {
 		// Enable/disable OpenSL ES playback.
 		if (!peerConnectionParameters.useOpenSLES) {
