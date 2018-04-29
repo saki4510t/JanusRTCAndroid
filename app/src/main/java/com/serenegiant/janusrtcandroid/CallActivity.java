@@ -271,7 +271,7 @@ public class CallActivity extends BaseActivity
 		// Create video renderers.
 		pipRenderer.init(eglBase.getEglBaseContext(), null);
 		pipRenderer.setScalingType(ScalingType.SCALE_ASPECT_FIT);
-		String saveRemoteVideoToFile = intent.getStringExtra(EXTRA_SAVE_REMOTE_VIDEO_TO_FILE);
+		final String saveRemoteVideoToFile = intent.getStringExtra(EXTRA_SAVE_REMOTE_VIDEO_TO_FILE);
 
 		// When saveRemoteVideoToFile is set we save the video from the remote to a file.
 		if (saveRemoteVideoToFile != null) {
@@ -316,7 +316,7 @@ public class CallActivity extends BaseActivity
 
 		// Get Intent parameters.
 		final String roomId = intent.getStringExtra(EXTRA_ROOMID);
-		Log.d(TAG, "Room ID: " + roomId);
+		if (DEBUG) Log.d(TAG, "Room ID: " + roomId);
 		if (TextUtils.isEmpty(roomId)) {
 			logAndToast(getString(R.string.missing_url));
 			Log.e(TAG, "Incorrect room ID in intent!");
@@ -365,7 +365,7 @@ public class CallActivity extends BaseActivity
 		commandLineRun = intent.getBooleanExtra(EXTRA_CMDLINE, false);
 		int runTimeMs = intent.getIntExtra(EXTRA_RUNTIME, 0);
 
-		Log.d(TAG, "VIDEO_FILE: '" + intent.getStringExtra(EXTRA_VIDEO_FILE_AS_CAMERA) + "'");
+		if (DEBUG) Log.d(TAG, "VIDEO_FILE: '" + intent.getStringExtra(EXTRA_VIDEO_FILE_AS_CAMERA) + "'");
 
 		// Create connection client. Use org.appspot.apprtc.DirectRTCClient if room name is an IP otherwise use the
 		// standard org.appspot.apprtc.WebSocketRTCClient.
@@ -632,7 +632,7 @@ public class CallActivity extends BaseActivity
 		audioManager = AppRTCAudioManager.create(getApplicationContext());
 		// Store existing audio settings and change audio mode to
 		// MODE_IN_COMMUNICATION for best possible VoIP performance.
-		Log.d(TAG, "Starting the audio manager...");
+		if (DEBUG) Log.d(TAG, "Starting the audio manager...");
 		audioManager.start(new AudioManagerEvents() {
 			// This method will be called each time the number of available audio
 			// devices has changed.
@@ -662,7 +662,7 @@ public class CallActivity extends BaseActivity
 	// e.g. from wired headset to speakerphone.
 	private void onAudioManagerDevicesChanged(
 		final AudioDevice device, final Set<AudioDevice> availableDevices) {
-		Log.d(TAG, "onAudioManagerDevicesChanged: " + availableDevices + ", "
+		if (DEBUG) Log.d(TAG, "onAudioManagerDevicesChanged: " + availableDevices + ", "
 			+ "selected: " + device);
 		// TODO(henrika): add callback handler.
 	}
@@ -730,7 +730,7 @@ public class CallActivity extends BaseActivity
 
 	// Log |msg| and Toast about it.
 	private void logAndToast(String msg) {
-		Log.d(TAG, msg);
+		if (DEBUG) Log.d(TAG, msg);
 		if (logToast != null) {
 			logToast.cancel();
 		}
@@ -948,7 +948,7 @@ public class CallActivity extends BaseActivity
 						}
 					}
 					if (peerConnectionParameters.videoMaxBitrate > 0) {
-						Log.d(TAG, "Set video maximum bitrate: " + peerConnectionParameters.videoMaxBitrate);
+						if (DEBUG) Log.d(TAG, "Set video maximum bitrate: " + peerConnectionParameters.videoMaxBitrate);
 						peerConnectionClient.setVideoMaxBitrate(peerConnectionParameters.videoMaxBitrate);
 					}
 				}
