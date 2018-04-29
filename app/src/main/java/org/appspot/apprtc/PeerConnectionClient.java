@@ -184,9 +184,9 @@ public class PeerConnectionClient {
 		this.dataChannelEnabled = peerConnectionParameters.dataChannelParameters != null;
 		
 		if (DEBUG) Log.d(TAG, "Preferred video codec: "
-			+ getSdpVideoCodecName(peerConnectionParameters));
+			+ peerConnectionParameters.getSdpVideoCodecName());
 		
-		final String fieldTrials = getFieldTrials(peerConnectionParameters);
+		final String fieldTrials = peerConnectionParameters.getFieldTrials();
 		executor.execute(() -> {
 			if (DEBUG) Log.d(TAG,
 				"Initialize WebRTC. Field trials: " + fieldTrials + " Enable video HW acceleration: "
@@ -763,7 +763,7 @@ public class PeerConnectionClient {
 			}
 			if (isVideoCallEnabled()) {
 				sdpDescription =
-					preferCodec(sdpDescription, getSdpVideoCodecName(peerConnectionParameters), false);
+					preferCodec(sdpDescription, peerConnectionParameters.getSdpVideoCodecName(), false);
 			}
 			if (peerConnectionParameters.audioStartBitrate > 0) {
 				sdpDescription = setStartBitrate(
@@ -877,38 +877,6 @@ public class PeerConnectionClient {
 			}
 		}
 		return null;
-	}
-	
-	private static String getSdpVideoCodecName(PeerConnectionParameters parameters) {
-		switch (parameters.videoCodec) {
-		case VIDEO_CODEC_VP8:
-			return VIDEO_CODEC_VP8;
-		case VIDEO_CODEC_VP9:
-			return VIDEO_CODEC_VP9;
-		case VIDEO_CODEC_H264_HIGH:
-		case VIDEO_CODEC_H264_BASELINE:
-			return VIDEO_CODEC_H264;
-		default:
-			return VIDEO_CODEC_VP8;
-		}
-	}
-	
-	private static String getFieldTrials(PeerConnectionParameters peerConnectionParameters) {
-		String fieldTrials = "";
-		if (peerConnectionParameters.videoFlexfecEnabled) {
-			fieldTrials += VIDEO_FLEXFEC_FIELDTRIAL;
-			if (DEBUG) Log.d(TAG, "Enable FlexFEC field trial.");
-		}
-		fieldTrials += VIDEO_VP8_INTEL_HW_ENCODER_FIELDTRIAL;
-		if (peerConnectionParameters.disableWebRtcAGCAndHPF) {
-			fieldTrials += DISABLE_WEBRTC_AGC_FIELDTRIAL;
-			if (DEBUG) Log.d(TAG, "Disable WebRTC AGC field trial.");
-		}
-		if (VIDEO_CODEC_H264_HIGH.equals(peerConnectionParameters.videoCodec)) {
-			// TODO(magjed): Strip High from SDP when selecting Baseline instead of using field trial.
-			fieldTrials += VIDEO_H264_HIGH_PROFILE_FIELDTRIAL;
-		}
-		return fieldTrials;
 	}
 	
 	@SuppressWarnings("StringSplitter")
@@ -1238,7 +1206,7 @@ public class PeerConnectionClient {
 			}
 			if (isVideoCallEnabled()) {
 				sdpDescription =
-					preferCodec(sdpDescription, getSdpVideoCodecName(peerConnectionParameters), false);
+					preferCodec(sdpDescription, peerConnectionParameters.getSdpVideoCodecName(), false);
 			}
 			final SessionDescription sdp = new SessionDescription(origSdp.type, sdpDescription);
 			localSdp = sdp;
