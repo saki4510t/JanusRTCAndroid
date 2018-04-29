@@ -23,6 +23,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentTransaction;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -305,7 +306,7 @@ public class CallActivity extends BaseActivity
 			}
 		}
 
-		Uri roomUri = intent.getData();
+		final Uri roomUri = intent.getData();
 		if (roomUri == null) {
 			logAndToast(getString(R.string.missing_url));
 			Log.e(TAG, "Didn't get any URL in intent!");
@@ -315,9 +316,9 @@ public class CallActivity extends BaseActivity
 		}
 
 		// Get Intent parameters.
-		String roomId = intent.getStringExtra(EXTRA_ROOMID);
+		final String roomId = intent.getStringExtra(EXTRA_ROOMID);
 		Log.d(TAG, "Room ID: " + roomId);
-		if (roomId == null || roomId.length() == 0) {
+		if (TextUtils.isEmpty(roomId)) {
 			logAndToast(getString(R.string.missing_url));
 			Log.e(TAG, "Incorrect room ID in intent!");
 			setResult(RESULT_CANCELED);
@@ -371,7 +372,7 @@ public class CallActivity extends BaseActivity
 		// standard org.appspot.apprtc.WebSocketRTCClient.
 
 		appRtcClient = new JanusRESTRTCClient(this,
-			mSignalingEvents, mJanusCallback, "http://192.168.1.26:8088/");
+			mSignalingEvents, mJanusCallback, roomUri.toString());
 		// Create connection parameters.
 		final String urlParameters = intent.getStringExtra(EXTRA_URLPARAMETERS);
 		roomConnectionParameters =
