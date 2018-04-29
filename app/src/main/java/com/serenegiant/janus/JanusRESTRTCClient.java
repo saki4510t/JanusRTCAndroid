@@ -19,12 +19,10 @@ import com.serenegiant.utils.HandlerThreadHandler;
 
 import org.appspot.apprtc.AppRTCClient;
 import org.appspot.apprtc.RoomConnectionParameters;
-import org.appspot.apprtc.SignalingEvents;
 import org.appspot.apprtc.SignalingParameters;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.webrtc.IceCandidate;
-import org.webrtc.PeerConnection;
 import org.webrtc.SessionDescription;
 
 import java.io.IOException;
@@ -48,20 +46,12 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-import static com.serenegiant.janus.Const.HTTP_CONNECT_TIMEOUT_MS;
-import static com.serenegiant.janus.Const.HTTP_READ_TIMEOUT_MS;
-import static com.serenegiant.janus.Const.HTTP_READ_TIMEOUT_MS_LONG_POLL;
-import static com.serenegiant.janus.Const.HTTP_WRITE_TIMEOUT_MS;
+import static com.serenegiant.janus.Const.*;
 
 public class JanusRESTRTCClient implements AppRTCClient {
 	private static final boolean DEBUG = true;	// set false on production
 	private static final String TAG = JanusRESTRTCClient.class.getSimpleName();
-
-	public interface JanusCallback {
-		public void onConnectServer(@NonNull final JanusRESTRTCClient client);
-		public List<PeerConnection.IceServer> getIceServers(@NonNull final JanusRESTRTCClient client);
-	}
-
+	
 	private static enum ConnectionState {
 		UNINITIALIZED,
 		READY,	// janus-gateway server is ready to access
@@ -72,8 +62,6 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	private final Object mSync = new Object();
 	private final WeakReference<Context> mWeakContext;
 	private final String baseUrl;
-	@NonNull
-	private final SignalingEvents events;
 	@NonNull
 	private final JanusCallback mCallback;
 	private VideoRoom mJanus;
@@ -88,12 +76,10 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	private Session mSession;
 
 	public JanusRESTRTCClient(@NonNull final Context context,
-		@NonNull final SignalingEvents events,
 		@NonNull final JanusCallback callback,
 		@NonNull final String baseUrl) {
 
 		this.mWeakContext = new WeakReference<>(context);
-		this.events = events;
 		this.mCallback = callback;
 		this.baseUrl = baseUrl;
 		this.handler = HandlerThreadHandler.createHandler(TAG);
@@ -301,7 +287,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			handler.post(() -> {
 				if (mConnectionState != ConnectionState.ERROR) {
 					mConnectionState = ConnectionState.ERROR;
-					events.onChannelError(t.getMessage());
+					mCallback.onChannelError(t.getMessage());
 				}
 			});
 		} catch (final Exception e) {
@@ -569,7 +555,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 
 			if (DEBUG) Log.v(TAG, "onRemoteIceCandidate:" + plugin
 				+ "\n" + candidate);
-			events.onRemoteIceCandidate(candidate);
+			mCallback.onRemoteIceCandidate(candidate);
 		}
 		
 		@Override
@@ -579,15 +565,15 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			if (DEBUG) Log.v(TAG, "onRemoteDescription:" + plugin
 				+ "\n" + sdp);
 			if (plugin instanceof JanusPlugin.Publisher) {
-				events.onRemoteDescription(sdp);
+				mCallback.onRemoteDescription(sdp);
 			} else if (plugin instanceof JanusPlugin.Subscriber) {
 				if (sdp.type == SessionDescription.Type.ANSWER) {
-					events.onRemoteDescription(sdp);
+					mCallback.onRemoteDescription(sdp);
 				} else {
 					final SessionDescription answerSdp
 						= new SessionDescription(SessionDescription.Type.ANSWER,
 							sdp.description);
-					events.onRemoteDescription(sdp);
+					mCallback.onRemoteDescription(sdp);
 				}
 			}
 		}
@@ -754,7 +740,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 				null, null,
 				null, null);	// この2つはinitiator=falseの時有効
 		// Fire connection and signaling parameters events.
-		events.onConnectedToRoom(params);
+		mCallback.onConnectedToRoom(params);
 	}
 
 	/**
@@ -769,7 +755,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		case "slowlink":
 			break;
 		case "hangup":
-			events.onChannelClose();
+			mCallback.onChannelClose();
 			break;
 		default:
 			break;

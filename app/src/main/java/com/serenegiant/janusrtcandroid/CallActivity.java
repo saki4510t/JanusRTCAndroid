@@ -32,6 +32,7 @@ import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.widget.Toast;
 
+import com.serenegiant.janus.JanusCallback;
 import com.serenegiant.janus.JanusRESTRTCClient;
 
 import org.appspot.apprtc.AppRTCAudioManager;
@@ -39,7 +40,6 @@ import org.appspot.apprtc.AppRTCAudioManager.AudioDevice;
 import org.appspot.apprtc.AppRTCAudioManager.AudioManagerEvents;
 import org.appspot.apprtc.AppRTCClient;
 import org.appspot.apprtc.RoomConnectionParameters;
-import org.appspot.apprtc.SignalingEvents;
 import org.appspot.apprtc.SignalingParameters;
 import org.appspot.apprtc.PeerConnectionClient;
 import org.appspot.apprtc.DataChannelParameters;
@@ -372,7 +372,7 @@ public class CallActivity extends BaseActivity
 		// standard org.appspot.apprtc.WebSocketRTCClient.
 
 		appRtcClient = new JanusRESTRTCClient(this,
-			mSignalingEvents, mJanusCallback, roomUri.toString());
+			mJanusCallback, roomUri.toString());
 		// Create connection parameters.
 		final String urlParameters = intent.getStringExtra(EXTRA_URLPARAMETERS);
 		roomConnectionParameters =
@@ -831,8 +831,8 @@ public class CallActivity extends BaseActivity
 		}
 	}
 
-	private final SignalingEvents mSignalingEvents
-		= new SignalingEvents() {
+	private final JanusCallback mJanusCallback
+		= new JanusCallback() {
 
 		@Override
 		public void onConnectedToRoom(final SignalingParameters params) {
@@ -914,10 +914,7 @@ public class CallActivity extends BaseActivity
 		public void onChannelError(final String description) {
 			reportError(description);
 		}
-	};
 
-	private final JanusRESTRTCClient.JanusCallback mJanusCallback
-		= new JanusRESTRTCClient.JanusCallback() {
 		@Override
 		public void onConnectServer(@NonNull final JanusRESTRTCClient client) {
 		}
