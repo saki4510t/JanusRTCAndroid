@@ -1,4 +1,4 @@
-package org.appspot.apprtc;/*
+package com.serenegiant.janusrtcandroid;/*
  *  Copyright 2015 The WebRTC Project Authors. All rights reserved.
  *
  *  Use of this source code is governed by a BSD-style license
@@ -17,8 +17,7 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-import com.serenegiant.janusrtcandroid.R;
-
+import org.appspot.apprtc.PeerConnectionClient;
 import org.webrtc.StatsReport;
 
 import java.util.HashMap;

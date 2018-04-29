@@ -1,4 +1,4 @@
-package org.appspot.apprtc;
+package com.serenegiant.janusrtcandroid;
 
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
@@ -6,7 +6,6 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
-import com.serenegiant.janusrtcandroid.R;
 import com.serenegiant.dialog.MessageDialogFragment;
 import com.serenegiant.utils.BuildCheck;
 import com.serenegiant.utils.PermissionCheck;

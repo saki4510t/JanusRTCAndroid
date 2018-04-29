@@ -35,7 +35,7 @@ public class DirectRTCClient implements AppRTCClient, TCPChannelClient.TCPChanne
 	private static final int DEFAULT_PORT = 8888;
 	
 	// Regex pattern used for checking if room id looks like an IP.
-	static final Pattern IP_PATTERN = Pattern.compile("("
+	public static final Pattern IP_PATTERN = Pattern.compile("("
 		// IPv4
 		+ "((\\d+\\.){3}\\d+)|"
 		// IPv6

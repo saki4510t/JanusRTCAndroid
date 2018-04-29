@@ -1,4 +1,4 @@
-package org.appspot.apprtc;/*
+package com.serenegiant.janusrtcandroid;/*
  *  Copyright 2015 The WebRTC Project Authors. All rights reserved.
  *
  *  Use of this source code is governed by a BSD-style license
@@ -11,6 +11,7 @@ package org.appspot.apprtc;/*
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.serenegiant.janusrtcandroid.CallFragment;
 import com.serenegiant.janusrtcandroid.R;
 
 import org.webrtc.CameraEnumerationAndroid.CaptureFormat;

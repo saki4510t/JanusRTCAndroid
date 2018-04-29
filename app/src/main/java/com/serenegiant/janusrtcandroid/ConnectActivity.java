@@ -1,4 +1,4 @@
-package org.appspot.apprtc;/*
+package com.serenegiant.janusrtcandroid;/*
  *  Copyright 2014 The WebRTC Project Authors. All rights reserved.
  *
  *  Use of this source code is governed by a BSD-style license
@@ -31,8 +31,6 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.serenegiant.janusrtcandroid.R;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 
@@ -43,7 +41,7 @@ import java.util.Random;
  * Handles the initial setup where the user selects which room to join.
  */
 public class ConnectActivity extends BaseActivity {
-	private static final String TAG = "org.appspot.apprtc.ConnectActivity";
+	private static final String TAG = "com.serenegiant.janusrtcandroid.ConnectActivity";
 	private static final int CONNECTION_REQUEST = 1;
 	private static final int REMOVE_FAVORITE_INDEX = 0;
 	private static boolean commandLineRun = false;

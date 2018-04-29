@@ -1,4 +1,4 @@
-package org.appspot.apprtc;/*
+package com.serenegiant.janusrtcandroid;/*
  *  Copyright 2015 The WebRTC Project Authors. All rights reserved.
  *
  *  Use of this source code is governed by a BSD-style license
@@ -32,7 +32,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Simple CPU monitor.  The caller creates a org.appspot.apprtc.CpuMonitor object which can then
+ * Simple CPU monitor.  The caller creates a com.serenegiant.janusrtcandroid.CpuMonitor object which can then
  * be used via sampleCpuUtilization() to collect the percentual use of the
  * cumulative CPU capacity for all CPUs running at their nominal frequency.  3
  * values are generated: (1) getCpuCurrent() returns the use since the last
@@ -54,7 +54,7 @@ import java.util.concurrent.TimeUnit;
  * o No provision made for ARM big.LITTLE; if CPU n can switch behind our
  * back, we might get incorrect estimates.
  * o This is not thread-safe.  To call asynchronously, create different
- * org.appspot.apprtc.CpuMonitor objects.
+ * com.serenegiant.janusrtcandroid.CpuMonitor objects.
  * <p>
  * <p>If we can gather enough info to generate a sensible result,
  * sampleCpuUtilization returns true.  It is designed to never throw an
@@ -74,7 +74,7 @@ import java.util.concurrent.TimeUnit;
  */
 @TargetApi(Build.VERSION_CODES.KITKAT)
 class CpuMonitor {
-	private static final String TAG = "org.appspot.apprtc.CpuMonitor";
+	private static final String TAG = "com.serenegiant.janusrtcandroid.CpuMonitor";
 	private static final int MOVING_AVERAGE_SAMPLES = 5;
 	
 	private static final int CPU_STAT_SAMPLE_PERIOD_MS = 2000;
@@ -164,10 +164,10 @@ class CpuMonitor {
 	
 	public CpuMonitor(Context context) {
 		if (!isSupported()) {
-			throw new RuntimeException("org.appspot.apprtc.CpuMonitor is not supported on this Android version.");
+			throw new RuntimeException("com.serenegiant.janusrtcandroid.CpuMonitor is not supported on this Android version.");
 		}
 		
-		Log.d(TAG, "org.appspot.apprtc.CpuMonitor ctor.");
+		Log.d(TAG, "com.serenegiant.janusrtcandroid.CpuMonitor ctor.");
 		appContext = context.getApplicationContext();
 		userCpuUsage = new MovingAverage(MOVING_AVERAGE_SAMPLES);
 		systemCpuUsage = new MovingAverage(MOVING_AVERAGE_SAMPLES);

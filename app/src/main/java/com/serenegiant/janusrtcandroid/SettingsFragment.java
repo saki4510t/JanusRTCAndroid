@@ -1,4 +1,4 @@
-package org.appspot.apprtc;/*
+package com.serenegiant.janusrtcandroid;/*
  *  Copyright 2014 The WebRTC Project Authors. All rights reserved.
  *
  *  Use of this source code is governed by a BSD-style license

@@ -1,4 +1,4 @@
-package org.appspot.apprtc;/*
+package com.serenegiant.janusrtcandroid;/*
  *  Copyright 2015 The WebRTC Project Authors. All rights reserved.
  *
  *  Use of this source code is governed by a BSD-style license
@@ -31,15 +31,20 @@ import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.widget.Toast;
 
-import com.serenegiant.janusrtcandroid.R;
 import com.serenegiant.janus.JanusRESTRTCClient;
 
+import org.appspot.apprtc.AppRTCAudioManager;
 import org.appspot.apprtc.AppRTCAudioManager.AudioDevice;
 import org.appspot.apprtc.AppRTCAudioManager.AudioManagerEvents;
+import org.appspot.apprtc.AppRTCClient;
 import org.appspot.apprtc.AppRTCClient.RoomConnectionParameters;
 import org.appspot.apprtc.AppRTCClient.SignalingParameters;
+import org.appspot.apprtc.DirectRTCClient;
+import org.appspot.apprtc.PeerConnectionClient;
 import org.appspot.apprtc.PeerConnectionClient.DataChannelParameters;
 import org.appspot.apprtc.PeerConnectionClient.PeerConnectionParameters;
+import org.appspot.apprtc.UnhandledExceptionHandler;
+import org.appspot.apprtc.WebSocketRTCClient;
 import org.webrtc.Camera1Enumerator;
 import org.webrtc.Camera2Enumerator;
 import org.webrtc.CameraEnumerator;
@@ -563,7 +568,7 @@ public class CallActivity extends BaseActivity
 		super.onDestroy();
 	}
 
-	// org.appspot.apprtc.CallFragment.OnCallEvents interface implementation.
+	// com.serenegiant.janusrtcandroid.CallFragment.OnCallEvents interface implementation.
 	@Override
 	public void onCallHangUp() {
 		if (DEBUG) Log.v(TAG, "onCallHangUp:");
