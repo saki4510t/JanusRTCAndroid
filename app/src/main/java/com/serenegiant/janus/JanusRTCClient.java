@@ -80,11 +80,11 @@ public class JanusRTCClient implements JanusClient {
 	private ServerInfo mServerInfo;
 	private Session mSession;
 
-	public JanusRTCClient(@NonNull final Context context,
+	public JanusRTCClient(@NonNull final Context appContext,
 		@NonNull final JanusCallback callback,
 		@NonNull final String baseUrl) {
 
-		this.mWeakContext = new WeakReference<>(context);
+		this.mWeakContext = new WeakReference<>(appContext);
 		this.mCallback = callback;
 		this.baseUrl = baseUrl;
 		this.mConnectionState = ConnectionState.UNINITIALIZED;

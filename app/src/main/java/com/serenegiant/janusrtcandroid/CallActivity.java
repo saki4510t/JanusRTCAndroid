@@ -372,7 +372,7 @@ public class CallActivity extends BaseActivity
 		// Create connection client. Use org.appspot.apprtc.DirectRTCClient if room name is an IP otherwise use the
 		// standard org.appspot.apprtc.WebSocketRTCClient.
 
-		janusClient = new JanusRTCClient(this,
+		janusClient = new JanusRTCClient(getApplicationContext(),
 			mJanusCallback, roomUri.toString());
 		// Create connection parameters.
 		final String urlParameters = intent.getStringExtra(EXTRA_URLPARAMETERS);
