@@ -369,11 +369,15 @@ public class CallActivity extends BaseActivity
 
 		if (DEBUG) Log.d(TAG, "VIDEO_FILE: '" + intent.getStringExtra(EXTRA_VIDEO_FILE_AS_CAMERA) + "'");
 
-		// Create connection client. Use org.appspot.apprtc.DirectRTCClient if room name is an IP otherwise use the
-		// standard org.appspot.apprtc.WebSocketRTCClient.
+		final PeerConnectionFactory.Options options = new PeerConnectionFactory.Options();
+		if (loopback) {
+			options.networkIgnoreMask = 0;
+		}
 
 		janusClient = new JanusRTCClient(getApplicationContext(),
-			mJanusCallback, roomUri.toString());
+			eglBase, peerConnectionParameters, mJanusCallback, roomUri.toString());
+		janusClient.createPeerConnectionFactory(options);
+		
 		// Create connection parameters.
 		final String urlParameters = intent.getStringExtra(EXTRA_URLPARAMETERS);
 		roomConnectionParameters =
@@ -407,10 +411,6 @@ public class CallActivity extends BaseActivity
 		// Create peer connection client.
 		peerConnectionClient = new PeerConnectionClient(
 			getApplicationContext(), eglBase, peerConnectionParameters, mPeerConnectionEvents);
-		final PeerConnectionFactory.Options options = new PeerConnectionFactory.Options();
-		if (loopback) {
-			options.networkIgnoreMask = 0;
-		}
 		peerConnectionClient.createPeerConnectionFactory(options);
 
 		if (screenCaptureEnabled) {

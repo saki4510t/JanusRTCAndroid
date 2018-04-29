@@ -21,7 +21,12 @@ import com.serenegiant.janus.response.PublisherInfo;
 import com.serenegiant.janus.response.Session;
 
 import org.json.JSONObject;
+import org.webrtc.DataChannel;
 import org.webrtc.IceCandidate;
+import org.webrtc.MediaStream;
+import org.webrtc.PeerConnection;
+import org.webrtc.RtpReceiver;
+import org.webrtc.SdpObserver;
 import org.webrtc.SessionDescription;
 
 import java.io.IOException;
@@ -56,10 +61,10 @@ import retrofit2.Response;
 		 * @param sdp
 		 */
 		public void onRemoteDescription(@NonNull final JanusPlugin plugin,
-										final SessionDescription sdp);
+			final SessionDescription sdp);
 
 		public void onError(@NonNull final JanusPlugin plugin,
-							@NonNull final Throwable t);
+			@NonNull final Throwable t);
 	}
 	
 	private static enum RoomState {
@@ -595,6 +600,85 @@ import retrofit2.Response;
 	}
 
 
+	private final PeerConnection.Observer
+		mPeerConnectionObserver = new PeerConnection.Observer() {
+		@Override
+		public void onSignalingChange(final PeerConnection.SignalingState newState) {
+			if (DEBUG) Log.v(TAG, "onSignalingChange:" + newState);
+		}
+		
+		@Override
+		public void onIceConnectionChange(final PeerConnection.IceConnectionState newState) {
+			if (DEBUG) Log.v(TAG, "onIceConnectionChange:" + newState);
+		}
+		
+		@Override
+		public void onIceConnectionReceivingChange(final boolean receiving) {
+			if (DEBUG) Log.v(TAG, "onIceConnectionReceivingChange:receiving=" + receiving);
+		}
+		
+		@Override
+		public void onIceGatheringChange(final PeerConnection.IceGatheringState newState) {
+			if (DEBUG) Log.v(TAG, "onIceGatheringChange:" + newState);
+		}
+		
+		@Override
+		public void onIceCandidate(final IceCandidate candidate) {
+			if (DEBUG) Log.v(TAG, "onIceCandidate:");
+		}
+		
+		@Override
+		public void onIceCandidatesRemoved(final IceCandidate[] candidates) {
+			if (DEBUG) Log.v(TAG, "onIceCandidatesRemoved:");
+		}
+		
+		@Override
+		public void onAddStream(final MediaStream stream) {
+			if (DEBUG) Log.v(TAG, "onAddStream:");
+		}
+		
+		@Override
+		public void onRemoveStream(final MediaStream stream) {
+			if (DEBUG) Log.v(TAG, "onRemoveStream:");
+		}
+		
+		@Override
+		public void onDataChannel(final DataChannel channel) {
+			if (DEBUG) Log.v(TAG, "onDataChannel:");
+		}
+		
+		@Override
+		public void onRenegotiationNeeded() {
+			if (DEBUG) Log.v(TAG, "onRenegotiationNeeded:");
+		}
+		
+		@Override
+		public void onAddTrack(final RtpReceiver receiver, final MediaStream[] streams) {
+			if (DEBUG) Log.v(TAG, "onAddTrack:");
+		}
+	};
+	
+	private final SdpObserver mSdpObserver = new SdpObserver() {
+		@Override
+		public void onCreateSuccess(final SessionDescription origSdp) {
+			if (DEBUG) Log.v(TAG, "onCreateSuccess:");
+		}
+		
+		@Override
+		public void onSetSuccess() {
+			if (DEBUG) Log.v(TAG, "onSetSuccess:");
+		}
+		
+		@Override
+		public void onCreateFailure(final String error) {
+			reportError(new RuntimeException("createSDP error: " + error));
+		}
+		
+		@Override
+		public void onSetFailure(final String error) {
+			reportError(new RuntimeException("createSDP error: " + error));
+		}
+	};
 //================================================================================
 	/*package*/ static class Publisher extends JanusPlugin {
 

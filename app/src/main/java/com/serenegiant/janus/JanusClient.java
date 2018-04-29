@@ -8,8 +8,11 @@ package com.serenegiant.janus;/*
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+import android.support.annotation.Nullable;
+
 import org.appspot.apprtc.RoomConnectionParameters;
 import org.webrtc.IceCandidate;
+import org.webrtc.PeerConnectionFactory;
 import org.webrtc.SessionDescription;
 
 /**
@@ -17,36 +20,43 @@ import org.webrtc.SessionDescription;
  */
 public interface JanusClient {
 	
+	public void createPeerConnectionFactory(
+		@Nullable final PeerConnectionFactory.Options options);
+
 	/**
 	 * Asynchronously connect to an AppRTC room URL using supplied connection
 	 * parameters. Once connection is established onConnectedToRoom()
 	 * callback with room parameters is invoked.
 	 */
-	void connectToRoom(final RoomConnectionParameters connectionParameters);
+	public void connectToRoom(final RoomConnectionParameters connectionParameters);
 	
 	/**
 	 * Send offer SDP to the other participant.
 	 */
-	void sendOfferSdp(final SessionDescription sdp);
+	@Deprecated
+	public void sendOfferSdp(final SessionDescription sdp);
 	
 	/**
 	 * Send answer SDP to the other participant.
 	 */
-	void sendAnswerSdp(final SessionDescription sdp);
+	@Deprecated
+	public void sendAnswerSdp(final SessionDescription sdp);
 	
 	/**
 	 * Send Ice candidate to the other participant.
 	 */
-	void sendLocalIceCandidate(final IceCandidate candidate);
+	@Deprecated
+	public void sendLocalIceCandidate(final IceCandidate candidate);
 	
 	/**
 	 * Send removed ICE candidates to the other participant.
 	 */
-	void sendLocalIceCandidateRemovals(final IceCandidate[] candidates);
+	@Deprecated
+	public void sendLocalIceCandidateRemovals(final IceCandidate[] candidates);
 	
 	/**
 	 * Disconnect from room.
 	 */
-	void disconnectFromRoom();
+	public void disconnectFromRoom();
 	
 }

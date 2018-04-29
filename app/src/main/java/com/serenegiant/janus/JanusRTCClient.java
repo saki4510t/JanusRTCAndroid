@@ -1,6 +1,7 @@
 package com.serenegiant.janus;
 
 import android.content.Context;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
@@ -15,13 +16,31 @@ import com.serenegiant.janus.response.EventRoom;
 import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
 
+import org.appspot.apprtc.PeerConnectionParameters;
+import org.appspot.apprtc.RecordedAudioToFileController;
 import org.appspot.apprtc.RoomConnectionParameters;
 import org.appspot.apprtc.SignalingParameters;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.webrtc.DefaultVideoDecoderFactory;
+import org.webrtc.DefaultVideoEncoderFactory;
+import org.webrtc.EglBase;
 import org.webrtc.IceCandidate;
+import org.webrtc.PeerConnectionFactory;
 import org.webrtc.SessionDescription;
+import org.webrtc.SoftwareVideoDecoderFactory;
+import org.webrtc.SoftwareVideoEncoderFactory;
+import org.webrtc.VideoDecoderFactory;
+import org.webrtc.VideoEncoderFactory;
+import org.webrtc.audio.AudioDeviceModule;
+import org.webrtc.audio.JavaAudioDeviceModule;
+import org.webrtc.audio.LegacyAudioDeviceModule;
+import org.webrtc.voiceengine.WebRtcAudioManager;
+import org.webrtc.voiceengine.WebRtcAudioRecord;
+import org.webrtc.voiceengine.WebRtcAudioTrack;
+import org.webrtc.voiceengine.WebRtcAudioUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.math.BigInteger;
@@ -46,6 +65,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 import static com.serenegiant.janus.Const.*;
+import static org.appspot.apprtc.AppRTCConst.*;
 
 public class JanusRTCClient implements JanusClient {
 	private static final boolean DEBUG = true;	// set false on production
@@ -67,9 +87,26 @@ public class JanusRTCClient implements JanusClient {
 
 	private final Object mSync = new Object();
 	private final WeakReference<Context> mWeakContext;
+	@NonNull
+	private final EglBase rootEglBase;
+	@NonNull
+	private final PeerConnectionParameters peerConnectionParameters;
+	@NonNull
 	private final String baseUrl;
 	@NonNull
 	private final JanusCallback mCallback;
+
+	@Nullable
+	private PeerConnectionFactory factory;
+	private boolean preferIsac;
+	private boolean isError;
+	/**
+	 * Implements the WebRtcAudioRecordSamplesReadyCallback interface and writes
+	 * recorded audio samples to an output file.
+	 */
+	@Nullable
+	private RecordedAudioToFileController saveRecordedAudioToFile = null;
+
 	private VideoRoom mJanus;
 	private LongPoll mLongPoll;
 	private final List<Call<?>> mCurrentCalls = new ArrayList<>();
@@ -81,10 +118,14 @@ public class JanusRTCClient implements JanusClient {
 	private Session mSession;
 
 	public JanusRTCClient(@NonNull final Context appContext,
+		@NonNull final EglBase eglBase,
+		@NonNull final PeerConnectionParameters peerConnectionParameters,
 		@NonNull final JanusCallback callback,
 		@NonNull final String baseUrl) {
 
 		this.mWeakContext = new WeakReference<>(appContext);
+		this.rootEglBase = eglBase;
+		this.peerConnectionParameters = peerConnectionParameters;
 		this.mCallback = callback;
 		this.baseUrl = baseUrl;
 		this.mConnectionState = ConnectionState.UNINITIALIZED;
@@ -105,6 +146,19 @@ public class JanusRTCClient implements JanusClient {
 
 //================================================================================
 // implementations of com.serenegiant.janus.JanusClient interface
+
+	/**
+	 * This function should only be called once.
+	 */
+	public void createPeerConnectionFactory(
+		@Nullable final PeerConnectionFactory.Options options) {
+
+		if (factory != null) {
+			throw new IllegalStateException("PeerConnectionFactory has already been constructed");
+		}
+		executor.execute(() -> createPeerConnectionFactoryInternal(options));
+	}
+
 	@Override
 	public void connectToRoom(final RoomConnectionParameters connectionParameters) {
 		if (DEBUG) Log.v(TAG, "connectToRoom:");
@@ -114,6 +168,7 @@ public class JanusRTCClient implements JanusClient {
 		});
 	}
 	
+	@Deprecated
 	@Override
 	public void sendOfferSdp(final SessionDescription sdp) {
 		if (DEBUG) Log.v(TAG, "sendOfferSdp:" + sdp);
@@ -122,6 +177,7 @@ public class JanusRTCClient implements JanusClient {
 		});
 	}
 	
+	@Deprecated
 	@Override
 	public void sendAnswerSdp(final SessionDescription sdp) {
 		if (DEBUG) Log.v(TAG, "sendAnswerSdp:" + sdp);
@@ -130,6 +186,7 @@ public class JanusRTCClient implements JanusClient {
 		});
 	}
 	
+	@Deprecated
 	@Override
 	public void sendLocalIceCandidate(final IceCandidate candidate) {
 		if (DEBUG) Log.v(TAG, "sendLocalIceCandidate:");
@@ -138,14 +195,7 @@ public class JanusRTCClient implements JanusClient {
 		});
 	}
 	
-	private final Runnable mTrySendTrickleCompletedTask
-		= new Runnable() {
-		@Override
-		public void run() {
-			sendLocalIceCandidateInternal(null);
-		}
-	};
-	
+	@Deprecated
 	@Override
 	public void sendLocalIceCandidateRemovals(final IceCandidate[] candidates) {
 		if (DEBUG) Log.v(TAG, "sendLocalIceCandidateRemovals:");
@@ -185,7 +235,216 @@ public class JanusRTCClient implements JanusClient {
 	}
 
 //================================================================================
+	private void createPeerConnectionFactoryInternal(
+		@Nullable final PeerConnectionFactory.Options options) {
+	
+		if (DEBUG) Log.v(TAG, "createPeerConnectionFactoryInternal:");
+		isError = false;
+		
+		if (peerConnectionParameters.tracing) {
+			PeerConnectionFactory.startInternalTracingCapture(
+				Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator
+					+ "webrtc-trace.txt");
+		}
+		
+		// Check if ISAC is used by default.
+		preferIsac = peerConnectionParameters.audioCodec != null
+			&& peerConnectionParameters.audioCodec.equals(AUDIO_CODEC_ISAC);
+		
+		// It is possible to save a copy in raw PCM format on a file by checking
+		// the "Save input audio to file" checkbox in the Settings UI. A callback
+		// interface is set when this flag is enabled. As a result, a copy of recorded
+		// audio samples are provided to this client directly from the native audio
+		// layer in Java.
+		if (peerConnectionParameters.saveInputAudioToFile) {
+			if (!peerConnectionParameters.useOpenSLES) {
+				if (DEBUG) Log.d(TAG, "Enable recording of microphone input audio to file");
+				saveRecordedAudioToFile = new RecordedAudioToFileController(executor);
+			} else {
+				// TODO(henrika): ensure that the UI reflects that if OpenSL ES is selected,
+				// then the "Save inut audio to file" option shall be grayed out.
+				Log.e(TAG, "Recording of input audio is not supported for OpenSL ES");
+			}
+		}
+		
+		final AudioDeviceModule adm = peerConnectionParameters.useLegacyAudioDevice
+			? createLegacyAudioDevice()
+			: createJavaAudioDevice();
+		
+		// Create peer connection factory.
+		if (options != null && DEBUG) {
+			if (DEBUG) Log.d(TAG, "Factory networkIgnoreMask option: " + options.networkIgnoreMask);
+		}
+		final boolean enableH264HighProfile =
+			VIDEO_CODEC_H264_HIGH.equals(peerConnectionParameters.videoCodec);
+		final VideoEncoderFactory encoderFactory;
+		final VideoDecoderFactory decoderFactory;
+		
+		if (peerConnectionParameters.videoCodecHwAcceleration) {
+			encoderFactory = new DefaultVideoEncoderFactory(
+				rootEglBase.getEglBaseContext(), true /* enableIntelVp8Encoder */, enableH264HighProfile);
+			decoderFactory = new DefaultVideoDecoderFactory(rootEglBase.getEglBaseContext());
+		} else {
+			encoderFactory = new SoftwareVideoEncoderFactory();
+			decoderFactory = new SoftwareVideoDecoderFactory();
+		}
+		
+		factory = PeerConnectionFactory.builder()
+			.setOptions(options)
+			.setAudioDeviceModule(adm)
+			.setVideoEncoderFactory(encoderFactory)
+			.setVideoDecoderFactory(decoderFactory)
+			.createPeerConnectionFactory();
+		if (DEBUG) Log.d(TAG, "Peer connection factory created.");
+	}
 
+	@SuppressWarnings("deprecation")
+	private AudioDeviceModule createLegacyAudioDevice() {
+		// Enable/disable OpenSL ES playback.
+		if (!peerConnectionParameters.useOpenSLES) {
+			if (DEBUG) Log.d(TAG, "Disable OpenSL ES audio even if device supports it");
+			WebRtcAudioManager.setBlacklistDeviceForOpenSLESUsage(true /* enable */);
+		} else {
+			if (DEBUG) Log.d(TAG, "Allow OpenSL ES audio if device supports it");
+			WebRtcAudioManager.setBlacklistDeviceForOpenSLESUsage(false);
+		}
+		
+		if (peerConnectionParameters.disableBuiltInAEC) {
+			if (DEBUG) Log.d(TAG, "Disable built-in AEC even if device supports it");
+			WebRtcAudioUtils.setWebRtcBasedAcousticEchoCanceler(true);
+		} else {
+			if (DEBUG) Log.d(TAG, "Enable built-in AEC if device supports it");
+			WebRtcAudioUtils.setWebRtcBasedAcousticEchoCanceler(false);
+		}
+		
+		if (peerConnectionParameters.disableBuiltInNS) {
+			if (DEBUG) Log.d(TAG, "Disable built-in NS even if device supports it");
+			WebRtcAudioUtils.setWebRtcBasedNoiseSuppressor(true);
+		} else {
+			if (DEBUG) Log.d(TAG, "Enable built-in NS if device supports it");
+			WebRtcAudioUtils.setWebRtcBasedNoiseSuppressor(false);
+		}
+		
+		WebRtcAudioRecord.setOnAudioSamplesReady(saveRecordedAudioToFile);
+		
+		// Set audio record error callbacks.
+		WebRtcAudioRecord.setErrorCallback(new WebRtcAudioRecord.WebRtcAudioRecordErrorCallback() {
+			@Override
+			public void onWebRtcAudioRecordInitError(final String errorMessage) {
+				Log.e(TAG, "onWebRtcAudioRecordInitError: " + errorMessage);
+				reportError(new RuntimeException(errorMessage));
+			}
+			
+			@Override
+			public void onWebRtcAudioRecordStartError(
+				final WebRtcAudioRecord.AudioRecordStartErrorCode errorCode,
+					final String errorMessage) {
+
+				Log.e(TAG, "onWebRtcAudioRecordStartError: " + errorCode + ". " + errorMessage);
+				reportError(new RuntimeException(errorMessage));
+			}
+			
+			@Override
+			public void onWebRtcAudioRecordError(final String errorMessage) {
+				Log.e(TAG, "onWebRtcAudioRecordError: " + errorMessage);
+				reportError(new RuntimeException(errorMessage));
+			}
+		});
+		
+		WebRtcAudioTrack.setErrorCallback(new WebRtcAudioTrack.ErrorCallback() {
+			@Override
+			public void onWebRtcAudioTrackInitError(final String errorMessage) {
+				Log.e(TAG, "onWebRtcAudioTrackInitError: " + errorMessage);
+				reportError(new RuntimeException(errorMessage));
+			}
+			
+			@Override
+			public void onWebRtcAudioTrackStartError(
+				final WebRtcAudioTrack.AudioTrackStartErrorCode errorCode,
+					final String errorMessage) {
+
+				Log.e(TAG, "onWebRtcAudioTrackStartError: " + errorCode + ". " + errorMessage);
+				reportError(new RuntimeException(errorMessage));
+			}
+			
+			@Override
+			public void onWebRtcAudioTrackError(final String errorMessage) {
+				Log.e(TAG, "onWebRtcAudioTrackError: " + errorMessage);
+				reportError(new RuntimeException(errorMessage));
+			}
+		});
+		
+		return new LegacyAudioDeviceModule();
+	}
+	
+	private AudioDeviceModule createJavaAudioDevice() {
+		// Enable/disable OpenSL ES playback.
+		if (!peerConnectionParameters.useOpenSLES) {
+			Log.w(TAG, "External OpenSLES ADM not implemented yet.");
+			// TODO(magjed): Add support for external OpenSLES ADM.
+		}
+		
+		// Set audio record error callbacks.
+		final JavaAudioDeviceModule.AudioRecordErrorCallback audioRecordErrorCallback
+			= new JavaAudioDeviceModule.AudioRecordErrorCallback() {
+
+			@Override
+			public void onWebRtcAudioRecordInitError(final String errorMessage) {
+				Log.e(TAG, "onWebRtcAudioRecordInitError: " + errorMessage);
+				reportError(new RuntimeException(errorMessage));
+			}
+			
+			@Override
+			public void onWebRtcAudioRecordStartError(
+				final JavaAudioDeviceModule.AudioRecordStartErrorCode errorCode,
+					final String errorMessage) {
+
+				Log.e(TAG, "onWebRtcAudioRecordStartError: " + errorCode + ". " + errorMessage);
+				reportError(new RuntimeException(errorMessage));
+			}
+			
+			@Override
+			public void onWebRtcAudioRecordError(final String errorMessage) {
+				Log.e(TAG, "onWebRtcAudioRecordError: " + errorMessage);
+				reportError(new RuntimeException(errorMessage));
+			}
+		};
+		
+		final JavaAudioDeviceModule.AudioTrackErrorCallback audioTrackErrorCallback
+			= new JavaAudioDeviceModule.AudioTrackErrorCallback() {
+
+			@Override
+			public void onWebRtcAudioTrackInitError(final String errorMessage) {
+				Log.e(TAG, "onWebRtcAudioTrackInitError: " + errorMessage);
+				reportError(new RuntimeException(errorMessage));
+			}
+			
+			@Override
+			public void onWebRtcAudioTrackStartError(
+				final JavaAudioDeviceModule.AudioTrackStartErrorCode errorCode,
+				final String errorMessage) {
+
+				Log.e(TAG, "onWebRtcAudioTrackStartError: " + errorCode + ". " + errorMessage);
+				reportError(new RuntimeException(errorMessage));
+			}
+			
+			@Override
+			public void onWebRtcAudioTrackError(final String errorMessage) {
+				Log.e(TAG, "onWebRtcAudioTrackError: " + errorMessage);
+				reportError(new RuntimeException(errorMessage));
+			}
+		};
+		
+		return JavaAudioDeviceModule.builder(getContext())
+			.setSamplesReadyCallback(saveRecordedAudioToFile)
+			.setUseHardwareAcousticEchoCanceler(!peerConnectionParameters.disableBuiltInAEC)
+			.setUseHardwareNoiseSuppressor(!peerConnectionParameters.disableBuiltInNS)
+			.setAudioRecordErrorCallback(audioRecordErrorCallback)
+			.setAudioTrackErrorCallback(audioTrackErrorCallback)
+			.createAudioDeviceModule();
+	}
+
+//--------------------------------------------------------------------------------
 	@Nullable
 	private Context getContext() {
 		return mWeakContext.get();
