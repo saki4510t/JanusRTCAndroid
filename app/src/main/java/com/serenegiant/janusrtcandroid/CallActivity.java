@@ -33,7 +33,7 @@ import android.view.WindowManager.LayoutParams;
 import android.widget.Toast;
 
 import com.serenegiant.janus.JanusCallback;
-import com.serenegiant.janus.JanusRESTRTCClient;
+import com.serenegiant.janus.JanusRTCClient;
 
 import org.appspot.apprtc.AppRTCAudioManager;
 import org.appspot.apprtc.AppRTCAudioManager.AudioDevice;
@@ -372,7 +372,7 @@ public class CallActivity extends BaseActivity
 		// Create connection client. Use org.appspot.apprtc.DirectRTCClient if room name is an IP otherwise use the
 		// standard org.appspot.apprtc.WebSocketRTCClient.
 
-		janusClient = new JanusRESTRTCClient(this,
+		janusClient = new JanusRTCClient(this,
 			mJanusCallback, roomUri.toString());
 		// Create connection parameters.
 		final String urlParameters = intent.getStringExtra(EXTRA_URLPARAMETERS);
@@ -920,11 +920,11 @@ public class CallActivity extends BaseActivity
 		}
 
 		@Override
-		public void onConnectServer(@NonNull final JanusRESTRTCClient client) {
+		public void onConnectServer(@NonNull final JanusRTCClient client) {
 		}
 		
 		@Override
-		public List<PeerConnection.IceServer> getIceServers(@NonNull final JanusRESTRTCClient client) {
+		public List<PeerConnection.IceServer> getIceServers(@NonNull final JanusRTCClient client) {
 			return new ArrayList<PeerConnection.IceServer>();
 		}
 	};

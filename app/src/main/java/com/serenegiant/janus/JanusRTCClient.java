@@ -47,9 +47,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 import static com.serenegiant.janus.Const.*;
 
-public class JanusRESTRTCClient implements JanusClient {
+public class JanusRTCClient implements JanusClient {
 	private static final boolean DEBUG = true;	// set false on production
-	private static final String TAG = JanusRESTRTCClient.class.getSimpleName();
+	private static final String TAG = JanusRTCClient.class.getSimpleName();
 	
 	private static enum ConnectionState {
 		UNINITIALIZED,
@@ -74,7 +74,7 @@ public class JanusRESTRTCClient implements JanusClient {
 	private ServerInfo mServerInfo;
 	private Session mSession;
 
-	public JanusRESTRTCClient(@NonNull final Context context,
+	public JanusRTCClient(@NonNull final Context context,
 		@NonNull final JanusCallback callback,
 		@NonNull final String baseUrl) {
 

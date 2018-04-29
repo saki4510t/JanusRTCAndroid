@@ -8,6 +8,6 @@ import org.webrtc.PeerConnection;
 import java.util.List;
 
 public interface JanusCallback extends SignalingEvents {
-	public void onConnectServer(@NonNull final JanusRESTRTCClient client);
-	public List<PeerConnection.IceServer> getIceServers(@NonNull final JanusRESTRTCClient client);
+	public void onConnectServer(@NonNull final JanusRTCClient client);
+	public List<PeerConnection.IceServer> getIceServers(@NonNull final JanusRTCClient client);
 }
