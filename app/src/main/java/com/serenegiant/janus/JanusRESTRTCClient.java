@@ -569,6 +569,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 
 			if (DEBUG) Log.v(TAG, "onRemoteIceCandidate:" + plugin
 				+ "\n" + candidate);
+			events.onRemoteIceCandidate(candidate);
 		}
 		
 		@Override
