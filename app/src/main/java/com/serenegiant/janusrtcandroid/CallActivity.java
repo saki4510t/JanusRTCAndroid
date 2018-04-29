@@ -134,7 +134,6 @@ public class CallActivity extends BaseActivity
 	public static final String EXTRA_ENABLE_RTCEVENTLOG = "org.appspot.apprtc.ENABLE_RTCEVENTLOG";
 	public static final String EXTRA_USE_LEGACY_AUDIO_DEVICE =
 		"org.appspot.apprtc.USE_LEGACY_AUDIO_DEVICE";
-	public static final String EXTRA_USE_JANUS = "com.serenegiant.janus.USE_JANUS";
 
 	private static final int CAPTURE_PERMISSION_REQUEST_CODE = 1;
 
@@ -328,7 +327,6 @@ public class CallActivity extends BaseActivity
 
 		final boolean loopback = intent.getBooleanExtra(EXTRA_LOOPBACK, false);
 		final boolean tracing = intent.getBooleanExtra(EXTRA_TRACING, false);
-		final boolean useJanus = intent.getBooleanExtra(EXTRA_USE_JANUS, false);
 
 		int videoWidth = intent.getIntExtra(EXTRA_VIDEO_WIDTH, 0);
 		int videoHeight = intent.getIntExtra(EXTRA_VIDEO_HEIGHT, 0);
