@@ -209,7 +209,7 @@ public class CallActivity extends BaseActivity
 	private boolean callControlFragmentVisible = true;
 	private long callStartedTimeMs = 0;
 	private boolean micEnabled = true;
-	private boolean screencaptureEnabled = false;
+	private boolean screenCaptureEnabled = false;
 	private static Intent mediaProjectionPermissionResultData;
 	private static int mediaProjectionPermissionResultCode;
 	// True if local view is in the fullscreen renderer.
@@ -331,9 +331,9 @@ public class CallActivity extends BaseActivity
 		int videoWidth = intent.getIntExtra(EXTRA_VIDEO_WIDTH, 0);
 		int videoHeight = intent.getIntExtra(EXTRA_VIDEO_HEIGHT, 0);
 
-		screencaptureEnabled = intent.getBooleanExtra(EXTRA_SCREENCAPTURE, false);
+		screenCaptureEnabled = intent.getBooleanExtra(EXTRA_SCREENCAPTURE, false);
 		// If capturing format is not specified for screen capture, use screen resolution.
-		if (screencaptureEnabled && videoWidth == 0 && videoHeight == 0) {
+		if (screenCaptureEnabled && videoWidth == 0 && videoHeight == 0) {
 			final DisplayMetrics displayMetrics = getDisplayMetrics();
 			videoWidth = displayMetrics.widthPixels;
 			videoHeight = displayMetrics.heightPixels;
@@ -411,7 +411,7 @@ public class CallActivity extends BaseActivity
 		}
 		peerConnectionClient.createPeerConnectionFactory(options);
 
-		if (screencaptureEnabled) {
+		if (screenCaptureEnabled) {
 			startScreenCapture();
 		} else {
 			startCall();
@@ -522,7 +522,7 @@ public class CallActivity extends BaseActivity
 		activityRunning = false;
 		// Don't stop the video when using screen capture to allow user to show other apps to the remote
 		// end.
-		if (peerConnectionClient != null && !screencaptureEnabled) {
+		if (peerConnectionClient != null && !screenCaptureEnabled) {
 			peerConnectionClient.stopVideoSource();
 		}
 		if (cpuMonitor != null) {
@@ -537,7 +537,7 @@ public class CallActivity extends BaseActivity
 		if (DEBUG) Log.v(TAG, "onStart:");
 		activityRunning = true;
 		// Video is not paused for screen capture. See onPause.
-		if (peerConnectionClient != null && !screencaptureEnabled) {
+		if (peerConnectionClient != null && !screenCaptureEnabled) {
 			peerConnectionClient.startVideoSource();
 		}
 		if (cpuMonitor != null) {
@@ -762,7 +762,7 @@ public class CallActivity extends BaseActivity
 				reportError("Failed to open video file for emulated camera");
 				return null;
 			}
-		} else if (screencaptureEnabled) {
+		} else if (screenCaptureEnabled) {
 			return createScreenCapturer();
 		} else if (useCamera2()) {
 			if (!captureToTexture()) {
