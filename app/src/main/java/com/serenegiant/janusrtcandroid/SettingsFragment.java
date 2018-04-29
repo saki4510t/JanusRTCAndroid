@@ -11,14 +11,15 @@ package com.serenegiant.janusrtcandroid;/*
 import android.os.Bundle;
 import android.preference.PreferenceFragment;
 
-import com.serenegiant.janusrtcandroid.R;
-
 /**
  * Settings fragment for AppRTC.
  */
 public class SettingsFragment extends PreferenceFragment {
+	private static final boolean DEBUG = true;	// set false on production
+	private static final String TAG = SettingsFragment.class.getSimpleName();
+
 	@Override
-	public void onCreate(Bundle savedInstanceState) {
+	public void onCreate(final Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		// Load the preferences from an XML resource
 		addPreferencesFromResource(R.xml.preferences);

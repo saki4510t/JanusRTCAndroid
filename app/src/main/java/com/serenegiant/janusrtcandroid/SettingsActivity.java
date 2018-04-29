@@ -21,6 +21,9 @@ import org.webrtc.audio.JavaAudioDeviceModule;
  * Settings activity for AppRTC.
  */
 public class SettingsActivity extends BaseActivity implements OnSharedPreferenceChangeListener {
+	private static final boolean DEBUG = true;	// set false on production
+	private static final String TAG = SettingsActivity.class.getSimpleName();
+
 	private SettingsFragment settingsFragment;
 	private String keyprefVideoCall;
 	private String keyprefScreencapture;
@@ -118,7 +121,7 @@ public class SettingsActivity extends BaseActivity implements OnSharedPreference
 	protected void onResume() {
 		super.onResume();
 		// Set summary to be the user-description for the selected value
-		SharedPreferences sharedPreferences =
+		final SharedPreferences sharedPreferences =
 			settingsFragment.getPreferenceScreen().getSharedPreferences();
 		sharedPreferences.registerOnSharedPreferenceChangeListener(this);
 		updateSummaryB(sharedPreferences, keyprefVideoCall);
@@ -196,14 +199,16 @@ public class SettingsActivity extends BaseActivity implements OnSharedPreference
 	
 	@Override
 	protected void onPause() {
-		super.onPause();
-		SharedPreferences sharedPreferences =
+		final SharedPreferences sharedPreferences =
 			settingsFragment.getPreferenceScreen().getSharedPreferences();
 		sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
+		super.onPause();
 	}
 	
 	@Override
-	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+	public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences,
+		final String key) {
+
 		// clang-format off
 		if (key.equals(keyprefResolution)
 			|| key.equals(keyprefFps)
@@ -258,34 +263,34 @@ public class SettingsActivity extends BaseActivity implements OnSharedPreference
 		}
 	}
 	
-	private void updateSummary(SharedPreferences sharedPreferences, String key) {
-		Preference updatedPref = settingsFragment.findPreference(key);
+	private void updateSummary(final SharedPreferences sharedPreferences, final String key) {
+		final Preference updatedPref = settingsFragment.findPreference(key);
 		// Set summary to be the user-description for the selected value
 		updatedPref.setSummary(sharedPreferences.getString(key, ""));
 	}
 	
-	private void updateSummaryBitrate(SharedPreferences sharedPreferences, String key) {
-		Preference updatedPref = settingsFragment.findPreference(key);
+	private void updateSummaryBitrate(final SharedPreferences sharedPreferences, final String key) {
+		final Preference updatedPref = settingsFragment.findPreference(key);
 		updatedPref.setSummary(sharedPreferences.getString(key, "") + " kbps");
 	}
 	
-	private void updateSummaryB(SharedPreferences sharedPreferences, String key) {
-		Preference updatedPref = settingsFragment.findPreference(key);
+	private void updateSummaryB(final SharedPreferences sharedPreferences, final String key) {
+		final Preference updatedPref = settingsFragment.findPreference(key);
 		updatedPref.setSummary(sharedPreferences.getBoolean(key, true)
 			? getString(R.string.pref_value_enabled)
 			: getString(R.string.pref_value_disabled));
 	}
 	
-	private void updateSummaryList(SharedPreferences sharedPreferences, String key) {
-		ListPreference updatedPref = (ListPreference) settingsFragment.findPreference(key);
+	private void updateSummaryList(final SharedPreferences sharedPreferences, final String key) {
+		final ListPreference updatedPref = (ListPreference) settingsFragment.findPreference(key);
 		updatedPref.setSummary(updatedPref.getEntry());
 	}
 	
-	private void setVideoBitrateEnable(SharedPreferences sharedPreferences) {
-		Preference bitratePreferenceValue =
+	private void setVideoBitrateEnable(final SharedPreferences sharedPreferences) {
+		final Preference bitratePreferenceValue =
 			settingsFragment.findPreference(keyprefMaxVideoBitrateValue);
-		String bitrateTypeDefault = getString(R.string.pref_maxvideobitrate_default);
-		String bitrateType =
+		final String bitrateTypeDefault = getString(R.string.pref_maxvideobitrate_default);
+		final String bitrateType =
 			sharedPreferences.getString(keyprefMaxVideoBitrateType, bitrateTypeDefault);
 		if (bitrateType.equals(bitrateTypeDefault)) {
 			bitratePreferenceValue.setEnabled(false);
@@ -294,11 +299,11 @@ public class SettingsActivity extends BaseActivity implements OnSharedPreference
 		}
 	}
 	
-	private void setAudioBitrateEnable(SharedPreferences sharedPreferences) {
-		Preference bitratePreferenceValue =
+	private void setAudioBitrateEnable(final SharedPreferences sharedPreferences) {
+		final Preference bitratePreferenceValue =
 			settingsFragment.findPreference(keyprefStartAudioBitrateValue);
-		String bitrateTypeDefault = getString(R.string.pref_startaudiobitrate_default);
-		String bitrateType =
+		final String bitrateTypeDefault = getString(R.string.pref_startaudiobitrate_default);
+		final String bitrateType =
 			sharedPreferences.getString(keyprefStartAudioBitrateType, bitrateTypeDefault);
 		if (bitrateType.equals(bitrateTypeDefault)) {
 			bitratePreferenceValue.setEnabled(false);
@@ -307,8 +312,8 @@ public class SettingsActivity extends BaseActivity implements OnSharedPreference
 		}
 	}
 	
-	private void setDataChannelEnable(SharedPreferences sharedPreferences) {
-		boolean enabled = sharedPreferences.getBoolean(keyprefEnableDataChannel, true);
+	private void setDataChannelEnable(final SharedPreferences sharedPreferences) {
+		final boolean enabled = sharedPreferences.getBoolean(keyprefEnableDataChannel, true);
 		settingsFragment.findPreference(keyprefOrdered).setEnabled(enabled);
 		settingsFragment.findPreference(keyprefMaxRetransmitTimeMs).setEnabled(enabled);
 		settingsFragment.findPreference(keyprefMaxRetransmits).setEnabled(enabled);

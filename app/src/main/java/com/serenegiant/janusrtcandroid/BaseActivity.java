@@ -13,6 +13,9 @@ import com.serenegiant.utils.PermissionCheck;
 public abstract class BaseActivity extends AppCompatActivity
 	implements MessageDialogFragment.MessageDialogListener {
 	
+	private static final boolean DEBUG = true;	// set false on production
+	private static final String TAG = BaseActivity.class.getSimpleName();
+
 	static int ID_PERMISSION_REASON_AUDIO = R.string.permission_audio_reason;
 	static int ID_PERMISSION_REQUEST_AUDIO = R.string.permission_audio_request;
 	static int ID_PERMISSION_REASON_NETWORK = R.string.permission_network_reason;
@@ -35,7 +38,7 @@ public abstract class BaseActivity extends AppCompatActivity
 	@SuppressLint("NewApi")
 	@Override
 	public void onMessageDialogResult(final MessageDialogFragment dialog,
-									  final int requestCode, final String[] permissions, final boolean result) {
+		final int requestCode, final String[] permissions, final boolean result) {
 		
 		if (result) {
 			// メッセージダイアログでOKを押された時はパーミッション要求する
@@ -60,7 +63,7 @@ public abstract class BaseActivity extends AppCompatActivity
 	 */
 	@Override
 	public void onRequestPermissionsResult(final int requestCode,
-										   @NonNull final String[] permissions, @NonNull final int[] grantResults) {
+		@NonNull final String[] permissions, @NonNull final int[] grantResults) {
 		
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults);    // 何もしてないけど一応呼んどく
 		final int n = Math.min(permissions.length, grantResults.length);
@@ -79,7 +82,7 @@ public abstract class BaseActivity extends AppCompatActivity
 	 * @param result
 	 */
 	protected void checkPermissionResult(final int requestCode,
-										 final String permission, final boolean result) {
+		final String permission, final boolean result) {
 		
 		// パーミッションがないときにはメッセージを表示する
 		if (!result && (permission != null)) {

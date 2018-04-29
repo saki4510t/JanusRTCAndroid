@@ -25,6 +25,9 @@ import org.webrtc.RendererCommon.ScalingType;
  * Fragment for call control.
  */
 public class CallFragment extends Fragment {
+	private static final boolean DEBUG = true;	// set false on production
+	private static final String TAG = CallFragment.class.getSimpleName();
+
 	private TextView contactView;
 	private ImageButton cameraSwitchButton;
 	private ImageButton videoScalingButton;
@@ -52,13 +55,13 @@ public class CallFragment extends Fragment {
 	
 	@Override
 	public View onCreateView(
-		@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		@NonNull final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState) {
 
 		final View controlView = inflater.inflate(R.layout.fragment_call, container, false);
 		
 		// Create UI controls.
 		contactView = controlView.findViewById(R.id.contact_name_call);
-		ImageButton disconnectButton = controlView.findViewById(R.id.button_call_disconnect);
+		final ImageButton disconnectButton = controlView.findViewById(R.id.button_call_disconnect);
 		cameraSwitchButton = controlView.findViewById(R.id.button_call_switch_camera);
 		videoScalingButton = controlView.findViewById(R.id.button_call_scaling_mode);
 		toggleMuteButton = controlView.findViewById(R.id.button_call_toggle_mic);
@@ -68,21 +71,21 @@ public class CallFragment extends Fragment {
 		// Add buttons click events.
 		disconnectButton.setOnClickListener(new View.OnClickListener() {
 			@Override
-			public void onClick(View view) {
+			public void onClick(final View view) {
 				callEvents.onCallHangUp();
 			}
 		});
 		
 		cameraSwitchButton.setOnClickListener(new View.OnClickListener() {
 			@Override
-			public void onClick(View view) {
+			public void onClick(final View view) {
 				callEvents.onCameraSwitch();
 			}
 		});
 		
 		videoScalingButton.setOnClickListener(new View.OnClickListener() {
 			@Override
-			public void onClick(View view) {
+			public void onClick(final View view) {
 				if (scalingType == ScalingType.SCALE_ASPECT_FILL) {
 					videoScalingButton.setBackgroundResource(R.drawable.ic_action_full_screen);
 					scalingType = ScalingType.SCALE_ASPECT_FIT;
@@ -97,7 +100,7 @@ public class CallFragment extends Fragment {
 		
 		toggleMuteButton.setOnClickListener(new View.OnClickListener() {
 			@Override
-			public void onClick(View view) {
+			public void onClick(final View view) {
 				boolean enabled = callEvents.onToggleMic();
 				toggleMuteButton.setAlpha(enabled ? 1.0f : 0.3f);
 			}
@@ -111,9 +114,9 @@ public class CallFragment extends Fragment {
 		super.onStart();
 		
 		boolean captureSliderEnabled = false;
-		Bundle args = getArguments();
+		final Bundle args = getArguments();
 		if (args != null) {
-			String contactName = args.getString(CallActivity.EXTRA_ROOMID);
+			final String contactName = args.getString(CallActivity.EXTRA_ROOMID);
 			contactView.setText(contactName);
 			videoCallEnabled = args.getBoolean(CallActivity.EXTRA_VIDEO_CALL, true);
 			captureSliderEnabled = videoCallEnabled
@@ -134,7 +137,7 @@ public class CallFragment extends Fragment {
 	// TODO(sakal): Replace with onAttach(Context) once we only support API level 23+.
 	@SuppressWarnings("deprecation")
 	@Override
-	public void onAttach(Activity activity) {
+	public void onAttach(final Activity activity) {
 		super.onAttach(activity);
 		callEvents = (OnCallEvents) activity;
 	}

@@ -139,8 +139,10 @@ public class CallActivity extends BaseActivity
 	private static final int CAPTURE_PERMISSION_REQUEST_CODE = 1;
 
 	// List of mandatory application permissions.
-	private static final String[] MANDATORY_PERMISSIONS = {"android.permission.MODIFY_AUDIO_SETTINGS",
-		"android.permission.RECORD_AUDIO", "android.permission.INTERNET"};
+	private static final String[] MANDATORY_PERMISSIONS = {
+		"android.permission.MODIFY_AUDIO_SETTINGS",
+		"android.permission.RECORD_AUDIO",
+		"android.permission.INTERNET"};
 
 	// Peer connection statistics callback period in ms.
 	private static final int STAT_CALLBACK_PERIOD = 1000;
@@ -149,9 +151,9 @@ public class CallActivity extends BaseActivity
 		private VideoRenderer.Callbacks target;
 
 		@Override
-		synchronized public void renderFrame(VideoRenderer.I420Frame frame) {
+		synchronized public void renderFrame(final VideoRenderer.I420Frame frame) {
 			if (target == null) {
-				Logging.d(TAG, "Dropping frame in proxy because target is null.");
+				if (DEBUG) Logging.d(TAG, "Dropping frame in proxy because target is null.");
 				VideoRenderer.renderFrameDone(frame);
 				return;
 			}
@@ -168,16 +170,16 @@ public class CallActivity extends BaseActivity
 		private VideoSink target;
 
 		@Override
-		synchronized public void onFrame(VideoFrame frame) {
+		synchronized public void onFrame(final VideoFrame frame) {
 			if (target == null) {
-				Logging.d(TAG, "Dropping frame in proxy because target is null.");
+				if (DEBUG) Logging.d(TAG, "Dropping frame in proxy because target is null.");
 				return;
 			}
 
 			target.onFrame(frame);
 		}
 
-		synchronized public void setTarget(VideoSink target) {
+		synchronized public void setTarget(final VideoSink target) {
 			this.target = target;
 		}
 	}
@@ -225,7 +227,7 @@ public class CallActivity extends BaseActivity
 	// TODO(bugs.webrtc.org/8580): LayoutParams.FLAG_TURN_SCREEN_ON and
 	// LayoutParams.FLAG_SHOW_WHEN_LOCKED are deprecated.
 	@SuppressWarnings("deprecation")
-	public void onCreate(Bundle savedInstanceState) {
+	public void onCreate(final Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		if (DEBUG) Log.v(TAG, "onCreate:");
 		Thread.setDefaultUncaughtExceptionHandler(new UnhandledExceptionHandler(this));
@@ -296,7 +298,7 @@ public class CallActivity extends BaseActivity
 		setSwappedFeeds(true /* isSwappedFeeds */);
 
 		// Check for mandatory permissions.
-		for (String permission : MANDATORY_PERMISSIONS) {
+		for (final String permission : MANDATORY_PERMISSIONS) {
 			if (checkCallingOrSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
 				logAndToast("Permission " + permission + " is not granted");
 				setResult(RESULT_CANCELED);
@@ -405,7 +407,7 @@ public class CallActivity extends BaseActivity
 		// Create peer connection client.
 		peerConnectionClient = new PeerConnectionClient(
 			getApplicationContext(), eglBase, peerConnectionParameters, mPeerConnectionEvents);
-		PeerConnectionFactory.Options options = new PeerConnectionFactory.Options();
+		final PeerConnectionFactory.Options options = new PeerConnectionFactory.Options();
 		if (loopback) {
 			options.networkIgnoreMask = 0;
 		}
@@ -420,8 +422,8 @@ public class CallActivity extends BaseActivity
 
 	@TargetApi(17)
 	private DisplayMetrics getDisplayMetrics() {
-		DisplayMetrics displayMetrics = new DisplayMetrics();
-		WindowManager windowManager =
+		final DisplayMetrics displayMetrics = new DisplayMetrics();
+		final WindowManager windowManager =
 			(WindowManager) getApplication().getSystemService(Context.WINDOW_SERVICE);
 		windowManager.getDefaultDisplay().getRealMetrics(displayMetrics);
 		return displayMetrics;
@@ -457,15 +459,16 @@ public class CallActivity extends BaseActivity
 	}
 
 	private boolean useCamera2() {
-		return Camera2Enumerator.isSupported(this) && getIntent().getBooleanExtra(EXTRA_CAMERA2, true);
+		return Camera2Enumerator.isSupported(this)
+			&& getIntent().getBooleanExtra(EXTRA_CAMERA2, true);
 	}
 
 	private boolean captureToTexture() {
 		return getIntent().getBooleanExtra(EXTRA_CAPTURETOTEXTURE_ENABLED, false);
 	}
 
-	private @Nullable
-	VideoCapturer createCameraCapturer(CameraEnumerator enumerator) {
+	@Nullable
+	private VideoCapturer createCameraCapturer(CameraEnumerator enumerator) {
 		final String[] deviceNames = enumerator.getDeviceNames();
 
 		if (DEBUG) Log.v(TAG, "createCameraCapturer:");
@@ -499,8 +502,8 @@ public class CallActivity extends BaseActivity
 	}
 
 	@TargetApi(21)
-	private @Nullable
-	VideoCapturer createScreenCapturer() {
+	@Nullable
+	private VideoCapturer createScreenCapturer() {
 		if (DEBUG) Log.v(TAG, "createScreenCapturer:");
 		if (mediaProjectionPermissionResultCode != Activity.RESULT_OK) {
 			reportError("User didn't give permission to capture the screen.");
@@ -638,7 +641,9 @@ public class CallActivity extends BaseActivity
 			// devices has changed.
 			@Override
 			public void onAudioDeviceChanged(
-				AudioDevice audioDevice, Set<AudioDevice> availableAudioDevices) {
+				final AudioDevice audioDevice,
+				final Set<AudioDevice> availableAudioDevices) {
+
 				onAudioManagerDevicesChanged(audioDevice, availableAudioDevices);
 			}
 		});
@@ -729,7 +734,7 @@ public class CallActivity extends BaseActivity
 	}
 
 	// Log |msg| and Toast about it.
-	private void logAndToast(String msg) {
+	private void logAndToast(final String msg) {
 		if (DEBUG) Log.d(TAG, msg);
 		if (logToast != null) {
 			logToast.cancel();
@@ -750,8 +755,8 @@ public class CallActivity extends BaseActivity
 		});
 	}
 
-	private @Nullable
-	VideoCapturer createVideoCapturer() {
+	@Nullable
+	private VideoCapturer createVideoCapturer() {
 		if (DEBUG) Log.v(TAG, "createVideoCapturer:");
 		final VideoCapturer videoCapturer;
 		String videoFileAsCamera = getIntent().getStringExtra(EXTRA_VIDEO_FILE_AS_CAMERA);
@@ -948,8 +953,10 @@ public class CallActivity extends BaseActivity
 						}
 					}
 					if (peerConnectionParameters.videoMaxBitrate > 0) {
-						if (DEBUG) Log.d(TAG, "Set video maximum bitrate: " + peerConnectionParameters.videoMaxBitrate);
-						peerConnectionClient.setVideoMaxBitrate(peerConnectionParameters.videoMaxBitrate);
+						if (DEBUG) Log.d(TAG, "Set video maximum bitrate: "
+							+ peerConnectionParameters.videoMaxBitrate);
+						peerConnectionClient.setVideoMaxBitrate(
+							peerConnectionParameters.videoMaxBitrate);
 					}
 				}
 			});

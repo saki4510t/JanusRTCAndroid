@@ -41,7 +41,9 @@ import java.util.Random;
  * Handles the initial setup where the user selects which room to join.
  */
 public class ConnectActivity extends BaseActivity {
-	private static final String TAG = "com.serenegiant.janusrtcandroid.ConnectActivity";
+	private static final boolean DEBUG = true;	// set false on production
+	private static final String TAG = ConnectActivity.class.getSimpleName();
+	
 	private static final int CONNECTION_REQUEST = 1;
 	private static final int REMOVE_FAVORITE_INDEX = 0;
 	private static boolean commandLineRun = false;

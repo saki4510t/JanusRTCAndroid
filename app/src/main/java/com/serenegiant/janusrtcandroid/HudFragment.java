@@ -9,6 +9,7 @@ package com.serenegiant.janusrtcandroid;/*
  */
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -17,7 +18,6 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-import org.appspot.apprtc.PeerConnectionClient;
 import org.webrtc.StatsReport;
 
 import java.util.HashMap;
@@ -29,6 +29,9 @@ import static org.appspot.apprtc.AppRTCConst.VIDEO_TRACK_ID;
  * Fragment for HUD statistics display.
  */
 public class HudFragment extends Fragment {
+	private static final boolean DEBUG = true;	// set false on production
+	private static final String TAG = HudFragment.class.getSimpleName();
+
 	private TextView encoderStatView;
 	private TextView hudViewBwe;
 	private TextView hudViewConnection;
@@ -42,7 +45,9 @@ public class HudFragment extends Fragment {
 	
 	@Override
 	public View onCreateView(
-		LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		@NonNull final LayoutInflater inflater,
+		final ViewGroup container, final Bundle savedInstanceState) {
+
 		View controlView = inflater.inflate(R.layout.fragment_hud, container, false);
 		
 		// Create UI controls.
@@ -55,9 +60,9 @@ public class HudFragment extends Fragment {
 		
 		toggleDebugButton.setOnClickListener(new View.OnClickListener() {
 			@Override
-			public void onClick(View view) {
+			public void onClick(final View view) {
 				if (displayHud) {
-					int visibility =
+					final int visibility =
 						(hudViewBwe.getVisibility() == View.VISIBLE) ? View.INVISIBLE : View.VISIBLE;
 					hudViewsSetProperties(visibility);
 				}
@@ -71,12 +76,12 @@ public class HudFragment extends Fragment {
 	public void onStart() {
 		super.onStart();
 		
-		Bundle args = getArguments();
+		final Bundle args = getArguments();
 		if (args != null) {
 			videoCallEnabled = args.getBoolean(CallActivity.EXTRA_VIDEO_CALL, true);
 			displayHud = args.getBoolean(CallActivity.EXTRA_DISPLAY_HUD, false);
 		}
-		int visibility = displayHud ? View.VISIBLE : View.INVISIBLE;
+		final int visibility = displayHud ? View.VISIBLE : View.INVISIBLE;
 		encoderStatView.setVisibility(visibility);
 		toggleDebugButton.setVisibility(visibility);
 		hudViewsSetProperties(View.INVISIBLE);
@@ -89,11 +94,11 @@ public class HudFragment extends Fragment {
 		super.onStop();
 	}
 	
-	public void setCpuMonitor(CpuMonitor cpuMonitor) {
+	public void setCpuMonitor(final CpuMonitor cpuMonitor) {
 		this.cpuMonitor = cpuMonitor;
 	}
 	
-	private void hudViewsSetProperties(int visibility) {
+	private void hudViewsSetProperties(final int visibility) {
 		hudViewBwe.setVisibility(visibility);
 		hudViewConnection.setVisibility(visibility);
 		hudViewVideoSend.setVisibility(visibility);
@@ -104,7 +109,7 @@ public class HudFragment extends Fragment {
 		hudViewVideoRecv.setTextSize(TypedValue.COMPLEX_UNIT_PT, 5);
 	}
 	
-	private Map<String, String> getReportMap(StatsReport report) {
+	private Map<String, String> getReportMap(final StatsReport report) {
 		Map<String, String> reportMap = new HashMap<>();
 		for (StatsReport.Value value : report.values) {
 			reportMap.put(value.name, value.value);
@@ -116,16 +121,16 @@ public class HudFragment extends Fragment {
 		if (!isRunning || !displayHud) {
 			return;
 		}
-		StringBuilder encoderStat = new StringBuilder(128);
-		StringBuilder bweStat = new StringBuilder();
-		StringBuilder connectionStat = new StringBuilder();
-		StringBuilder videoSendStat = new StringBuilder();
-		StringBuilder videoRecvStat = new StringBuilder();
+		final StringBuilder encoderStat = new StringBuilder(128);
+		final StringBuilder bweStat = new StringBuilder();
+		final StringBuilder connectionStat = new StringBuilder();
+		final StringBuilder videoSendStat = new StringBuilder();
+		final StringBuilder videoRecvStat = new StringBuilder();
 		String fps = null;
 		String targetBitrate = null;
 		String actualBitrate = null;
 		
-		for (StatsReport report : reports) {
+		for (final StatsReport report : reports) {
 			if (report.type.equals("ssrc") && report.id.contains("ssrc") && report.id.contains("send")) {
 				// Send video statistics.
 				Map<String, String> reportMap = getReportMap(report);

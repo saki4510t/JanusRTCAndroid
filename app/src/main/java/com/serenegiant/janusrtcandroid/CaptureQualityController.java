@@ -11,9 +11,6 @@ package com.serenegiant.janusrtcandroid;/*
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import com.serenegiant.janusrtcandroid.CallFragment;
-import com.serenegiant.janusrtcandroid.R;
-
 import org.webrtc.CameraEnumerationAndroid.CaptureFormat;
 
 import java.util.Arrays;
@@ -26,9 +23,13 @@ import java.util.List;
  */
 public class CaptureQualityController implements SeekBar.OnSeekBarChangeListener {
 	private final List<CaptureFormat> formats =
-		Arrays.asList(new CaptureFormat(1280, 720, 0, 30000), new CaptureFormat(960, 540, 0, 30000),
-			new CaptureFormat(640, 480, 0, 30000), new CaptureFormat(480, 360, 0, 30000),
-			new CaptureFormat(320, 240, 0, 30000), new CaptureFormat(256, 144, 0, 30000));
+		Arrays.asList(
+			new CaptureFormat(1280, 720, 0, 30000),
+			new CaptureFormat(960, 540, 0, 30000),
+			new CaptureFormat(640, 480, 0, 30000),
+			new CaptureFormat(480, 360, 0, 30000),
+			new CaptureFormat(320, 240, 0, 30000),
+			new CaptureFormat(256, 144, 0, 30000));
 	// Prioritize framerate below this threshold and resolution above the threshold.
 	private static final int FRAMERATE_THRESHOLD = 15;
 	private TextView captureFormatText;
@@ -39,16 +40,17 @@ public class CaptureQualityController implements SeekBar.OnSeekBarChangeListener
 	private double targetBandwidth = 0;
 
 	public CaptureQualityController(
-		TextView captureFormatText, CallFragment.OnCallEvents callEvents) {
+		final TextView captureFormatText, final CallFragment.OnCallEvents callEvents) {
+
 		this.captureFormatText = captureFormatText;
 		this.callEvents = callEvents;
 	}
 
 	private final Comparator<CaptureFormat> compareFormats = new Comparator<CaptureFormat>() {
 		@Override
-		public int compare(CaptureFormat first, CaptureFormat second) {
-			int firstFps = calculateFramerate(targetBandwidth, first);
-			int secondFps = calculateFramerate(targetBandwidth, second);
+		public int compare(final CaptureFormat first, final CaptureFormat second) {
+			final int firstFps = calculateFramerate(targetBandwidth, first);
+			final int secondFps = calculateFramerate(targetBandwidth, second);
 
 			if ((firstFps >= FRAMERATE_THRESHOLD && secondFps >= FRAMERATE_THRESHOLD)
 				|| firstFps == secondFps) {
@@ -62,7 +64,7 @@ public class CaptureQualityController implements SeekBar.OnSeekBarChangeListener
 	};
 
 	@Override
-	public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+	public void onProgressChanged(final SeekBar seekBar, final int progress, final boolean fromUser) {
 		if (progress == 0) {
 			width = 0;
 			height = 0;
@@ -97,16 +99,16 @@ public class CaptureQualityController implements SeekBar.OnSeekBarChangeListener
 	}
 
 	@Override
-	public void onStartTrackingTouch(SeekBar seekBar) {
+	public void onStartTrackingTouch(final SeekBar seekBar) {
 	}
 
 	@Override
-	public void onStopTrackingTouch(SeekBar seekBar) {
+	public void onStopTrackingTouch(final SeekBar seekBar) {
 		callEvents.onCaptureFormatChange(width, height, framerate);
 	}
 
 	// Return the highest frame rate possible based on bandwidth and format.
-	private int calculateFramerate(double bandwidth, CaptureFormat format) {
+	private int calculateFramerate(final double bandwidth, final CaptureFormat format) {
 		return (int) Math.round(
 			Math.min(format.framerate.max, (int) Math.round(bandwidth / (format.width * format.height)))
 				/ 1000.0);

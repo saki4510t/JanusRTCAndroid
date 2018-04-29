@@ -74,7 +74,9 @@ import java.util.concurrent.TimeUnit;
  */
 @TargetApi(Build.VERSION_CODES.KITKAT)
 class CpuMonitor {
-	private static final String TAG = "com.serenegiant.janusrtcandroid.CpuMonitor";
+	private static final boolean DEBUG = true;	// set false on production
+	private static final String TAG = CpuMonitor.class.getSimpleName();
+
 	private static final int MOVING_AVERAGE_SAMPLES = 5;
 	
 	private static final int CPU_STAT_SAMPLE_PERIOD_MS = 2000;
@@ -123,7 +125,7 @@ class CpuMonitor {
 		private double[] circBuffer;
 		private int circBufferIndex;
 		
-		public MovingAverage(int size) {
+		public MovingAverage(final int size) {
 			if (size <= 0) {
 				throw new AssertionError("Size value in MovingAverage ctor should be positive.");
 			}
@@ -138,7 +140,7 @@ class CpuMonitor {
 			currentValue = 0;
 		}
 		
-		public void addValue(double value) {
+		public void addValue(final double value) {
 			sum -= circBuffer[circBufferIndex];
 			circBuffer[circBufferIndex++] = value;
 			currentValue = value;
@@ -162,12 +164,12 @@ class CpuMonitor {
 			&& Build.VERSION.SDK_INT < Build.VERSION_CODES.N;
 	}
 	
-	public CpuMonitor(Context context) {
+	public CpuMonitor(final Context context) {
 		if (!isSupported()) {
-			throw new RuntimeException("com.serenegiant.janusrtcandroid.CpuMonitor is not supported on this Android version.");
+			throw new RuntimeException("CpuMonitor is not supported on this Android version.");
 		}
 		
-		Log.d(TAG, "com.serenegiant.janusrtcandroid.CpuMonitor ctor.");
+		if (DEBUG) Log.d(TAG, "CpuMonitor ctor.");
 		appContext = context.getApplicationContext();
 		userCpuUsage = new MovingAverage(MOVING_AVERAGE_SAMPLES);
 		systemCpuUsage = new MovingAverage(MOVING_AVERAGE_SAMPLES);
@@ -180,14 +182,14 @@ class CpuMonitor {
 	
 	public void pause() {
 		if (executor != null) {
-			Log.d(TAG, "pause");
+			if (DEBUG) Log.d(TAG, "pause");
 			executor.shutdownNow();
 			executor = null;
 		}
 	}
 	
 	public void resume() {
-		Log.d(TAG, "resume");
+		if (DEBUG) Log.d(TAG, "resume");
 		resetStat();
 		scheduleCpuUtilizationTask();
 	}
@@ -196,7 +198,7 @@ class CpuMonitor {
 	@SuppressWarnings("NoSynchronizedMethodCheck")
 	public synchronized void reset() {
 		if (executor != null) {
-			Log.d(TAG, "reset");
+			if (DEBUG) Log.d(TAG, "reset");
 			resetStat();
 			cpuOveruse = false;
 		}
@@ -237,28 +239,28 @@ class CpuMonitor {
 	}
 	
 	private void cpuUtilizationTask() {
-		boolean cpuMonitorAvailable = sampleCpuUtilization();
+		final boolean cpuMonitorAvailable = sampleCpuUtilization();
 		if (cpuMonitorAvailable
 			&& SystemClock.elapsedRealtime() - lastStatLogTimeMs >= CPU_STAT_LOG_PERIOD_MS) {
 			lastStatLogTimeMs = SystemClock.elapsedRealtime();
-			String statString = getStatString();
-			Log.d(TAG, statString);
+			if (DEBUG) Log.d(TAG, getStatString());
 		}
 	}
 	
 	private void init() {
-		try (FileInputStream fin = new FileInputStream("/sys/devices/system/cpu/present");
-			 InputStreamReader streamReader = new InputStreamReader(fin, Charset.forName("UTF-8"));
-			 BufferedReader reader = new BufferedReader(streamReader);
-			 Scanner scanner = new Scanner(reader).useDelimiter("[-\n]");) {
+		try (final FileInputStream fin = new FileInputStream("/sys/devices/system/cpu/present");
+			 final InputStreamReader streamReader = new InputStreamReader(fin, Charset.forName("UTF-8"));
+			 final BufferedReader reader = new BufferedReader(streamReader);
+			 final Scanner scanner = new Scanner(reader).useDelimiter("[-\n]") ) {
+
 			scanner.nextInt(); // Skip leading number 0.
 			cpusPresent = 1 + scanner.nextInt();
 			scanner.close();
-		} catch (FileNotFoundException e) {
+		} catch (final FileNotFoundException e) {
 			Log.e(TAG, "Cannot do CPU stats since /sys/devices/system/cpu/present is missing");
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			Log.e(TAG, "Error closing file");
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			Log.e(TAG, "Cannot do CPU stats due to /sys/devices/system/cpu/present parsing problem");
 		}
 		
@@ -289,11 +291,11 @@ class CpuMonitor {
 	
 	private int getBatteryLevel() {
 		// Use sticky broadcast with null receiver to read battery level once only.
-		Intent intent = appContext.registerReceiver(
+		final Intent intent = appContext.registerReceiver(
 			null /* receiver */, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
 		
 		int batteryLevel = 0;
-		int batteryScale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100);
+		final int batteryScale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100);
 		if (batteryScale > 0) {
 			batteryLevel =
 				(int) (100f * intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0) / batteryScale);
@@ -382,15 +384,15 @@ class CpuMonitor {
 			currentFrequencyScale = (frequencyScale.getCurrent() + currentFrequencyScale) * 0.5;
 		}
 		
-		ProcStat procStat = readProcStat();
+		final ProcStat procStat = readProcStat();
 		if (procStat == null) {
 			return false;
 		}
 		
-		long diffUserTime = procStat.userTime - lastProcStat.userTime;
-		long diffSystemTime = procStat.systemTime - lastProcStat.systemTime;
-		long diffIdleTime = procStat.idleTime - lastProcStat.idleTime;
-		long allTime = diffUserTime + diffSystemTime + diffIdleTime;
+		final long diffUserTime = procStat.userTime - lastProcStat.userTime;
+		final long diffSystemTime = procStat.systemTime - lastProcStat.systemTime;
+		final long diffIdleTime = procStat.idleTime - lastProcStat.idleTime;
+		final long allTime = diffUserTime + diffSystemTime + diffIdleTime;
 		
 		if (currentFrequencyScale == 0 || allTime == 0) {
 			return false;
@@ -399,10 +401,10 @@ class CpuMonitor {
 		// Update statistics.
 		frequencyScale.addValue(currentFrequencyScale);
 		
-		double currentUserCpuUsage = diffUserTime / (double) allTime;
+		final double currentUserCpuUsage = diffUserTime / (double) allTime;
 		userCpuUsage.addValue(currentUserCpuUsage);
 		
-		double currentSystemCpuUsage = diffSystemTime / (double) allTime;
+		final double currentSystemCpuUsage = diffSystemTime / (double) allTime;
 		systemCpuUsage.addValue(currentSystemCpuUsage);
 		
 		double currentTotalCpuUsage =
@@ -415,7 +417,7 @@ class CpuMonitor {
 		return true;
 	}
 	
-	private int doubleToPercent(double d) {
+	private int doubleToPercent(final double d) {
 		return (int) (d * 100 + 0.5);
 	}
 	
@@ -454,7 +456,7 @@ class CpuMonitor {
 	 * Read a single integer value from the named file.  Return the read value
 	 * or if an error occurs return 0.
 	 */
-	private long readFreqFromFile(String fileName) {
+	private long readFreqFromFile(final String fileName) {
 		long number = 0;
 		try (FileInputStream stream = new FileInputStream(fileName);
 			 InputStreamReader streamReader = new InputStreamReader(stream, Charset.forName("UTF-8"));
@@ -471,11 +473,11 @@ class CpuMonitor {
 		return number;
 	}
 	
-	private static long parseLong(String value) {
+	private static long parseLong(final String value) {
 		long number = 0;
 		try {
 			number = Long.parseLong(value);
-		} catch (NumberFormatException e) {
+		} catch (final NumberFormatException e) {
 			Log.e(TAG, "parseLong error.", e);
 		}
 		return number;
@@ -497,9 +499,9 @@ class CpuMonitor {
 			// line should contain something like this:
 			// cpu  5093818 271838 3512830 165934119 101374 447076 272086 0 0 0
 			//       user    nice  system     idle   iowait  irq   softirq
-			String line = reader.readLine();
-			String[] lines = line.split("\\s+");
-			int length = lines.length;
+			final String line = reader.readLine();
+			final String[] lines = line.split("\\s+");
+			final int length = lines.length;
 			if (length >= 5) {
 				userTime = parseLong(lines[1]); // user
 				userTime += parseLong(lines[2]); // nice
@@ -511,10 +513,10 @@ class CpuMonitor {
 				systemTime += parseLong(lines[6]); // irq
 				systemTime += parseLong(lines[7]); // softirq
 			}
-		} catch (FileNotFoundException e) {
+		} catch (final FileNotFoundException e) {
 			Log.e(TAG, "Cannot open /proc/stat for reading", e);
 			return null;
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			Log.e(TAG, "Problems parsing /proc/stat", e);
 			return null;
 		}
