@@ -23,6 +23,8 @@ import org.webrtc.StatsReport;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.appspot.apprtc.AppRTCConst.VIDEO_TRACK_ID;
+
 /**
  * Fragment for HUD statistics display.
  */
@@ -128,7 +130,7 @@ public class HudFragment extends Fragment {
 				// Send video statistics.
 				Map<String, String> reportMap = getReportMap(report);
 				String trackId = reportMap.get("googTrackId");
-				if (trackId != null && trackId.contains(PeerConnectionClient.VIDEO_TRACK_ID)) {
+				if (trackId != null && trackId.contains(VIDEO_TRACK_ID)) {
 					fps = reportMap.get("googFrameRateSent");
 					videoSendStat.append(report.id).append("\n");
 					for (StatsReport.Value value : report.values) {

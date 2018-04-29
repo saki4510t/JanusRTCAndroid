@@ -10,7 +10,6 @@ package org.appspot.apprtc;/*
 
 import android.util.Log;
 
-import org.appspot.apprtc.AppRTCClient.SignalingParameters;
 import org.appspot.apprtc.util.AsyncHttpURLConnection;
 import org.appspot.apprtc.util.AsyncHttpURLConnection.AsyncHttpEvents;
 import org.json.JSONArray;

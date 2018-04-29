@@ -18,6 +18,9 @@ import com.serenegiant.janus.response.Session;
 import com.serenegiant.utils.HandlerThreadHandler;
 
 import org.appspot.apprtc.AppRTCClient;
+import org.appspot.apprtc.RoomConnectionParameters;
+import org.appspot.apprtc.SignalingEvents;
+import org.appspot.apprtc.SignalingParameters;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.webrtc.IceCandidate;

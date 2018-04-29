@@ -37,8 +37,9 @@ import org.appspot.apprtc.AppRTCAudioManager;
 import org.appspot.apprtc.AppRTCAudioManager.AudioDevice;
 import org.appspot.apprtc.AppRTCAudioManager.AudioManagerEvents;
 import org.appspot.apprtc.AppRTCClient;
-import org.appspot.apprtc.AppRTCClient.RoomConnectionParameters;
-import org.appspot.apprtc.AppRTCClient.SignalingParameters;
+import org.appspot.apprtc.RoomConnectionParameters;
+import org.appspot.apprtc.SignalingEvents;
+import org.appspot.apprtc.SignalingParameters;
 import org.appspot.apprtc.DirectRTCClient;
 import org.appspot.apprtc.PeerConnectionClient;
 import org.appspot.apprtc.DataChannelParameters;
@@ -842,8 +843,8 @@ public class CallActivity extends BaseActivity
 		}
 	}
 
-	private final AppRTCClient.SignalingEvents mSignalingEvents
-		= new AppRTCClient.SignalingEvents() {
+	private final SignalingEvents mSignalingEvents
+		= new SignalingEvents() {
 
 		@Override
 		public void onConnectedToRoom(final SignalingParameters params) {
