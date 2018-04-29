@@ -40,13 +40,11 @@ import org.appspot.apprtc.AppRTCClient;
 import org.appspot.apprtc.RoomConnectionParameters;
 import org.appspot.apprtc.SignalingEvents;
 import org.appspot.apprtc.SignalingParameters;
-import org.appspot.apprtc.DirectRTCClient;
 import org.appspot.apprtc.PeerConnectionClient;
 import org.appspot.apprtc.DataChannelParameters;
 import org.appspot.apprtc.PeerConnectionEvents;
 import org.appspot.apprtc.PeerConnectionParameters;
 import org.appspot.apprtc.UnhandledExceptionHandler;
-import org.appspot.apprtc.WebSocketRTCClient;
 import org.webrtc.Camera1Enumerator;
 import org.webrtc.Camera2Enumerator;
 import org.webrtc.CameraEnumerator;
@@ -374,17 +372,8 @@ public class CallActivity extends BaseActivity
 		// Create connection client. Use org.appspot.apprtc.DirectRTCClient if room name is an IP otherwise use the
 		// standard org.appspot.apprtc.WebSocketRTCClient.
 
-		if (loopback || !DirectRTCClient.IP_PATTERN.matcher(roomId).matches()) {
-			if (!useJanus) {
-				appRtcClient = new WebSocketRTCClient(mSignalingEvents);
-			} else {
-				appRtcClient = new JanusRESTRTCClient(this,
-					mSignalingEvents, mJanusCallback, "http://192.168.1.26:8088/");
-			}
-		} else {
-			Log.i(TAG, "Using org.appspot.apprtc.DirectRTCClient because room name looks like an IP.");
-			appRtcClient = new DirectRTCClient(mSignalingEvents);
-		}
+		appRtcClient = new JanusRESTRTCClient(this,
+			mSignalingEvents, mJanusCallback, "http://192.168.1.26:8088/");
 		// Create connection parameters.
 		final String urlParameters = intent.getStringExtra(EXTRA_URLPARAMETERS);
 		roomConnectionParameters =
