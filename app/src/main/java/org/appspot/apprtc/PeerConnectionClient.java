@@ -11,6 +11,7 @@ package org.appspot.apprtc;/*
 import android.content.Context;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import org.webrtc.AudioSource;
@@ -92,9 +93,11 @@ import static org.appspot.apprtc.AppRTCConst.*;
 public class PeerConnectionClient {
 	private static final boolean DEBUG = true;    // set false on production
 	
-	// Executor thread is started once in private ctor and is used for all
-	// peer connection API calls to ensure new peer connection factory is
-	// created on the same thread as previously destroyed factory.
+	/**
+	 * Executor thread is started once in private ctor and is used for all
+	 * peer connection API calls to ensure new peer connection factory is
+	 * created on the same thread as previously destroyed factory.
+	 */
 	private static final ExecutorService executor = Executors.newSingleThreadExecutor();
 	
 	private final PCObserver pcObserver = new PCObserver();
@@ -126,9 +129,11 @@ public class PeerConnectionClient {
 	private int videoFps;
 	private MediaConstraints audioConstraints;
 	private MediaConstraints sdpMediaConstraints;
-	// Queued remote ICE candidates are consumed only after both local and
-	// remote descriptions are set. Similarly local ICE candidates are sent to
-	// remote peer after both local and remote description are set.
+	/**
+	 * Queued remote ICE candidates are consumed only after both local and
+	 * remote descriptions are set. Similarly local ICE candidates are sent to
+	 * remote peer after both local and remote description are set.
+	 */
 	@Nullable
 	private List<IceCandidate> queuedRemoteCandidates;
 	private boolean isInitiator;
@@ -136,7 +141,9 @@ public class PeerConnectionClient {
 	private SessionDescription localSdp; // either offer or answer SDP
 	@Nullable
 	private VideoCapturer videoCapturer;
-	// enableVideo is set to true if video should be rendered and sent.
+	/**
+	 * enableVideo is set to true if video should be rendered and sent.
+	 */
 	private boolean renderVideo = true;
 	@Nullable
 	private VideoTrack localVideoTrack;
@@ -144,18 +151,20 @@ public class PeerConnectionClient {
 	private VideoTrack remoteVideoTrack;
 	@Nullable
 	private RtpSender localVideoSender;
-	// enableAudio is set to true if audio should be sent.
+	/** enableAudio is set to true if audio should be sent. */
 	private boolean enableAudio = true;
 	@Nullable
 	private AudioTrack localAudioTrack;
 	@Nullable
 	private DataChannel dataChannel;
 	private final boolean dataChannelEnabled;
-	// Enable org.appspot.apprtc.RtcEventLog.
+	/** Enable org.appspot.apprtc.RtcEventLog. */
 	@Nullable
 	private RtcEventLog rtcEventLog;
-	// Implements the WebRtcAudioRecordSamplesReadyCallback interface and writes
-	// recorded audio samples to an output file.
+	/**
+	 * Implements the WebRtcAudioRecordSamplesReadyCallback interface and writes
+	 * recorded audio samples to an output file.
+	 */
 	@Nullable
 	private RecordedAudioToFileController saveRecordedAudioToFile = null;
 	
@@ -163,8 +172,11 @@ public class PeerConnectionClient {
 	 * Create a org.appspot.apprtc.PeerConnectionClient with the specified parameters.
 	 * org.appspot.apprtc.PeerConnectionClient takes ownership of |eglBase|.
 	 */
-	public PeerConnectionClient(Context appContext, EglBase eglBase,
-								PeerConnectionParameters peerConnectionParameters, PeerConnectionEvents events) {
+	public PeerConnectionClient(@NonNull final Context appContext,
+		final EglBase eglBase,
+		final PeerConnectionParameters peerConnectionParameters,
+		final PeerConnectionEvents events) {
+
 		this.rootEglBase = eglBase;
 		this.appContext = appContext;
 		this.events = events;
@@ -1092,7 +1104,9 @@ public class PeerConnectionClient {
 		videoSource.adaptOutputFormat(width, height, framerate);
 	}
 	
-	// Implementation detail: observe ICE & stream changes and react accordingly.
+	/**
+	 * Implementation detail: observe ICE & stream changes and react accordingly.
+ 	 */
 	private class PCObserver implements PeerConnection.Observer {
 		@Override
 		public void onIceCandidate(final IceCandidate candidate) {
@@ -1206,8 +1220,10 @@ public class PeerConnectionClient {
 		}
 	}
 	
-	// Implementation detail: handle offer creation/signaling and answer setting,
-	// as well as adding remote ICE candidates once the answer SDP is set.
+	/**
+	 * Implementation detail: handle offer creation/signaling and answer setting,
+	 * as well as adding remote ICE candidates once the answer SDP is set.
+	 */
 	private class SDPObserver implements SdpObserver {
 		@Override
 		public void onCreateSuccess(final SessionDescription origSdp) {
