@@ -81,6 +81,8 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
+import static org.appspot.apprtc.AppRTCConst.*;
+
 /**
  * Peer connection client implementation.
  * <p>
@@ -89,37 +91,7 @@ import javax.annotation.Nullable;
  * This class is a singleton.
  */
 public class PeerConnectionClient {
-	private static final boolean DEBUG = true;	// set false on production
-
-	public static final String VIDEO_TRACK_ID = "ARDAMSv0";
-	public static final String AUDIO_TRACK_ID = "ARDAMSa0";
-	public static final String VIDEO_TRACK_TYPE = "video";
-	private static final String TAG = PeerConnectionClient.class.getSimpleName();
-	private static final String VIDEO_CODEC_VP8 = "VP8";
-	private static final String VIDEO_CODEC_VP9 = "VP9";
-	private static final String VIDEO_CODEC_H264 = "H264";
-	private static final String VIDEO_CODEC_H264_BASELINE = "H264 Baseline";
-	private static final String VIDEO_CODEC_H264_HIGH = "H264 High";
-	private static final String AUDIO_CODEC_OPUS = "opus";
-	private static final String AUDIO_CODEC_ISAC = "ISAC";
-	private static final String VIDEO_CODEC_PARAM_START_BITRATE = "x-google-start-bitrate";
-	private static final String VIDEO_FLEXFEC_FIELDTRIAL =
-		"WebRTC-FlexFEC-03-Advertised/Enabled/WebRTC-FlexFEC-03/Enabled/";
-	private static final String VIDEO_VP8_INTEL_HW_ENCODER_FIELDTRIAL = "WebRTC-IntelVP8/Enabled/";
-	private static final String VIDEO_H264_HIGH_PROFILE_FIELDTRIAL =
-		"WebRTC-H264HighProfile/Enabled/";
-	private static final String DISABLE_WEBRTC_AGC_FIELDTRIAL =
-		"WebRTC-Audio-MinimizeResamplingOnMobile/Enabled/";
-	private static final String AUDIO_CODEC_PARAM_BITRATE = "maxaveragebitrate";
-	private static final String AUDIO_ECHO_CANCELLATION_CONSTRAINT = "googEchoCancellation";
-	private static final String AUDIO_AUTO_GAIN_CONTROL_CONSTRAINT = "googAutoGainControl";
-	private static final String AUDIO_HIGH_PASS_FILTER_CONSTRAINT = "googHighpassFilter";
-	private static final String AUDIO_NOISE_SUPPRESSION_CONSTRAINT = "googNoiseSuppression";
-	private static final String DTLS_SRTP_KEY_AGREEMENT_CONSTRAINT = "DtlsSrtpKeyAgreement";
-	private static final int HD_VIDEO_WIDTH = 1280;
-	private static final int HD_VIDEO_HEIGHT = 720;
-	private static final int BPS_IN_KBPS = 1000;
-	private static final String RTCEVENTLOG_OUTPUT_DIR_NAME = "rtc_event_log";
+	private static final boolean DEBUG = true;    // set false on production
 	
 	// Executor thread is started once in private ctor and is used for all
 	// peer connection API calls to ensure new peer connection factory is
@@ -189,139 +161,8 @@ public class PeerConnectionClient {
 	private RecordedAudioToFileController saveRecordedAudioToFile = null;
 	
 	/**
-	 * Peer connection parameters.
-	 */
-	public static class DataChannelParameters {
-		public final boolean ordered;
-		public final int maxRetransmitTimeMs;
-		public final int maxRetransmits;
-		public final String protocol;
-		public final boolean negotiated;
-		public final int id;
-		
-		public DataChannelParameters(boolean ordered, int maxRetransmitTimeMs, int maxRetransmits,
-									 String protocol, boolean negotiated, int id) {
-			this.ordered = ordered;
-			this.maxRetransmitTimeMs = maxRetransmitTimeMs;
-			this.maxRetransmits = maxRetransmits;
-			this.protocol = protocol;
-			this.negotiated = negotiated;
-			this.id = id;
-		}
-	}
-	
-	/**
-	 * Peer connection parameters.
-	 */
-	public static class PeerConnectionParameters {
-		public final boolean videoCallEnabled;
-		public final boolean loopback;
-		public final boolean tracing;
-		public final int videoWidth;
-		public final int videoHeight;
-		public final int videoFps;
-		public final int videoMaxBitrate;
-		public final String videoCodec;
-		public final boolean videoCodecHwAcceleration;
-		public final boolean videoFlexfecEnabled;
-		public final int audioStartBitrate;
-		public final String audioCodec;
-		public final boolean noAudioProcessing;
-		public final boolean aecDump;
-		public final boolean saveInputAudioToFile;
-		public final boolean useOpenSLES;
-		public final boolean disableBuiltInAEC;
-		public final boolean disableBuiltInAGC;
-		public final boolean disableBuiltInNS;
-		public final boolean disableWebRtcAGCAndHPF;
-		public final boolean enableRtcEventLog;
-		public final boolean useLegacyAudioDevice;
-		private final DataChannelParameters dataChannelParameters;
-		
-		public PeerConnectionParameters(boolean videoCallEnabled, boolean loopback, boolean tracing,
-										int videoWidth, int videoHeight, int videoFps, int videoMaxBitrate, String videoCodec,
-										boolean videoCodecHwAcceleration, boolean videoFlexfecEnabled, int audioStartBitrate,
-										String audioCodec, boolean noAudioProcessing, boolean aecDump, boolean saveInputAudioToFile,
-										boolean useOpenSLES, boolean disableBuiltInAEC, boolean disableBuiltInAGC,
-										boolean disableBuiltInNS, boolean disableWebRtcAGCAndHPF, boolean enableRtcEventLog,
-										boolean useLegacyAudioDevice, DataChannelParameters dataChannelParameters) {
-			this.videoCallEnabled = videoCallEnabled;
-			this.loopback = loopback;
-			this.tracing = tracing;
-			this.videoWidth = videoWidth;
-			this.videoHeight = videoHeight;
-			this.videoFps = videoFps;
-			this.videoMaxBitrate = videoMaxBitrate;
-			this.videoCodec = videoCodec;
-			this.videoFlexfecEnabled = videoFlexfecEnabled;
-			this.videoCodecHwAcceleration = videoCodecHwAcceleration;
-			this.audioStartBitrate = audioStartBitrate;
-			this.audioCodec = audioCodec;
-			this.noAudioProcessing = noAudioProcessing;
-			this.aecDump = aecDump;
-			this.saveInputAudioToFile = saveInputAudioToFile;
-			this.useOpenSLES = useOpenSLES;
-			this.disableBuiltInAEC = disableBuiltInAEC;
-			this.disableBuiltInAGC = disableBuiltInAGC;
-			this.disableBuiltInNS = disableBuiltInNS;
-			this.disableWebRtcAGCAndHPF = disableWebRtcAGCAndHPF;
-			this.enableRtcEventLog = enableRtcEventLog;
-			this.useLegacyAudioDevice = useLegacyAudioDevice;
-			this.dataChannelParameters = dataChannelParameters;
-		}
-	}
-	
-	/**
-	 * Peer connection events.
-	 */
-	public interface PeerConnectionEvents {
-		/**
-		 * Callback fired once local SDP is created and set.
-		 */
-		void onLocalDescription(final SessionDescription sdp);
-		
-		/**
-		 * Callback fired once local Ice candidate is generated.
-		 */
-		void onIceCandidate(final IceCandidate candidate);
-		
-		/**
-		 * Callback fired once local ICE candidates are removed.
-		 */
-		void onIceCandidatesRemoved(final IceCandidate[] candidates);
-		
-		void onSignalingChange(PeerConnection.SignalingState newState);
-		/**
-		 * Callback fired once connection is established (IceConnectionState is
-		 * CONNECTED).
-		 */
-		void onIceConnected();
-		
-		/**
-		 * Callback fired once connection is closed (IceConnectionState is
-		 * DISCONNECTED).
-		 */
-		void onIceDisconnected();
-		
-		/**
-		 * Callback fired once peer connection is closed.
-		 */
-		void onPeerConnectionClosed();
-		
-		/**
-		 * Callback fired once peer connection statistics is ready.
-		 */
-		void onPeerConnectionStatsReady(final StatsReport[] reports);
-		
-		/**
-		 * Callback fired once peer connection error happened.
-		 */
-		void onPeerConnectionError(final String description);
-	}
-	
-	/**
-	 * Create a org.appspot.apprtc.PeerConnectionClient with the specified parameters. org.appspot.apprtc.PeerConnectionClient takes
-	 * ownership of |eglBase|.
+	 * Create a org.appspot.apprtc.PeerConnectionClient with the specified parameters.
+	 * org.appspot.apprtc.PeerConnectionClient takes ownership of |eglBase|.
 	 */
 	public PeerConnectionClient(Context appContext, EglBase eglBase,
 								PeerConnectionParameters peerConnectionParameters, PeerConnectionEvents events) {
@@ -461,7 +302,7 @@ public class PeerConnectionClient {
 		if (DEBUG) Log.d(TAG, "Peer connection factory created.");
 	}
 	
-	AudioDeviceModule createLegacyAudioDevice() {
+	private AudioDeviceModule createLegacyAudioDevice() {
 		// Enable/disable OpenSL ES playback.
 		if (!peerConnectionParameters.useOpenSLES) {
 			if (DEBUG) Log.d(TAG, "Disable OpenSL ES audio even if device supports it");
@@ -535,7 +376,7 @@ public class PeerConnectionClient {
 		return new LegacyAudioDeviceModule();
 	}
 	
-	AudioDeviceModule createJavaAudioDevice() {
+	private AudioDeviceModule createJavaAudioDevice() {
 		// Enable/disable OpenSL ES playback.
 		if (!peerConnectionParameters.useOpenSLES) {
 			Log.w(TAG, "External OpenSLES ADM not implemented yet.");
@@ -1082,7 +923,8 @@ public class PeerConnectionClient {
 			Log.w(TAG, "No rtpmap for " + codec + " codec");
 			return sdpDescription;
 		}
-		if (DEBUG) Log.d(TAG, "Found " + codec + " rtpmap " + codecRtpMap + " at " + lines[rtpmapLineIndex]);
+		if (DEBUG)
+			Log.d(TAG, "Found " + codec + " rtpmap " + codecRtpMap + " at " + lines[rtpmapLineIndex]);
 		
 		// Check if a=fmtp string already exist in remote SDP for this codec and
 		// update it with new bitrate parameter.
@@ -1201,7 +1043,8 @@ public class PeerConnectionClient {
 		if (newMLine == null) {
 			return sdpDescription;
 		}
-		if (DEBUG) Log.d(TAG, "Change media description from: " + lines[mLineIndex] + " to " + newMLine);
+		if (DEBUG)
+			Log.d(TAG, "Change media description from: " + lines[mLineIndex] + " to " + newMLine);
 		lines[mLineIndex] = newMLine;
 		return joinString(Arrays.asList(lines), "\r\n", true /* delimiterAtEnd */);
 	}
@@ -1326,12 +1169,14 @@ public class PeerConnectionClient {
 			dc.registerObserver(new DataChannel.Observer() {
 				@Override
 				public void onBufferedAmountChange(long previousAmount) {
-					if (DEBUG) Log.d(TAG, "Data channel buffered amount changed: " + dc.label() + ": " + dc.state());
+					if (DEBUG)
+						Log.d(TAG, "Data channel buffered amount changed: " + dc.label() + ": " + dc.state());
 				}
 				
 				@Override
 				public void onStateChange() {
-					if (DEBUG) Log.d(TAG, "Data channel state changed: " + dc.label() + ": " + dc.state());
+					if (DEBUG)
+						Log.d(TAG, "Data channel state changed: " + dc.label() + ": " + dc.state());
 				}
 				
 				@Override

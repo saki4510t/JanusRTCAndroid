@@ -41,8 +41,9 @@ import org.appspot.apprtc.AppRTCClient.RoomConnectionParameters;
 import org.appspot.apprtc.AppRTCClient.SignalingParameters;
 import org.appspot.apprtc.DirectRTCClient;
 import org.appspot.apprtc.PeerConnectionClient;
-import org.appspot.apprtc.PeerConnectionClient.DataChannelParameters;
-import org.appspot.apprtc.PeerConnectionClient.PeerConnectionParameters;
+import org.appspot.apprtc.DataChannelParameters;
+import org.appspot.apprtc.PeerConnectionEvents;
+import org.appspot.apprtc.PeerConnectionParameters;
 import org.appspot.apprtc.UnhandledExceptionHandler;
 import org.appspot.apprtc.WebSocketRTCClient;
 import org.webrtc.Camera1Enumerator;
@@ -943,8 +944,8 @@ public class CallActivity extends BaseActivity
 // Send local peer connection SDP and ICE candidates to remote party.
 // All callbacks are invoked from peer connection client looper thread and
 // are routed to UI thread.
-	private final PeerConnectionClient.PeerConnectionEvents
-		mPeerConnectionEvents = new PeerConnectionClient.PeerConnectionEvents() {
+	private final PeerConnectionEvents
+		mPeerConnectionEvents = new PeerConnectionEvents() {
 
 		@Override
 		public void onLocalDescription(final SessionDescription sdp) {
