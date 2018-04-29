@@ -32,6 +32,7 @@ import java.util.Scanner;
  * AsyncTask that converts an AppRTC room URL into the set of signaling
  * parameters to use with that room.
  */
+@Deprecated
 public class RoomParametersFetcher {
 	private static final String TAG = "RoomRTCClient";
 	private static final int TURN_HTTP_TIMEOUT_MS = 5000;

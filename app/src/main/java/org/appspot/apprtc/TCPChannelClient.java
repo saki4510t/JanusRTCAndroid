@@ -34,6 +34,7 @@ import javax.annotation.Nullable;
  * passed in a constructor, otherwise exception will be thrown.
  * All events are dispatched on the same thread.
  */
+@Deprecated
 public class TCPChannelClient {
 	private static final String TAG = "org.appspot.apprtc.TCPChannelClient";
 	

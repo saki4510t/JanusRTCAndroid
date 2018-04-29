@@ -34,6 +34,7 @@ import de.tavendo.autobahn.WebSocketException;
  * passed in a constructor, otherwise exception will be thrown.
  * All events are dispatched on the same thread.
  */
+@Deprecated
 public class WebSocketChannelClient {
 	private static final String TAG = "WSChannelRTCClient";
 	private static final int CLOSE_TIMEOUT = 1000;

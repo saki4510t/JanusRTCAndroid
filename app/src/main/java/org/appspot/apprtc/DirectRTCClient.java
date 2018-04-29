@@ -29,6 +29,7 @@ import javax.annotation.Nullable;
  * This eliminates the need for an external server. This class does not support loopback
  * connections.
  */
+@Deprecated
 public class DirectRTCClient implements AppRTCClient, TCPChannelClient.TCPChannelEvents {
 	private static final String TAG = "org.appspot.apprtc.DirectRTCClient";
 	private static final int DEFAULT_PORT = 8888;

@@ -36,6 +36,7 @@ import javax.annotation.Nullable;
  * Messages to other party (with local Ice candidates and answer SDP) can
  * be sent after WebSocket connection is established.
  */
+@Deprecated
 public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents {
 	private static final boolean DEBUG = true;    // set false on production
 	private static final String TAG = "WSRTCClient";
