@@ -247,14 +247,6 @@ public class CallActivity extends BaseActivity
 		callFragment = new CallFragment();
 		hudFragment = new HudFragment();
 
-		// Show/hide call control fragment on view click.
-		View.OnClickListener listener = new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				toggleCallControlFragmentVisibility();
-			}
-		};
-
 		// Swap feeds on pip view click.
 		pipRenderer.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -263,7 +255,14 @@ public class CallActivity extends BaseActivity
 			}
 		});
 
-		fullscreenRenderer.setOnClickListener(listener);
+		// Show/hide call control fragment on view click.
+		fullscreenRenderer.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(final View v) {
+				toggleCallControlFragmentVisibility();
+			}
+		});
+
 		remoteRenderers.add(remoteProxyRenderer);
 
 		final Intent intent = getIntent();
