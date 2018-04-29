@@ -8,7 +8,7 @@ import static org.appspot.apprtc.AppRTCConst.*;
  * Peer connection parameters.
  */
 public class PeerConnectionParameters {
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = false;	// set false on production
 
 	public final boolean videoCallEnabled;
 	public final boolean loopback;
