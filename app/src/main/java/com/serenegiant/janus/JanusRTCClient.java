@@ -1,7 +1,6 @@
 package com.serenegiant.janus;
 
 import android.content.Context;
-import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
@@ -15,7 +14,6 @@ import com.serenegiant.janus.request.Destroy;
 import com.serenegiant.janus.response.EventRoom;
 import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
-import com.serenegiant.utils.HandlerThreadHandler;
 
 import org.appspot.apprtc.RoomConnectionParameters;
 import org.appspot.apprtc.SignalingParameters;
@@ -32,6 +30,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Interceptor;
@@ -58,6 +58,13 @@ public class JanusRTCClient implements JanusClient {
 		CLOSED,
 		ERROR }
 
+	/**
+	 * Executor thread is started once in private ctor and is used for all
+	 * peer connection API calls to ensure new peer connection factory is
+	 * created on the same thread as previously destroyed factory.
+	 */
+	private static final ExecutorService executor = Executors.newSingleThreadExecutor();
+
 	private final Object mSync = new Object();
 	private final WeakReference<Context> mWeakContext;
 	private final String baseUrl;
@@ -69,7 +76,6 @@ public class JanusRTCClient implements JanusClient {
 	private final Map<BigInteger, JanusPlugin> mAttachedPlugins
 		= new ConcurrentHashMap<BigInteger, JanusPlugin>();
 	private RoomConnectionParameters connectionParameters;
-	private Handler handler;
 	private ConnectionState mConnectionState;
 	private ServerInfo mServerInfo;
 	private Session mSession;
@@ -81,7 +87,6 @@ public class JanusRTCClient implements JanusClient {
 		this.mWeakContext = new WeakReference<>(context);
 		this.mCallback = callback;
 		this.baseUrl = baseUrl;
-		this.handler = HandlerThreadHandler.createHandler(TAG);
 		this.mConnectionState = ConnectionState.UNINITIALIZED;
 	}
 	
@@ -104,7 +109,7 @@ public class JanusRTCClient implements JanusClient {
 	public void connectToRoom(final RoomConnectionParameters connectionParameters) {
 		if (DEBUG) Log.v(TAG, "connectToRoom:");
 		this.connectionParameters = connectionParameters;
-		handler.post(() -> {
+		executor.execute(() -> {
 			connectToRoomInternal();
 		});
 	}
@@ -112,7 +117,7 @@ public class JanusRTCClient implements JanusClient {
 	@Override
 	public void sendOfferSdp(final SessionDescription sdp) {
 		if (DEBUG) Log.v(TAG, "sendOfferSdp:" + sdp);
-		handler.post(() -> {
+		executor.execute(() -> {
 			sendOfferSdpInternal(sdp);
 		});
 	}
@@ -120,7 +125,7 @@ public class JanusRTCClient implements JanusClient {
 	@Override
 	public void sendAnswerSdp(final SessionDescription sdp) {
 		if (DEBUG) Log.v(TAG, "sendAnswerSdp:" + sdp);
-		handler.post(() -> {
+		executor.execute(() -> {
 			sendAnswerSdpInternal(sdp);
 		});
 	}
@@ -128,15 +133,9 @@ public class JanusRTCClient implements JanusClient {
 	@Override
 	public void sendLocalIceCandidate(final IceCandidate candidate) {
 		if (DEBUG) Log.v(TAG, "sendLocalIceCandidate:");
-		if (candidate != null) {
-			handler.removeCallbacks(mTrySendTrickleCompletedTask);
-			handler.post(() -> {
-				sendLocalIceCandidateInternal(candidate);
-			});
-			handler.postDelayed(mTrySendTrickleCompletedTask, 50);
-		} else {
-			handler.post(mTrySendTrickleCompletedTask);
-		}
+		executor.execute(() -> {
+			sendLocalIceCandidateInternal(candidate);
+		});
 	}
 	
 	private final Runnable mTrySendTrickleCompletedTask
@@ -150,7 +149,7 @@ public class JanusRTCClient implements JanusClient {
 	@Override
 	public void sendLocalIceCandidateRemovals(final IceCandidate[] candidates) {
 		if (DEBUG) Log.v(TAG, "sendLocalIceCandidateRemovals:");
-		handler.post(() -> {
+		executor.execute(() -> {
 			// FIXME 未実装
 //			final JSONObject json = new JSONObject();
 //			jsonPut(json, "type", "remove-candidates");
@@ -180,13 +179,8 @@ public class JanusRTCClient implements JanusClient {
 	public void disconnectFromRoom() {
 		if (DEBUG) Log.v(TAG, "disconnectFromRoom:");
 		cancelCall();
-		handler.post(() -> {
+		executor.execute(() -> {
 			disconnectFromRoomInternal();
-			try {
-				handler.getLooper().quit();
-			} catch (final Exception e) {
-				if (DEBUG) Log.w(TAG, e);
-			}
 		});
 	}
 
@@ -250,7 +244,7 @@ public class JanusRTCClient implements JanusClient {
 			? BigInteger.ZERO
 			: ((JanusPlugin.Subscriber)plugin).feederId;
 		
-		handler.post(() -> {
+		executor.execute(() -> {
 			synchronized (mAttachedPlugins) {
 				mAttachedPlugins.remove(key);
 			}
@@ -258,7 +252,7 @@ public class JanusRTCClient implements JanusClient {
 	}
 
 	private void removePlugin(@NonNull final BigInteger key) {
-		handler.post(() -> {
+		executor.execute(() -> {
 			synchronized (mAttachedPlugins) {
 				mAttachedPlugins.remove(key);
 			}
@@ -283,7 +277,7 @@ public class JanusRTCClient implements JanusClient {
 		cancelCall();
 		TransactionManager.clearTransactions();
 		try {
-			handler.post(() -> {
+			executor.execute(() -> {
 				if (mConnectionState != ConnectionState.ERROR) {
 					mConnectionState = ConnectionState.ERROR;
 					mCallback.onChannelError(t.getMessage());
@@ -307,7 +301,7 @@ public class JanusRTCClient implements JanusClient {
 		mLongPoll = setupRetrofit(
 			setupHttpClient(HTTP_READ_TIMEOUT_MS_LONG_POLL, HTTP_WRITE_TIMEOUT_MS),
 			baseUrl).create(LongPoll.class);
-		handler.post(() -> {
+		executor.execute(() -> {
 			requestServerInfo();
 		});
 	}
@@ -400,7 +394,7 @@ public class JanusRTCClient implements JanusClient {
 					removeCall(call);
 					mServerInfo = response.body();
 					if (DEBUG) Log.v(TAG, "requestServerInfo:success");
-					handler.post(() -> {
+					executor.execute(() -> {
 						createSession();
 					});
 				} else {
@@ -435,7 +429,7 @@ public class JanusRTCClient implements JanusClient {
 						// セッションを生成できた＼(^o^)／
 						if (DEBUG) Log.v(TAG, "createSession:success");
 						// パブリッシャーをVideoRoomプラグインにアタッチ
-						handler.post(() -> {
+						executor.execute(() -> {
 							longPoll();
 							final JanusPlugin.Publisher publisher
 								= new JanusPlugin.Publisher(
@@ -619,7 +613,7 @@ public class JanusRTCClient implements JanusClient {
 					&& (mConnectionState != ConnectionState.UNINITIALIZED)) {
 
 					try {
-						handler.post(() -> {
+						executor.execute(() -> {
 							handleLongPoll(call, response);
 						});
 						recall(call);

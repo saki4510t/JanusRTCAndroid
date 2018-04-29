@@ -1,7 +1,6 @@
 package com.serenegiant.janus;
 
 import android.os.Build;
-import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
@@ -29,6 +28,8 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -75,7 +76,7 @@ import retrofit2.Response;
 	protected final Session mSession;
 	@NonNull
 	protected final JanusPluginCallback mCallback;
-	protected final Handler handler;
+	protected final ExecutorService executor = Executors.newSingleThreadExecutor();
 	protected final List<Call<?>> mCurrentCalls = new ArrayList<>();
 	protected RoomState mRoomState = RoomState.UNINITIALIZED;
 	protected Plugin mPlugin;
@@ -95,7 +96,6 @@ import retrofit2.Response;
 		this.mVideoRoom = videoRoom;
 		this.mSession = session;
 		this.mCallback = callback;
-		this.handler = new Handler();
 	}
 
 	BigInteger id() {
@@ -135,7 +135,7 @@ import retrofit2.Response;
 						if (DEBUG) Log.v(TAG, "attach:success");
 						mCallback.onAttach(JanusPlugin.this);
 						// ルームへjoin
-						handler.post(() -> {
+						executor.execute(() -> {
 							join();
 						});
 					} else {
@@ -653,7 +653,7 @@ import retrofit2.Response;
 				if (!changed.isEmpty()) {
 					if (DEBUG) Log.v(TAG, "checkPublishers:number of publishers changed");
 					for (final PublisherInfo info: changed) {
-						handler.post(() -> {
+						executor.execute(() -> {
 							if (DEBUG) Log.v(TAG, "checkPublishers:attach new Subscriber");
 							final Subscriber subscriber = new Subscriber(mVideoRoom,
 								mSession, mCallback, info.id, mLocalSdp, mRemoteSdp);
