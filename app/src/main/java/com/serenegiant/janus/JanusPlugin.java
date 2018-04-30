@@ -20,10 +20,13 @@ import com.serenegiant.janus.response.Plugin;
 import com.serenegiant.janus.response.PublisherInfo;
 import com.serenegiant.janus.response.Session;
 
+import org.appspot.apprtc.PeerConnectionParameters;
 import org.appspot.apprtc.RtcEventLog;
+import org.appspot.apprtc.util.SdpUtils;
 import org.json.JSONObject;
 import org.webrtc.DataChannel;
 import org.webrtc.IceCandidate;
+import org.webrtc.MediaConstraints;
 import org.webrtc.PeerConnection;
 import org.webrtc.SdpObserver;
 import org.webrtc.SessionDescription;
@@ -41,6 +44,8 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_ISAC;
+
 /*package*/ abstract class JanusPlugin {
 	private static final boolean DEBUG = true;	// set false on production
 	
@@ -54,6 +59,23 @@ import retrofit2.Response;
 		public void onLeave(@NonNull final JanusPlugin plugin, @NonNull final BigInteger pluginId);
 		public void onRemoteIceCandidate(@NonNull final JanusPlugin plugin,
 			final IceCandidate remoteCandidate);
+		/**
+		 * Callback fired once local SDP is created and set.
+		 */
+		public void onLocalDescription(@NonNull final JanusPlugin plugin, final SessionDescription sdp);
+
+		@NonNull
+		public MediaConstraints getAudioConstraints(@NonNull final JanusPlugin plugin);
+		@NonNull
+		public MediaConstraints getSdpMediaConstraints(@NonNull final JanusPlugin plugin);
+		@NonNull
+		public PeerConnectionParameters getPeerConnectionParameters(@NonNull final JanusPlugin plugin);
+		public boolean isVideoCallEnabled(@NonNull final JanusPlugin plugin);
+
+		public void createSubscriber(@NonNull final JanusPlugin plugin,
+			@NonNull final BigInteger feederId,
+			@NonNull final SessionDescription localSdp,
+			@NonNull final SessionDescription remoteSdp);
 
 		/**
 		 * リモート側のSessionDescriptionを受信した時
@@ -78,10 +100,18 @@ import retrofit2.Response;
 	protected final String TAG = "JanusPlugin:" + getClass().getSimpleName();
 
 	private PeerConnection peerConnection;
+	/** Enable org.appspot.apprtc.RtcEventLog. */
 	@Nullable
 	RtcEventLog rtcEventLog;
 	@Nullable
 	private DataChannel dataChannel;
+	/**
+	 * Queued remote ICE candidates are consumed only after both local and
+	 * remote descriptions are set. Similarly local ICE candidates are sent to
+	 * remote peer after both local and remote description are set.
+	 */
+	@android.support.annotation.Nullable
+	private List<IceCandidate> queuedRemoteCandidates;
 
 	@NonNull
 	protected final VideoRoom mVideoRoom;
@@ -96,6 +126,9 @@ import retrofit2.Response;
 	protected Room mRoom;
 	protected SessionDescription mLocalSdp;
 	protected SessionDescription mRemoteSdp;
+	protected boolean isInitiator;
+	protected boolean isError;
+	private final boolean preferIsac;
 	
 	/**
 	 * constructor
@@ -115,6 +148,13 @@ import retrofit2.Response;
 		this.peerConnection = peerConnection;
 		this.dataChannel = dataChannel;
 		this.rtcEventLog = rtcEventLog;
+		
+		final PeerConnectionParameters peerConnectionParameters
+			= callback.getPeerConnectionParameters(this);
+		// Check if ISAC is used by default.
+		preferIsac = peerConnectionParameters.audioCodec != null
+			&& peerConnectionParameters.audioCodec.equals(AUDIO_CODEC_ISAC);
+		queuedRemoteCandidates = new ArrayList<>();
 	}
 	
 	@Override
@@ -130,6 +170,62 @@ import retrofit2.Response;
 		return mPlugin != null ? mPlugin.id() : null;
 	}
 	
+	public void createOffer() {
+		executor.execute(() -> {
+			if (peerConnection != null && !isError) {
+				if (DEBUG) Log.d(TAG, "PC Create OFFER");
+				isInitiator = true;
+				peerConnection.createOffer(mSdpObserver,
+					mCallback.getSdpMediaConstraints(this));
+			}
+		});
+	}
+	
+	public void createAnswer() {
+		executor.execute(() -> {
+			if (peerConnection != null && !isError) {
+				if (DEBUG) Log.d(TAG, "PC create ANSWER");
+				isInitiator = false;
+				peerConnection.createAnswer(mSdpObserver,
+					mCallback.getSdpMediaConstraints(this));
+			}
+		});
+	}
+	
+	private void drainCandidates() {
+		if (queuedRemoteCandidates != null) {
+			if (DEBUG) Log.d(TAG, "Add " + queuedRemoteCandidates.size() + " remote candidates");
+			for (IceCandidate candidate : queuedRemoteCandidates) {
+				peerConnection.addIceCandidate(candidate);
+			}
+			queuedRemoteCandidates = null;
+		}
+	}
+
+	public void addRemoteIceCandidate(final IceCandidate candidate) {
+		executor.execute(() -> {
+			if (peerConnection != null && !isError) {
+				if (queuedRemoteCandidates != null) {
+					queuedRemoteCandidates.add(candidate);
+				} else {
+					peerConnection.addIceCandidate(candidate);
+				}
+			}
+		});
+	}
+	
+	public void removeRemoteIceCandidates(final IceCandidate[] candidates) {
+		executor.execute(() -> {
+			if (peerConnection == null || isError) {
+				return;
+			}
+			// Drain the queued remote candidates if there is any so that
+			// they are processed in the proper order.
+			drainCandidates();
+			peerConnection.removeIceCandidates(candidates);
+		});
+	}
+
 	@NonNull
 	protected abstract String getPType();
 
@@ -640,11 +736,66 @@ import retrofit2.Response;
 		@Override
 		public void onCreateSuccess(final SessionDescription origSdp) {
 			if (DEBUG) Log.v(TAG, "onCreateSuccess:");
+			if (mLocalSdp != null) {
+				reportError(new RuntimeException("Multiple SDP create."));
+				return;
+			}
+			String sdpDescription = origSdp.description;
+			if (preferIsac) {
+				sdpDescription = SdpUtils.preferCodec(sdpDescription, AUDIO_CODEC_ISAC, true);
+			}
+			if (mCallback.isVideoCallEnabled(JanusPlugin.this)) {
+				sdpDescription =
+					SdpUtils.preferCodec(sdpDescription,
+						mCallback.getPeerConnectionParameters(JanusPlugin.this)
+							.getSdpVideoCodecName(), false);
+			}
+			final SessionDescription sdp = new SessionDescription(origSdp.type, sdpDescription);
+			mLocalSdp = sdp;
+			executor.execute(() -> {
+				if (peerConnection != null && !isError) {
+					Log.d(TAG, "Set local SDP from " + sdp.type);
+					peerConnection.setLocalDescription(mSdpObserver, sdp);
+				}
+			});
 		}
 		
 		@Override
 		public void onSetSuccess() {
 			if (DEBUG) Log.v(TAG, "onSetSuccess:");
+			executor.execute(() -> {
+				if (peerConnection == null || isError) {
+					return;
+				}
+				if (isInitiator) {
+					// For offering peer connection we first create offer and set
+					// local SDP, then after receiving answer set remote SDP.
+					if (peerConnection.getRemoteDescription() == null) {
+						// We've just set our local SDP so time to send it.
+						if (DEBUG) Log.d(TAG, "Local SDP set successfully");
+						mCallback.onLocalDescription(JanusPlugin.this, mLocalSdp);
+					} else {
+						// We've just set remote description, so drain remote
+						// and send local ICE candidates.
+						if (DEBUG) Log.d(TAG, "Remote SDP set successfully");
+						drainCandidates();
+					}
+				} else {
+					// For answering peer connection we set remote SDP and then
+					// create answer and set local SDP.
+					if (peerConnection.getLocalDescription() != null) {
+						// We've just set our local SDP so time to send it, drain
+						// remote and send local ICE candidates.
+						if (DEBUG) Log.d(TAG, "Local SDP set successfully");
+						mCallback.onLocalDescription(JanusPlugin.this, mLocalSdp);
+						drainCandidates();
+					} else {
+						// We've just set remote SDP - do nothing for now -
+						// answer will be created soon.
+						if (DEBUG) Log.d(TAG, "Remote SDP set successfully");
+					}
+				}
+			});
 		}
 		
 		@Override
@@ -721,10 +872,9 @@ import retrofit2.Response;
 					for (final PublisherInfo info: changed) {
 						executor.execute(() -> {
 							if (DEBUG) Log.v(TAG, "checkPublishers:attach new Subscriber");
-							final Subscriber subscriber = new Subscriber(mVideoRoom,
-								mSession, mCallback, info.id, mLocalSdp, mRemoteSdp,
-								null, null, null);
-							subscriber.attach();
+							mCallback.createSubscriber(
+								Publisher.this,
+								info.id, mLocalSdp, mRemoteSdp);
 						});
 					}
 				}
@@ -739,7 +889,7 @@ import retrofit2.Response;
 		 * コンストラクタ
 		 * @param session
 		 */
-		/*package*/ Subscriber(@NonNull VideoRoom videoRoom,
+		public Subscriber(@NonNull VideoRoom videoRoom,
 			@NonNull final Session session,
 			@NonNull final JanusPluginCallback callback,
 			@NonNull final BigInteger feederId,

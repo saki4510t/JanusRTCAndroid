@@ -838,6 +838,38 @@ public class CallActivity extends BaseActivity
 		= new JanusCallback() {
 
 		@Override
+		public void onIceConnected() {
+			if (DEBUG) Log.v(TAG, "onIceConnected:");
+			final long delta = System.currentTimeMillis() - callStartedTimeMs;
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					logAndToast("ICE connected, delay=" + delta + "ms");
+					iceConnected = true;
+					callConnected();
+				}
+			});
+		}
+	
+		@Override
+		public void onIceDisconnected() {
+			if (DEBUG) Log.v(TAG, "onIceDisconnected:");
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					logAndToast("ICE disconnected");
+					iceConnected = false;
+					disconnect();
+				}
+			});
+		}
+
+		@Override
+		public void onPeerConnectionClosed() {
+			if (DEBUG) Log.v(TAG, "onPeerConnectionClosed:");
+		}
+
+		@Override
 		public void onConnectedToRoom(final SignalingParameters params) {
 			if (DEBUG) Log.v(TAG, "onConnectedToRoom:");
 			runOnUiThread(new Runnable() {

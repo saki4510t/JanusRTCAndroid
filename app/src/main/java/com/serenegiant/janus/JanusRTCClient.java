@@ -64,6 +64,8 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -126,7 +128,7 @@ public class JanusRTCClient implements JanusClient {
 	private final Timer statsTimer = new Timer();
 	@Nullable
 	private PeerConnectionFactory factory;
-	private boolean preferIsac;
+//	private boolean preferIsac;
 	private boolean videoCapturerStopped;
 	private boolean isError;
 	/**
@@ -156,15 +158,6 @@ public class JanusRTCClient implements JanusClient {
 	private int videoFps;
 	private MediaConstraints audioConstraints;
 	private MediaConstraints sdpMediaConstraints;
-	/** Enable org.appspot.apprtc.RtcEventLog. */
-	/**
-	 * Queued remote ICE candidates are consumed only after both local and
-	 * remote descriptions are set. Similarly local ICE candidates are sent to
-	 * remote peer after both local and remote description are set.
-	 */
-	@Nullable
-	private List<IceCandidate> queuedRemoteCandidates;
-	private boolean isInitiator;
 	/** enableAudio is set to true if audio should be sent. */
 	private boolean enableAudio = true;
 	/**
@@ -468,10 +461,6 @@ public class JanusRTCClient implements JanusClient {
 					+ "webrtc-trace.txt");
 		}
 		
-		// Check if ISAC is used by default.
-		preferIsac = peerConnectionParameters.audioCodec != null
-			&& peerConnectionParameters.audioCodec.equals(AUDIO_CODEC_ISAC);
-		
 		// It is possible to save a copy in raw PCM format on a file by checking
 		// the "Save input audio to file" checkbox in the Settings UI. A callback
 		// interface is set when this flag is enabled. As a result, a copy of recorded
@@ -726,7 +715,6 @@ public class JanusRTCClient implements JanusClient {
 		
 		PeerConnection peerConnection = null;
 		DataChannel dataChannel = null;
-		queuedRemoteCandidates = new ArrayList<>();
 		
 		if (isVideoCallEnabled()) {
 			factory.setVideoHwAccelerationOptions(
@@ -759,7 +747,6 @@ public class JanusRTCClient implements JanusClient {
 			init.protocol = peerConnectionParameters.dataChannelParameters.protocol;
 			dataChannel = peerConnection.createDataChannel("ApprtcDemo data", init);
 		}
-		isInitiator = false;
 		
 		// Set INFO libjingle logging.
 		// NOTE: this _must_ happen while |factory| is alive!
@@ -810,7 +797,7 @@ public class JanusRTCClient implements JanusClient {
 			if (DEBUG) Log.d(TAG, "org.appspot.apprtc.RtcEventLog is disabled.");
 		}
 		if (DEBUG) Log.d(TAG, "Peer connection created.");
-		// FIXME ここでPeerConnection等を渡してPublisherを生成する
+
 		final JanusPlugin.Publisher publisher
 			= new JanusPlugin.Publisher(
 				mJanus, mSession, mJanusPluginCallback,
@@ -820,6 +807,19 @@ public class JanusRTCClient implements JanusClient {
 		// attachした時点で実際のプラグインのidでも登録される
 		addPlugin(BigInteger.ZERO, publisher);
 		publisher.attach();
+	}
+
+	private void createSubscriber(
+		@NonNull final BigInteger feederId,
+		@NonNull final SessionDescription localSdp,
+		@NonNull final SessionDescription remoteSdp) {
+		
+		if (DEBUG) Log.v(TAG, "createSubscriber:");
+		// FIXME 未実装
+		final JanusPlugin.Subscriber subscriber = new JanusPlugin.Subscriber(mJanus,
+			mSession, mJanusPluginCallback, feederId, localSdp, remoteSdp,
+			null, null, null);	// FIXME
+		subscriber.attach();
 	}
 
 	private File createRtcEventLogOutputFile() {
@@ -882,17 +882,6 @@ public class JanusRTCClient implements JanusClient {
 		return null;
 	}
 	
-	private void drainCandidates(@NonNull final PeerConnection peerConnection) {
-		if (DEBUG) Log.v(TAG, "drainCandidates:");
-		if (queuedRemoteCandidates != null) {
-			if (DEBUG) Log.d(TAG, "Add " + queuedRemoteCandidates.size() + " remote candidates");
-			for (IceCandidate candidate : queuedRemoteCandidates) {
-				peerConnection.addIceCandidate(candidate);
-			}
-			queuedRemoteCandidates = null;
-		}
-	}
-	
 	private void switchCameraInternal() {
 		if (DEBUG) Log.v(TAG, "switchCameraInternal:");
 		if (videoCapturer instanceof CameraVideoCapturer) {
@@ -944,56 +933,119 @@ public class JanusRTCClient implements JanusClient {
 		@Override
 		public void onSignalingChange(final PeerConnection.SignalingState newState) {
 			if (DEBUG) Log.v(TAG, "onSignalingChange:" + newState);
+			// 今は何もしない
 		}
 		
 		@Override
 		public void onIceConnectionChange(final PeerConnection.IceConnectionState newState) {
 			if (DEBUG) Log.v(TAG, "onIceConnectionChange:" + newState);
+			executor.execute(() -> {
+				if (DEBUG) Log.d(TAG, "IceConnectionState: " + newState);
+				if (newState == PeerConnection.IceConnectionState.CONNECTED) {
+					mCallback.onIceConnected();
+				} else if (newState == PeerConnection.IceConnectionState.DISCONNECTED) {
+					mCallback.onIceDisconnected();
+				} else if (newState == PeerConnection.IceConnectionState.FAILED) {
+					reportError(new RuntimeException("ICE connection failed."));
+				}
+			});
 		}
 		
 		@Override
 		public void onIceConnectionReceivingChange(final boolean receiving) {
 			if (DEBUG) Log.v(TAG, "onIceConnectionReceivingChange:receiving=" + receiving);
+			// 今は何もしない
 		}
 		
 		@Override
 		public void onIceGatheringChange(final PeerConnection.IceGatheringState newState) {
 			if (DEBUG) Log.v(TAG, "onIceGatheringChange:" + newState);
+			switch (newState) {
+			case NEW:
+				break;
+			case GATHERING:
+				break;
+			case COMPLETE:
+				executor.execute(() -> sendLocalIceCandidate(null));
+				break;
+			default:
+				break;
+			}
 		}
 		
 		@Override
 		public void onIceCandidate(final IceCandidate candidate) {
 			if (DEBUG) Log.v(TAG, "onIceCandidate:");
+			
+			executor.execute(() -> sendLocalIceCandidate(candidate));
 		}
 		
 		@Override
 		public void onIceCandidatesRemoved(final IceCandidate[] candidates) {
 			if (DEBUG) Log.v(TAG, "onIceCandidatesRemoved:");
+
+			executor.execute(() -> sendLocalIceCandidateRemovals(candidates));
 		}
 		
 		@Override
 		public void onAddStream(final MediaStream stream) {
 			if (DEBUG) Log.v(TAG, "onAddStream:");
+			// 今は何もしない
 		}
 		
 		@Override
 		public void onRemoveStream(final MediaStream stream) {
 			if (DEBUG) Log.v(TAG, "onRemoveStream:");
+			// 今は何もしない
 		}
 		
 		@Override
 		public void onDataChannel(final DataChannel channel) {
 			if (DEBUG) Log.v(TAG, "onDataChannel:");
+			if (!dataChannelEnabled)
+				return;
+			
+			// FIXME これはAppRTCMobileのままで単にログを出力するだけ
+			channel.registerObserver(new DataChannel.Observer() {
+				@Override
+				public void onBufferedAmountChange(long previousAmount) {
+					if (DEBUG) Log.d(TAG,
+						 "Data channel buffered amount changed: "
+						 + channel.label() + ": " + channel.state());
+				}
+				
+				@Override
+				public void onStateChange() {
+					if (DEBUG) Log.d(TAG,
+						"Data channel state changed: "
+						+ channel.label() + ": " + channel.state());
+				}
+				
+				@Override
+				public void onMessage(final DataChannel.Buffer buffer) {
+					if (buffer.binary) {
+						if (DEBUG) Log.d(TAG, "Received binary msg over " + channel);
+						return;
+					}
+					final ByteBuffer data = buffer.data;
+					final byte[] bytes = new byte[data.capacity()];
+					data.get(bytes);
+					String strData = new String(bytes, Charset.forName("UTF-8"));
+					Log.d(TAG, "Got msg: " + strData + " over " + channel);
+				}
+			});
 		}
 		
 		@Override
 		public void onRenegotiationNeeded() {
 			if (DEBUG) Log.v(TAG, "onRenegotiationNeeded:");
+			// 今は何もしない
 		}
 		
 		@Override
 		public void onAddTrack(final RtpReceiver receiver, final MediaStream[] streams) {
 			if (DEBUG) Log.v(TAG, "onAddTrack:");
+			// 今は何もしない
 		}
 	};
 
@@ -1372,10 +1424,12 @@ public class JanusRTCClient implements JanusClient {
 			if (DEBUG) Log.v(TAG, "onJoin:" + plugin);
 			if (plugin instanceof JanusPlugin.Publisher) {
 				mConnectionState = ConnectionState.CONNECTED;
-				handleOnJoin(room);	// FIXME publisherの時はhandleJoin呼んじゃダメかも
+				handleOnJoin(plugin, room);	// FIXME publisherの時はhandleJoin呼んじゃダメかも
+				plugin.createOffer();
 			} else if (plugin instanceof JanusPlugin.Subscriber) {
 //				mConnectionState = ConnectionState.CONNECTED;
 //				handleOnJoin(room);
+//				plugin.createAnswer();	// FIXME ここで呼ぶべき？
 			}
 		}
 		
@@ -1399,6 +1453,62 @@ public class JanusRTCClient implements JanusClient {
 			if (DEBUG) Log.v(TAG, "onRemoteIceCandidate:" + plugin
 				+ "\n" + candidate);
 			mCallback.onRemoteIceCandidate(candidate);
+		}
+		
+		@Override
+		public void onLocalDescription(@NonNull final JanusPlugin plugin,
+			final SessionDescription sdp) {
+
+			if (DEBUG) Log.v(TAG, "onLocalDescription:");
+//			final long delta = System.currentTimeMillis() - callStartedTimeMs;
+			executor.execute(() -> {
+//				logAndToast("Sending " + sdp.type + ", delay=" + delta + "ms");
+				if (plugin instanceof JanusPlugin.Publisher) {
+					sendOfferSdp(sdp);
+				} else {
+					sendAnswerSdp(sdp);
+				}
+				if (peerConnectionParameters.videoMaxBitrate > 0) {
+					if (DEBUG) Log.d(TAG, "Set video maximum bitrate: "
+						+ peerConnectionParameters.videoMaxBitrate);
+					setVideoMaxBitrate(
+						peerConnectionParameters.videoMaxBitrate);
+				}
+			});
+		}
+
+		@NonNull
+		@Override
+		public MediaConstraints getAudioConstraints(@NonNull final JanusPlugin plugin) {
+			if (DEBUG) Log.v(TAG, "getAudioConstraints:" + plugin);
+			return audioConstraints;
+		}
+		
+		@NonNull
+		@Override
+		public MediaConstraints getSdpMediaConstraints(@NonNull final JanusPlugin plugin) {
+			if (DEBUG) Log.v(TAG, "getSdpMediaConstraints:" + plugin);
+			return sdpMediaConstraints;
+		}
+		
+		@NonNull
+		@Override
+		public PeerConnectionParameters getPeerConnectionParameters(@NonNull final JanusPlugin plugin) {
+			return peerConnectionParameters;
+		}
+	
+		@Override
+		public boolean isVideoCallEnabled(@NonNull final JanusPlugin plugin) {
+			return JanusRTCClient.this.isVideoCallEnabled();
+		}
+		
+		@Override
+		public void createSubscriber(@NonNull final JanusPlugin plugin,
+			@NonNull final BigInteger feederId,
+			@NonNull final SessionDescription localSdp,
+			@NonNull final SessionDescription remoteSdp) {
+
+			JanusRTCClient.this.createSubscriber(feederId, localSdp, remoteSdp);
 		}
 		
 		@Override
@@ -1573,7 +1683,9 @@ public class JanusRTCClient implements JanusClient {
 		if (DEBUG) Log.v(TAG, "handlePluginEvent: unhandled event");
 	}
 	
-	private void handleOnJoin(final EventRoom room) {
+	private void handleOnJoin(@NonNull final JanusPlugin plugin,
+		final EventRoom room) {
+
 		if (DEBUG) Log.v(TAG, "handleOnJoin:");
 		// roomにjoinできた
 		final SignalingParameters params = new SignalingParameters(
