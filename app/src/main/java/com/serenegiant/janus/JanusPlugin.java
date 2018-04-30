@@ -45,6 +45,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_ISAC;
+import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 
 /*package*/ abstract class JanusPlugin {
 	private static final boolean DEBUG = true;	// set false on production
@@ -171,6 +172,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_ISAC;
 	}
 	
 	public void createOffer() {
+		if (DEBUG) Log.v(TAG, "createOffer:");
 		executor.execute(() -> {
 			if (peerConnection != null && !isError) {
 				if (DEBUG) Log.d(TAG, "PC Create OFFER");
@@ -182,6 +184,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_ISAC;
 	}
 	
 	public void createAnswer() {
+		if (DEBUG) Log.v(TAG, "createAnswer:");
 		executor.execute(() -> {
 			if (peerConnection != null && !isError) {
 				if (DEBUG) Log.d(TAG, "PC create ANSWER");
@@ -193,6 +196,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_ISAC;
 	}
 	
 	private void drainCandidates() {
+		if (DEBUG) Log.v(TAG, "drainCandidates:");
 		if (queuedRemoteCandidates != null) {
 			if (DEBUG) Log.d(TAG, "Add " + queuedRemoteCandidates.size() + " remote candidates");
 			for (IceCandidate candidate : queuedRemoteCandidates) {
@@ -203,6 +207,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_ISAC;
 	}
 
 	public void addRemoteIceCandidate(final IceCandidate candidate) {
+		if (DEBUG) Log.v(TAG, "addRemoteIceCandidate:");
 		executor.execute(() -> {
 			if (peerConnection != null && !isError) {
 				if (queuedRemoteCandidates != null) {
@@ -215,6 +220,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_ISAC;
 	}
 	
 	public void removeRemoteIceCandidates(final IceCandidate[] candidates) {
+		if (DEBUG) Log.v(TAG, "removeRemoteIceCandidates:");
 		executor.execute(() -> {
 			if (peerConnection == null || isError) {
 				return;
@@ -223,6 +229,32 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_ISAC;
 			// they are processed in the proper order.
 			drainCandidates();
 			peerConnection.removeIceCandidates(candidates);
+		});
+	}
+
+	public void setRemoteDescription(final SessionDescription sdp) {
+		executor.execute(() -> {
+			if (peerConnection == null || isError) {
+				return;
+			}
+			final PeerConnectionParameters peerConnectionParameters
+				= mCallback.getPeerConnectionParameters(JanusPlugin.this);
+			String sdpDescription = sdp.description;
+			if (preferIsac) {
+				sdpDescription = SdpUtils.preferCodec(sdpDescription, AUDIO_CODEC_ISAC, true);
+			}
+			if (mCallback.isVideoCallEnabled(JanusPlugin.this)) {
+				sdpDescription =
+					SdpUtils.preferCodec(sdpDescription,
+						peerConnectionParameters.getSdpVideoCodecName(), false);
+			}
+			if (peerConnectionParameters.audioStartBitrate > 0) {
+				sdpDescription = SdpUtils.setStartBitrate(
+					AUDIO_CODEC_OPUS, false, sdpDescription, peerConnectionParameters.audioStartBitrate);
+			}
+			if (DEBUG) Log.d(TAG, "Set remote SDP.");
+			final SessionDescription sdpRemote = new SessionDescription(sdp.type, sdpDescription);
+			peerConnection.setRemoteDescription(mSdpObserver, sdpRemote);
 		});
 	}
 
@@ -376,7 +408,6 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_ISAC;
 				+ "\n" + response.body());
 			if (response.isSuccessful() && (response.body() != null)) {
 				removeCall(call);
-				this.mLocalSdp = sdp;
 				final EventRoom offer = response.body();
 				if ("event".equals(offer.janus)) {
 					if (DEBUG) Log.v(TAG, "多分ここにはこない, ackが返ってくるはず");
@@ -847,7 +878,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_ISAC;
 			if (DEBUG) Log.v(TAG, "onRemoteDescription:");
 			super.onRemoteDescription(sdp);
 //			// 通話準備完了
-//			mCallback.onRemoteDescription(this, sdp);
+			mCallback.onRemoteDescription(this, sdp);
 			return true;
 		}
 	

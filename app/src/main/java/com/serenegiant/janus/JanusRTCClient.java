@@ -1519,14 +1519,17 @@ public class JanusRTCClient implements JanusClient {
 				+ "\n" + sdp);
 			if (plugin instanceof JanusPlugin.Publisher) {
 				mCallback.onRemoteDescription(sdp);
+				plugin.setRemoteDescription(sdp);
 			} else if (plugin instanceof JanusPlugin.Subscriber) {
 				if (sdp.type == SessionDescription.Type.ANSWER) {
 					mCallback.onRemoteDescription(sdp);
+					plugin.setRemoteDescription(sdp);
 				} else {
 					final SessionDescription answerSdp
 						= new SessionDescription(SessionDescription.Type.ANSWER,
 							sdp.description);
-					mCallback.onRemoteDescription(sdp);
+					mCallback.onRemoteDescription(answerSdp);
+					plugin.setRemoteDescription(answerSdp);
 				}
 			}
 		}

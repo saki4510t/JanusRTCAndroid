@@ -812,26 +812,26 @@ public class CallActivity extends BaseActivity
 //		peerConnectionClient.createPeerConnection(
 //			localProxyVideoSink, remoteRenderers, videoCapturer, signalingParameters);
 
-//		if (signalingParameters.initiator) {
-//			logAndToast("Creating OFFER...");
+		if (signalingParameters.initiator) {
+			logAndToast("Creating OFFER...");
 //			// Create offer. Offer SDP will be sent to answering client in
 //			// PeerConnectionEvents.onLocalDescription event.
 //			peerConnectionClient.createOffer();
-//		} else {
-//			if (params.offerSdp != null) {
+		} else {
+			if (params.offerSdp != null) {
 //				peerConnectionClient.setRemoteDescription(params.offerSdp);
-//				logAndToast("Creating ANSWER...");
+				logAndToast("Creating ANSWER...");
 //				// Create answer. Answer SDP will be sent to offering client in
 //				// PeerConnectionEvents.onLocalDescription event.
 //				peerConnectionClient.createAnswer();
-//			}
+			}
 //			if (params.iceCandidates != null) {
 //				// Add remote ICE candidates from room.
 //				for (IceCandidate iceCandidate : params.iceCandidates) {
 //					peerConnectionClient.addRemoteIceCandidate(iceCandidate);
 //				}
 //			}
-//		}
+		}
 	}
 
 	private final JanusCallback mJanusCallback
