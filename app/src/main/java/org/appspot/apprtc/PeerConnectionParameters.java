@@ -9,6 +9,7 @@ import static org.appspot.apprtc.AppRTCConst.*;
  */
 public class PeerConnectionParameters {
 	private static final boolean DEBUG = false;	// set false on production
+	private static final String TAG = PeerConnectionParameters.class.getSimpleName();
 
 	public final boolean videoCallEnabled;
 	public final boolean loopback;

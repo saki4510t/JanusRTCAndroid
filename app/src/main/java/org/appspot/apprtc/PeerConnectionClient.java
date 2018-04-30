@@ -89,6 +89,7 @@ import static org.appspot.apprtc.AppRTCConst.*;
  */
 public class PeerConnectionClient {
 	private static final boolean DEBUG = true;    // set false on production
+	private static final String TAG = PeerConnectionClient.class.getSimpleName();
 	
 	/**
 	 * Executor thread is started once in private ctor and is used for all

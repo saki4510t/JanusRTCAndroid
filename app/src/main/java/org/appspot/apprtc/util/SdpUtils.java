@@ -11,12 +11,11 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
-import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_PARAM_BITRATE;
-import static org.appspot.apprtc.AppRTCConst.TAG;
-import static org.appspot.apprtc.AppRTCConst.VIDEO_CODEC_PARAM_START_BITRATE;
+import static org.appspot.apprtc.AppRTCConst.*;
 
 public class SdpUtils {
 	private static final boolean DEBUG = false;	// set false on production
+	private static final String TAG = SdpUtils.class.getSimpleName();
 
 	@SuppressWarnings("StringSplitter")
 	public static String setStartBitrate(

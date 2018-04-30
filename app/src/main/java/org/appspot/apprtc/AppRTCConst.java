@@ -4,7 +4,6 @@ public class AppRTCConst {
 	public static final String VIDEO_TRACK_ID = "ARDAMSv0";
 	public static final String AUDIO_TRACK_ID = "ARDAMSa0";
 	public static final String VIDEO_TRACK_TYPE = "video";
-	public static final String TAG = PeerConnectionClient.class.getSimpleName();
 	public static final String VIDEO_CODEC_VP8 = "VP8";
 	public static final String VIDEO_CODEC_VP9 = "VP9";
 	public static final String VIDEO_CODEC_H264 = "H264";
