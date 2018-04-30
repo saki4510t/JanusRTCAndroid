@@ -32,7 +32,7 @@ public class PeerConnectionParameters {
 	public final boolean disableWebRtcAGCAndHPF;
 	public final boolean enableRtcEventLog;
 	public final boolean useLegacyAudioDevice;
-	final DataChannelParameters dataChannelParameters;
+	public final DataChannelParameters dataChannelParameters;
 	
 	public PeerConnectionParameters(boolean videoCallEnabled, boolean loopback, boolean tracing,
 		int videoWidth, int videoHeight, int videoFps, int videoMaxBitrate, String videoCodec,
