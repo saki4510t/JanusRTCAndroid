@@ -47,7 +47,7 @@ import retrofit2.Response;
 	/**
 	 * callback interface for JanusPlugin
 	 */
-	/*package*/ interface JanusPluginCallback {
+	public interface JanusPluginCallback {
 		public void onAttach(@NonNull final JanusPlugin plugin);
 		public void onJoin(@NonNull final JanusPlugin plugin, final EventRoom room);
 		public void onDetach(@NonNull final JanusPlugin plugin);
@@ -102,7 +102,7 @@ import retrofit2.Response;
 	 * @param session
 	 * @param callback
 	 */
-	/*package*/ JanusPlugin(@NonNull VideoRoom videoRoom,
+	public JanusPlugin(@NonNull VideoRoom videoRoom,
 		@NonNull final Session session,
 		@NonNull final JanusPluginCallback callback,
 		@NonNull final PeerConnection peerConnection,
@@ -140,7 +140,7 @@ import retrofit2.Response;
 	/**
 	 * attach to VideoRoom plugin
 	 */
-	/*package*/ void attach() {
+	public void attach() {
 		if (DEBUG) Log.v(TAG, "attach:");
 		final Attach attach = new Attach(mSession,
 			"janus.plugin.videoroom",
@@ -187,7 +187,7 @@ import retrofit2.Response;
 	 * join to Room
 	 * @throws IOException
 	 */
-	/*package*/ void join() {
+	public void join() {
 		if (DEBUG) Log.v(TAG, "join:");
 		final Message message = new Message(mRoom,
 			new Join(1234/*FIXME*/, getPType(), Build.MODEL, getFeedId()),
@@ -223,7 +223,7 @@ import retrofit2.Response;
 	/**
 	 * detach from VideoRoom plugin
 	 */
-	/*package*/ void detach() {
+	public void detach() {
 		if (DEBUG) Log.v(TAG, "detach:");
 		if ((mRoomState == RoomState.CONNECTED)
 			|| (mRoomState == RoomState.ATTACHED)
@@ -259,7 +259,7 @@ import retrofit2.Response;
 		}
 	}
 
-	/*package*/ void sendOfferSdp(final SessionDescription sdp, final boolean isLoopback) {
+	public void sendOfferSdp(final SessionDescription sdp, final boolean isLoopback) {
 		if (DEBUG) Log.v(TAG, "sendOfferSdp:");
 		if (mRoomState != RoomState.CONNECTED) {
 			reportError(new RuntimeException("Sending offer SDP in non connected state."));
@@ -309,7 +309,7 @@ import retrofit2.Response;
 		}
 	}
 	
-	/*package*/ void sendAnswerSdp(final SessionDescription sdp, final boolean isLoopback) {
+	public void sendAnswerSdp(final SessionDescription sdp, final boolean isLoopback) {
 		if (DEBUG) Log.v(TAG, "sendAnswerSdpInternal:");
 		if (isLoopback) {
 			Log.e(TAG, "Sending answer in loopback mode.");
@@ -658,13 +658,13 @@ import retrofit2.Response;
 		}
 	};
 //================================================================================
-	/*package*/ static class Publisher extends JanusPlugin {
+	public static class Publisher extends JanusPlugin {
 
 		/**
 		 * コンストラクタ
 		 * @param session
 		 */
-		/*package*/ Publisher(@NonNull VideoRoom videoRoom,
+		public Publisher(@NonNull VideoRoom videoRoom,
 			@NonNull final Session session,
 			@NonNull final JanusPluginCallback callback,
 			@NonNull final PeerConnection peerConnection,
@@ -732,8 +732,8 @@ import retrofit2.Response;
 		}
 	}
 	
-	/*package*/ static class Subscriber extends JanusPlugin {
-		/*package*/ final BigInteger feederId;
+	public static class Subscriber extends JanusPlugin {
+		public final BigInteger feederId;
 
 		/**
 		 * コンストラクタ
