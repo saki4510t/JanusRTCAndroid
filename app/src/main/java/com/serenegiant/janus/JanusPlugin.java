@@ -695,11 +695,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 	 * @param sdp
 	 * @return
 	 */
-	protected boolean onRemoteDescription(@NonNull final SessionDescription sdp) {
-		if (DEBUG) Log.v(TAG, "onRemoteDescription:" + sdp);
-		mRemoteSdp = sdp;
-		return true;
-	}
+	protected abstract boolean onRemoteDescription(@NonNull final SessionDescription sdp);
 
 	/**
 	 * WebRTC関係のイベント受信時の処理
@@ -876,7 +872,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		@Override
 		protected boolean onRemoteDescription(@NonNull final SessionDescription sdp) {
 			if (DEBUG) Log.v(TAG, "onRemoteDescription:");
-			super.onRemoteDescription(sdp);
+			mRemoteSdp = sdp;
 //			// 通話準備完了
 			mCallback.onRemoteDescription(this, sdp);
 			return true;
@@ -935,8 +931,8 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 
 			if (DEBUG) Log.v(TAG, "Subscriber:local=" + localSdp + ",remote=" + remoteSdp);
 			this.feederId = feederId;
-			this.mLocalSdp = localSdp;
-			this.mRemoteSdp = remoteSdp;
+//			this.mLocalSdp = localSdp;
+//			this.mRemoteSdp = remoteSdp;
 		}
 		
 		@NonNull
@@ -952,14 +948,12 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		@Override
 		protected boolean onRemoteDescription(@NonNull final SessionDescription sdp) {
 			if (DEBUG) Log.v(TAG, "onRemoteDescription:\n" + sdp.description);
-			if (DEBUG) Log.v(TAG, "onRemoteDescription:local:\n" + mLocalSdp.description);
-			if (DEBUG) Log.v(TAG, "onRemoteDescription:remote:\n" + mRemoteSdp.description);
-//			super.onRemoteDescription(sdp);
-			if (sdp.type == SessionDescription.Type.OFFER) {
-				sendAnswerSdp(mLocalSdp, false);
-			}
+			mRemoteSdp = sdp;
 //			// 通話準備完了
-			mCallback.onRemoteDescription(this, mRemoteSdp);
+			mCallback.onRemoteDescription(this, sdp);
+			if (sdp.type == SessionDescription.Type.OFFER) {
+				createAnswer();
+			}
 			return true;
 		}
 

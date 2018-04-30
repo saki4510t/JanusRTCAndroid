@@ -150,6 +150,8 @@ public class JanusRTCClient implements JanusClient {
 	@Nullable
 	private List<VideoRenderer.Callbacks> remoteRenders;
 	@Nullable
+	private VideoTrack remoteVideoTrack;
+	@Nullable
 	private AudioSource audioSource;
 	@Nullable
 	private AudioTrack localAudioTrack;
@@ -366,10 +368,9 @@ public class JanusRTCClient implements JanusClient {
 			if (localVideoTrack != null) {
 				localVideoTrack.setEnabled(renderVideo);
 			}
-			// FIXME
-//			if (remoteVideoTrack != null) {
-//				remoteVideoTrack.setEnabled(renderVideo);
-//			}
+			if (remoteVideoTrack != null) {
+				remoteVideoTrack.setEnabled(renderVideo);
+			}
 		});
 	}
 
@@ -682,6 +683,7 @@ public class JanusRTCClient implements JanusClient {
 			Logging.d(TAG, "Capturing format: " + videoWidth + "x" + videoHeight + "@" + videoFps);
 		}
 		
+		// FIXME ここの処理はPublisherとSubscriberで別にしないといけない
 		// Create audio constraints.
 		audioConstraints = new MediaConstraints();
 		// added for audio performance measurements
@@ -700,8 +702,9 @@ public class JanusRTCClient implements JanusClient {
 		sdpMediaConstraints = new MediaConstraints();
 		sdpMediaConstraints.mandatory.add(
 			new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
-		sdpMediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair(
-			"OfferToReceiveVideo", Boolean.toString(isVideoCallEnabled())));
+		sdpMediaConstraints.mandatory.add(
+			new MediaConstraints.KeyValuePair(
+				"OfferToReceiveVideo", Boolean.toString(isVideoCallEnabled())));
 	}
 	
 	private void createPeerConnectionInternal() {
@@ -808,17 +811,114 @@ public class JanusRTCClient implements JanusClient {
 		addPlugin(BigInteger.ZERO, publisher);
 		publisher.attach();
 	}
-
+	
+	/**
+	 * Subscriberを生成
+	 * @param feederId
+	 * @param localSdp
+	 * @param remoteSdp
+	 */
 	private void createSubscriber(
 		@NonNull final BigInteger feederId,
 		@NonNull final SessionDescription localSdp,
 		@NonNull final SessionDescription remoteSdp) {
 		
 		if (DEBUG) Log.v(TAG, "createSubscriber:");
-		// FIXME 未実装
+
+		final Context context = getContext();
+		if ((context == null) || (factory == null) || isError) {
+			Log.e(TAG, "createSubscriber:Peerconnection factory is not created");
+			return;
+		}
+		if (DEBUG) Log.d(TAG, "createSubscriber:Create peer connection.");
+		
+		PeerConnection peerConnection = null;
+		DataChannel dataChannel = null;
+		
+		if (isVideoCallEnabled()) {
+			factory.setVideoHwAccelerationOptions(
+				rootEglBase.getEglBaseContext(), rootEglBase.getEglBaseContext());
+		}
+		
+		final PeerConnection.RTCConfiguration rtcConfig =
+			new PeerConnection.RTCConfiguration(mCallback.getIceServers(this));
+		// TCP candidates are only useful when connecting to a server that supports
+		// ICE-TCP.
+		rtcConfig.tcpCandidatePolicy = PeerConnection.TcpCandidatePolicy.DISABLED;
+		rtcConfig.bundlePolicy = PeerConnection.BundlePolicy.MAXBUNDLE;
+		rtcConfig.rtcpMuxPolicy = PeerConnection.RtcpMuxPolicy.REQUIRE;
+		rtcConfig.continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY;
+		// Use ECDSA encryption.
+		rtcConfig.keyType = PeerConnection.KeyType.ECDSA;
+		// Enable DTLS for normal calls and disable for loopback calls.
+		rtcConfig.enableDtlsSrtp = !peerConnectionParameters.loopback;
+		rtcConfig.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
+		
+		peerConnection = factory.createPeerConnection(rtcConfig, mPeerConnectionObserver);
+		
+		if (dataChannelEnabled) {
+			final DataChannel.Init init = new DataChannel.Init();
+			init.ordered = peerConnectionParameters.dataChannelParameters.ordered;
+			init.negotiated = peerConnectionParameters.dataChannelParameters.negotiated;
+			init.maxRetransmits = peerConnectionParameters.dataChannelParameters.maxRetransmits;
+			init.maxRetransmitTimeMs = peerConnectionParameters.dataChannelParameters.maxRetransmitTimeMs;
+			init.id = peerConnectionParameters.dataChannelParameters.id;
+			init.protocol = peerConnectionParameters.dataChannelParameters.protocol;
+			dataChannel = peerConnection.createDataChannel("ApprtcDemo data", init);
+		}
+		
+//		final List<String> mediaStreamLabels = Collections.singletonList("ARDAMS");
+		if (isVideoCallEnabled()) {
+//			peerConnection.addTrack(createVideoTrack(videoCapturer), mediaStreamLabels);
+			// We can add the renderers right away because we don't need to wait for an
+			// answer to get the remote track.
+			remoteVideoTrack = getRemoteVideoTrack(peerConnection);
+			if (remoteVideoTrack != null) {
+				remoteVideoTrack.setEnabled(renderVideo);
+				for (VideoRenderer.Callbacks remoteRender : remoteRenders) {
+					remoteVideoTrack.addRenderer(new VideoRenderer(remoteRender));
+				}
+			} else {
+				Log.w(TAG, "createSubscriber: remoteVideoTrack is null");
+			}
+		}
+//		peerConnection.addTrack(createAudioTrack(), mediaStreamLabels);
+//		if (isVideoCallEnabled()) {
+//			findVideoSender(peerConnection);
+//		}
+		
+//		if (peerConnectionParameters.aecDump) {
+//			try {
+//				final ParcelFileDescriptor aecDumpFileDescriptor =
+//					ParcelFileDescriptor.open(new File(
+//						Environment.getExternalStorageDirectory().getPath()
+//							+ File.separator + "Download/audio.aecdump"),
+//						ParcelFileDescriptor.MODE_READ_WRITE | ParcelFileDescriptor.MODE_CREATE
+//							| ParcelFileDescriptor.MODE_TRUNCATE);
+//				factory.startAecDump(aecDumpFileDescriptor.detachFd(), -1);
+//			} catch (IOException e) {
+//				Log.e(TAG, "Can not open aecdump file", e);
+//			}
+//		}
+		
+		if (saveRecordedAudioToFile != null) {
+			if (saveRecordedAudioToFile.start()) {
+				if (DEBUG) Log.d(TAG, "createSubscriber:Recording input audio to file is activated");
+			}
+		}
+
+		RtcEventLog rtcEventLog = null;
+		if (peerConnectionParameters.enableRtcEventLog) {
+			rtcEventLog = new RtcEventLog(peerConnection);
+			rtcEventLog.start(createRtcEventLogOutputFile());
+		} else {
+			if (DEBUG) Log.d(TAG, "createSubscriber: RtcEventLog is disabled.");
+		}
+		if (DEBUG) Log.d(TAG, "createSubscriber: Peer connection created.");
+
 		final JanusPlugin.Subscriber subscriber = new JanusPlugin.Subscriber(mJanus,
 			mSession, mJanusPluginCallback, feederId, localSdp, remoteSdp,
-			null, null, null);	// FIXME
+			peerConnection, dataChannel, rtcEventLog);
 		subscriber.attach();
 	}
 
@@ -874,7 +974,7 @@ public class JanusRTCClient implements JanusClient {
 	private VideoTrack getRemoteVideoTrack(@NonNull final PeerConnection peerConnection) {
 		if (DEBUG) Log.v(TAG, "getRemoteVideoTrack:");
 		for (RtpTransceiver transceiver : peerConnection.getTransceivers()) {
-			MediaStreamTrack track = transceiver.getReceiver().track();
+			final MediaStreamTrack track = transceiver.getReceiver().track();
 			if (track instanceof VideoTrack) {
 				return (VideoTrack) track;
 			}
@@ -1427,9 +1527,8 @@ public class JanusRTCClient implements JanusClient {
 				handleOnJoin(plugin, room);	// FIXME publisherの時はhandleJoin呼んじゃダメかも
 				plugin.createOffer();
 			} else if (plugin instanceof JanusPlugin.Subscriber) {
-//				mConnectionState = ConnectionState.CONNECTED;
-//				handleOnJoin(room);
-//				plugin.createAnswer();	// FIXME ここで呼ぶべき？
+				handleOnJoin(plugin, room);
+				plugin.createAnswer();	// FIXME ここで呼ぶべき？
 			}
 		}
 		
@@ -1508,7 +1607,9 @@ public class JanusRTCClient implements JanusClient {
 			@NonNull final SessionDescription localSdp,
 			@NonNull final SessionDescription remoteSdp) {
 
-			JanusRTCClient.this.createSubscriber(feederId, localSdp, remoteSdp);
+			executor.execute(() -> {
+				JanusRTCClient.this.createSubscriber(feederId, localSdp, remoteSdp);
+			});
 		}
 		
 		@Override
@@ -1517,21 +1618,22 @@ public class JanusRTCClient implements JanusClient {
 			
 			if (DEBUG) Log.v(TAG, "onRemoteDescription:" + plugin
 				+ "\n" + sdp);
-			if (plugin instanceof JanusPlugin.Publisher) {
-				mCallback.onRemoteDescription(sdp);
-				plugin.setRemoteDescription(sdp);
-			} else if (plugin instanceof JanusPlugin.Subscriber) {
-				if (sdp.type == SessionDescription.Type.ANSWER) {
-					mCallback.onRemoteDescription(sdp);
-					plugin.setRemoteDescription(sdp);
-				} else {
-					final SessionDescription answerSdp
-						= new SessionDescription(SessionDescription.Type.ANSWER,
-							sdp.description);
-					mCallback.onRemoteDescription(answerSdp);
-					plugin.setRemoteDescription(answerSdp);
-				}
-			}
+
+			mCallback.onRemoteDescription(sdp);
+			plugin.setRemoteDescription(sdp);
+//			if (plugin instanceof JanusPlugin.Publisher) {
+//				mCallback.onRemoteDescription(sdp);
+//				plugin.setRemoteDescription(sdp);
+//			} else if (plugin instanceof JanusPlugin.Subscriber) {
+//				if (sdp.type == SessionDescription.Type.ANSWER) {
+//					mCallback.onRemoteDescription(sdp);
+//				} else {
+//					final SessionDescription answerSdp
+//						= new SessionDescription(SessionDescription.Type.ANSWER,
+//							sdp.description);
+//					mCallback.onRemoteDescription(answerSdp);
+//				}
+//			}
 		}
 		
 		@Override
