@@ -66,17 +66,11 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		public void onLocalDescription(@NonNull final JanusPlugin plugin, final SessionDescription sdp);
 
 		@NonNull
-		public MediaConstraints getAudioConstraints(@NonNull final JanusPlugin plugin);
-		@NonNull
-		public MediaConstraints getSdpMediaConstraints(@NonNull final JanusPlugin plugin);
-		@NonNull
 		public PeerConnectionParameters getPeerConnectionParameters(@NonNull final JanusPlugin plugin);
 		public boolean isVideoCallEnabled(@NonNull final JanusPlugin plugin);
 
 		public void createSubscriber(@NonNull final JanusPlugin plugin,
-			@NonNull final BigInteger feederId,
-			@NonNull final SessionDescription localSdp,
-			@NonNull final SessionDescription remoteSdp);
+			@NonNull final BigInteger feederId);
 
 		/**
 		 * リモート側のSessionDescriptionを受信した時
@@ -100,6 +94,8 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 
 	protected final String TAG = "JanusPlugin:" + getClass().getSimpleName();
 
+	@NonNull
+	private final MediaConstraints sdpMediaConstraints;
 	private PeerConnection peerConnection;
 	/** Enable org.appspot.apprtc.RtcEventLog. */
 	@Nullable
@@ -139,6 +135,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 	public JanusPlugin(@NonNull VideoRoom videoRoom,
 		@NonNull final Session session,
 		@NonNull final JanusPluginCallback callback,
+		@NonNull final MediaConstraints sdpMediaConstraints,
 		@NonNull final PeerConnection peerConnection,
 		@Nullable final DataChannel dataChannel,
 		@Nullable final RtcEventLog rtcEventLog) {
@@ -146,6 +143,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		this.mVideoRoom = videoRoom;
 		this.mSession = session;
 		this.mCallback = callback;
+		this.sdpMediaConstraints = sdpMediaConstraints;
 		this.peerConnection = peerConnection;
 		this.dataChannel = dataChannel;
 		this.rtcEventLog = rtcEventLog;
@@ -177,8 +175,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 			if (peerConnection != null && !isError) {
 				if (DEBUG) Log.d(TAG, "PC Create OFFER");
 				isInitiator = true;
-				peerConnection.createOffer(mSdpObserver,
-					mCallback.getSdpMediaConstraints(this));
+				peerConnection.createOffer(mSdpObserver, sdpMediaConstraints);
 			}
 		});
 	}
@@ -189,8 +186,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 			if (peerConnection != null && !isError) {
 				if (DEBUG) Log.d(TAG, "PC create ANSWER");
 				isInitiator = false;
-				peerConnection.createAnswer(mSdpObserver,
-					mCallback.getSdpMediaConstraints(this));
+				peerConnection.createAnswer(mSdpObserver, sdpMediaConstraints);
 			}
 		});
 	}
@@ -845,11 +841,13 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		public Publisher(@NonNull VideoRoom videoRoom,
 			@NonNull final Session session,
 			@NonNull final JanusPluginCallback callback,
+			@NonNull final MediaConstraints sdpMediaConstraints,
 			@NonNull final PeerConnection peerConnection,
 			@Nullable final DataChannel dataChannel,
 			@Nullable final RtcEventLog rtcEventLog) {
 
 			super(videoRoom, session, callback,
+				sdpMediaConstraints,
 				peerConnection, dataChannel, rtcEventLog);
 			if (DEBUG) Log.v(TAG, "Publisher:");
 		}
@@ -900,8 +898,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 						executor.execute(() -> {
 							if (DEBUG) Log.v(TAG, "checkPublishers:attach new Subscriber");
 							mCallback.createSubscriber(
-								Publisher.this,
-								info.id, mLocalSdp, mRemoteSdp);
+								Publisher.this, info.id);
 						});
 					}
 				}
@@ -920,19 +917,17 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 			@NonNull final Session session,
 			@NonNull final JanusPluginCallback callback,
 			@NonNull final BigInteger feederId,
-			@NonNull final SessionDescription localSdp,
-			@NonNull final SessionDescription remoteSdp,
+			@NonNull final MediaConstraints sdpMediaConstraints,
 			@NonNull final PeerConnection peerConnection,
 			@Nullable final DataChannel dataChannel,
 			@Nullable final RtcEventLog rtcEventLog) {
 
 			super(videoRoom, session, callback,
+				sdpMediaConstraints,
 				peerConnection, dataChannel, rtcEventLog);
 
-			if (DEBUG) Log.v(TAG, "Subscriber:local=" + localSdp + ",remote=" + remoteSdp);
+			if (DEBUG) Log.v(TAG, "Subscriber:");
 			this.feederId = feederId;
-//			this.mLocalSdp = localSdp;
-//			this.mRemoteSdp = remoteSdp;
 		}
 		
 		@NonNull

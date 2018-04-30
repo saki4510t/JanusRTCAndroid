@@ -158,8 +158,8 @@ public class JanusRTCClient implements JanusClient {
 	private int videoWidth;
 	private int videoHeight;
 	private int videoFps;
-	private MediaConstraints audioConstraints;
-	private MediaConstraints sdpMediaConstraints;
+//	private MediaConstraints audioConstraints;
+//	private MediaConstraints sdpMediaConstraints;
 	/** enableAudio is set to true if audio should be sent. */
 	private boolean enableAudio = true;
 	/**
@@ -682,29 +682,6 @@ public class JanusRTCClient implements JanusClient {
 			}
 			Logging.d(TAG, "Capturing format: " + videoWidth + "x" + videoHeight + "@" + videoFps);
 		}
-		
-		// FIXME ここの処理はPublisherとSubscriberで別にしないといけない
-		// Create audio constraints.
-		audioConstraints = new MediaConstraints();
-		// added for audio performance measurements
-		if (peerConnectionParameters.noAudioProcessing) {
-			if (DEBUG) Log.d(TAG, "Disabling audio processing");
-			audioConstraints.mandatory.add(
-				new MediaConstraints.KeyValuePair(AUDIO_ECHO_CANCELLATION_CONSTRAINT, "false"));
-			audioConstraints.mandatory.add(
-				new MediaConstraints.KeyValuePair(AUDIO_AUTO_GAIN_CONTROL_CONSTRAINT, "false"));
-			audioConstraints.mandatory.add(
-				new MediaConstraints.KeyValuePair(AUDIO_HIGH_PASS_FILTER_CONSTRAINT, "false"));
-			audioConstraints.mandatory.add(
-				new MediaConstraints.KeyValuePair(AUDIO_NOISE_SUPPRESSION_CONSTRAINT, "false"));
-		}
-		// Create SDP constraints.
-		sdpMediaConstraints = new MediaConstraints();
-		sdpMediaConstraints.mandatory.add(
-			new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
-		sdpMediaConstraints.mandatory.add(
-			new MediaConstraints.KeyValuePair(
-				"OfferToReceiveVideo", Boolean.toString(isVideoCallEnabled())));
 	}
 	
 	private void createPeerConnectionInternal() {
@@ -750,7 +727,29 @@ public class JanusRTCClient implements JanusClient {
 			init.protocol = peerConnectionParameters.dataChannelParameters.protocol;
 			dataChannel = peerConnection.createDataChannel("ApprtcDemo data", init);
 		}
-		
+		// FIXME まだ設定が正しくない
+		// Create audio constraints.
+		final MediaConstraints audioConstraints = new MediaConstraints();
+		// added for audio performance measurements
+		if (peerConnectionParameters.noAudioProcessing) {
+			if (DEBUG) Log.d(TAG, "Disabling audio processing");
+			audioConstraints.mandatory.add(
+				new MediaConstraints.KeyValuePair(AUDIO_ECHO_CANCELLATION_CONSTRAINT, "false"));
+			audioConstraints.mandatory.add(
+				new MediaConstraints.KeyValuePair(AUDIO_AUTO_GAIN_CONTROL_CONSTRAINT, "false"));
+			audioConstraints.mandatory.add(
+				new MediaConstraints.KeyValuePair(AUDIO_HIGH_PASS_FILTER_CONSTRAINT, "false"));
+			audioConstraints.mandatory.add(
+				new MediaConstraints.KeyValuePair(AUDIO_NOISE_SUPPRESSION_CONSTRAINT, "false"));
+		}
+		// Create SDP constraints.
+		final MediaConstraints sdpMediaConstraints = new MediaConstraints();
+		sdpMediaConstraints.mandatory.add(
+			new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
+		sdpMediaConstraints.mandatory.add(
+			new MediaConstraints.KeyValuePair(
+				"OfferToReceiveVideo", Boolean.toString(isVideoCallEnabled())));
+
 		// Set INFO libjingle logging.
 		// NOTE: this _must_ happen while |factory| is alive!
 		Logging.enableLogToDebugOutput(Logging.Severity.LS_INFO);
@@ -767,7 +766,7 @@ public class JanusRTCClient implements JanusClient {
 //				remoteVideoTrack.addRenderer(new VideoRenderer(remoteRender));
 //			}
 		}
-		peerConnection.addTrack(createAudioTrack(), mediaStreamLabels);
+		peerConnection.addTrack(createAudioTrack(audioConstraints), mediaStreamLabels);
 		if (isVideoCallEnabled()) {
 			findVideoSender(peerConnection);
 		}
@@ -804,6 +803,7 @@ public class JanusRTCClient implements JanusClient {
 		final JanusPlugin.Publisher publisher
 			= new JanusPlugin.Publisher(
 				mJanus, mSession, mJanusPluginCallback,
+				sdpMediaConstraints,
 				peerConnection, dataChannel, rtcEventLog);
 		// ローカルのPublisherは1つしかないので検索の手間を省くために
 		// BigInteger.ZEROをキーとして登録しておく。
@@ -815,13 +815,9 @@ public class JanusRTCClient implements JanusClient {
 	/**
 	 * Subscriberを生成
 	 * @param feederId
-	 * @param localSdp
-	 * @param remoteSdp
 	 */
 	private void createSubscriber(
-		@NonNull final BigInteger feederId,
-		@NonNull final SessionDescription localSdp,
-		@NonNull final SessionDescription remoteSdp) {
+		@NonNull final BigInteger feederId) {
 		
 		if (DEBUG) Log.v(TAG, "createSubscriber:");
 
@@ -867,6 +863,29 @@ public class JanusRTCClient implements JanusClient {
 			dataChannel = peerConnection.createDataChannel("ApprtcDemo data", init);
 		}
 		
+		// FIXME まだ設定が正しくない
+		// Create audio constraints.
+		final MediaConstraints audioConstraints = new MediaConstraints();
+		// added for audio performance measurements
+		if (peerConnectionParameters.noAudioProcessing) {
+			if (DEBUG) Log.d(TAG, "Disabling audio processing");
+			audioConstraints.mandatory.add(
+				new MediaConstraints.KeyValuePair(AUDIO_ECHO_CANCELLATION_CONSTRAINT, "false"));
+			audioConstraints.mandatory.add(
+				new MediaConstraints.KeyValuePair(AUDIO_AUTO_GAIN_CONTROL_CONSTRAINT, "false"));
+			audioConstraints.mandatory.add(
+				new MediaConstraints.KeyValuePair(AUDIO_HIGH_PASS_FILTER_CONSTRAINT, "false"));
+			audioConstraints.mandatory.add(
+				new MediaConstraints.KeyValuePair(AUDIO_NOISE_SUPPRESSION_CONSTRAINT, "false"));
+		}
+		// Create SDP constraints.
+		final MediaConstraints sdpMediaConstraints = new MediaConstraints();
+		sdpMediaConstraints.mandatory.add(
+			new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
+		sdpMediaConstraints.mandatory.add(
+			new MediaConstraints.KeyValuePair(
+				"OfferToReceiveVideo", Boolean.toString(isVideoCallEnabled())));
+
 //		final List<String> mediaStreamLabels = Collections.singletonList("ARDAMS");
 		if (isVideoCallEnabled()) {
 //			peerConnection.addTrack(createVideoTrack(videoCapturer), mediaStreamLabels);
@@ -917,7 +936,8 @@ public class JanusRTCClient implements JanusClient {
 		if (DEBUG) Log.d(TAG, "createSubscriber: Peer connection created.");
 
 		final JanusPlugin.Subscriber subscriber = new JanusPlugin.Subscriber(mJanus,
-			mSession, mJanusPluginCallback, feederId, localSdp, remoteSdp,
+			mSession, mJanusPluginCallback,
+			feederId, sdpMediaConstraints,
 			peerConnection, dataChannel, rtcEventLog);
 		subscriber.attach();
 	}
@@ -932,7 +952,7 @@ public class JanusRTCClient implements JanusClient {
 	}
 
 	@Nullable
-	private AudioTrack createAudioTrack() {
+	private AudioTrack createAudioTrack(final MediaConstraints audioConstraints) {
 		if (DEBUG) Log.v(TAG, "createAudioTrack:");
 		audioSource = factory.createAudioSource(audioConstraints);
 		localAudioTrack = factory.createAudioTrack(AUDIO_TRACK_ID, audioSource);
@@ -1578,20 +1598,6 @@ public class JanusRTCClient implements JanusClient {
 
 		@NonNull
 		@Override
-		public MediaConstraints getAudioConstraints(@NonNull final JanusPlugin plugin) {
-			if (DEBUG) Log.v(TAG, "getAudioConstraints:" + plugin);
-			return audioConstraints;
-		}
-		
-		@NonNull
-		@Override
-		public MediaConstraints getSdpMediaConstraints(@NonNull final JanusPlugin plugin) {
-			if (DEBUG) Log.v(TAG, "getSdpMediaConstraints:" + plugin);
-			return sdpMediaConstraints;
-		}
-		
-		@NonNull
-		@Override
 		public PeerConnectionParameters getPeerConnectionParameters(@NonNull final JanusPlugin plugin) {
 			return peerConnectionParameters;
 		}
@@ -1603,12 +1609,10 @@ public class JanusRTCClient implements JanusClient {
 		
 		@Override
 		public void createSubscriber(@NonNull final JanusPlugin plugin,
-			@NonNull final BigInteger feederId,
-			@NonNull final SessionDescription localSdp,
-			@NonNull final SessionDescription remoteSdp) {
+			@NonNull final BigInteger feederId) {
 
 			executor.execute(() -> {
-				JanusRTCClient.this.createSubscriber(feederId, localSdp, remoteSdp);
+				JanusRTCClient.this.createSubscriber(feederId);
 			});
 		}
 		
