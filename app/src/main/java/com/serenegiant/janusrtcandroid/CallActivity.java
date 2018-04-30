@@ -41,7 +41,6 @@ import org.appspot.apprtc.AppRTCAudioManager.AudioManagerEvents;
 import com.serenegiant.janus.JanusClient;
 import org.appspot.apprtc.RoomConnectionParameters;
 import org.appspot.apprtc.SignalingParameters;
-import org.appspot.apprtc.PeerConnectionClient;
 import org.appspot.apprtc.DataChannelParameters;
 import org.appspot.apprtc.PeerConnectionEvents;
 import org.appspot.apprtc.PeerConnectionParameters;
@@ -186,8 +185,8 @@ public class CallActivity extends BaseActivity
 
 	private final ProxyRenderer remoteProxyRenderer = new ProxyRenderer();
 	private final ProxyVideoSink localProxyVideoSink = new ProxyVideoSink();
-	@Nullable
-	private PeerConnectionClient peerConnectionClient = null;
+//	@Nullable
+//	private PeerConnectionClient peerConnectionClient = null;
 	@Nullable
 	private JanusClient janusClient;
 	@Nullable
@@ -408,10 +407,10 @@ public class CallActivity extends BaseActivity
 			}, runTimeMs);
 		}
 
-		// Create peer connection client.
-		peerConnectionClient = new PeerConnectionClient(
-			getApplicationContext(), eglBase, peerConnectionParameters, mPeerConnectionEvents);
-		peerConnectionClient.createPeerConnectionFactory(options);
+//		// Create peer connection client.
+//		peerConnectionClient = new PeerConnectionClient(
+//			getApplicationContext(), eglBase, peerConnectionParameters, mPeerConnectionEvents);
+//		peerConnectionClient.createPeerConnectionFactory(options);
 
 		if (screenCaptureEnabled) {
 			startScreenCapture();
@@ -525,8 +524,8 @@ public class CallActivity extends BaseActivity
 		activityRunning = false;
 		// Don't stop the video when using screen capture to allow user to show other apps to the remote
 		// end.
-		if (peerConnectionClient != null && !screenCaptureEnabled) {
-			peerConnectionClient.stopVideoSource();
+		if (janusClient != null && !screenCaptureEnabled) {
+			janusClient.stopVideoSource();
 		}
 		if (cpuMonitor != null) {
 			cpuMonitor.pause();
@@ -540,8 +539,8 @@ public class CallActivity extends BaseActivity
 		if (DEBUG) Log.v(TAG, "onStart:");
 		activityRunning = true;
 		// Video is not paused for screen capture. See onPause.
-		if (peerConnectionClient != null && !screenCaptureEnabled) {
-			peerConnectionClient.startVideoSource();
+		if (janusClient != null && !screenCaptureEnabled) {
+			janusClient.startVideoSource();
 		}
 		if (cpuMonitor != null) {
 			cpuMonitor.resume();
@@ -570,8 +569,8 @@ public class CallActivity extends BaseActivity
 	@Override
 	public void onCameraSwitch() {
 		if (DEBUG) Log.v(TAG, "onCameraSwitch:");
-		if (peerConnectionClient != null) {
-			peerConnectionClient.switchCamera();
+		if (janusClient != null) {
+			janusClient.switchCamera();
 		}
 	}
 
@@ -584,16 +583,16 @@ public class CallActivity extends BaseActivity
 	@Override
 	public void onCaptureFormatChange(int width, int height, int framerate) {
 		if (DEBUG) Log.v(TAG, "onCaptureFormatChange:");
-		if (peerConnectionClient != null) {
-			peerConnectionClient.changeCaptureFormat(width, height, framerate);
+		if (janusClient != null) {
+			janusClient.changeCaptureFormat(width, height, framerate);
 		}
 	}
 
 	@Override
 	public boolean onToggleMic() {
-		if (peerConnectionClient != null) {
+		if (janusClient != null) {
 			micEnabled = !micEnabled;
-			peerConnectionClient.setAudioEnabled(micEnabled);
+			janusClient.setAudioEnabled(micEnabled);
 		}
 		return micEnabled;
 	}
@@ -654,12 +653,12 @@ public class CallActivity extends BaseActivity
 		if (DEBUG) Log.v(TAG, "callConnected:");
 		final long delta = System.currentTimeMillis() - callStartedTimeMs;
 		Log.i(TAG, "Call connected: delay=" + delta + "ms");
-		if (peerConnectionClient == null || isError) {
+		if (janusClient == null || isError) {
 			Log.w(TAG, "Call is connected in closed or error state");
 			return;
 		}
 		// Enable statistics callback.
-		peerConnectionClient.enableStatsEvents(true, STAT_CALLBACK_PERIOD);
+		janusClient.enableStatsEvents(true, STAT_CALLBACK_PERIOD);
 		setSwappedFeeds(false /* isSwappedFeeds */);
 	}
 
@@ -678,10 +677,6 @@ public class CallActivity extends BaseActivity
 		activityRunning = false;
 		remoteProxyRenderer.setTarget(null);
 		localProxyVideoSink.setTarget(null);
-		if (janusClient != null) {
-			janusClient.disconnectFromRoom();
-			janusClient = null;
-		}
 		if (pipRenderer != null) {
 			pipRenderer.release();
 			pipRenderer = null;
@@ -694,10 +689,14 @@ public class CallActivity extends BaseActivity
 			fullscreenRenderer.release();
 			fullscreenRenderer = null;
 		}
-		if (peerConnectionClient != null) {
-			peerConnectionClient.close();
-			peerConnectionClient = null;
+		if (janusClient != null) {
+			janusClient.disconnectFromRoom();
+			janusClient = null;
 		}
+//		if (peerConnectionClient != null) {
+//			peerConnectionClient.close();
+//			peerConnectionClient = null;
+//		}
 		if (audioManager != null) {
 			audioManager.stop();
 			audioManager = null;
@@ -806,33 +805,33 @@ public class CallActivity extends BaseActivity
 
 		signalingParameters = params;
 		logAndToast("Creating peer connection, delay=" + delta + "ms");
-		VideoCapturer videoCapturer = null;
-		if (peerConnectionParameters.videoCallEnabled) {
-			videoCapturer = createVideoCapturer();
-		}
-		peerConnectionClient.createPeerConnection(
-			localProxyVideoSink, remoteRenderers, videoCapturer, signalingParameters);
+//		VideoCapturer videoCapturer = null;
+//		if (peerConnectionParameters.videoCallEnabled) {
+//			videoCapturer = createVideoCapturer();
+//		}
+//		peerConnectionClient.createPeerConnection(
+//			localProxyVideoSink, remoteRenderers, videoCapturer, signalingParameters);
 
-		if (signalingParameters.initiator) {
-			logAndToast("Creating OFFER...");
-			// Create offer. Offer SDP will be sent to answering client in
-			// PeerConnectionEvents.onLocalDescription event.
-			peerConnectionClient.createOffer();
-		} else {
-			if (params.offerSdp != null) {
-				peerConnectionClient.setRemoteDescription(params.offerSdp);
-				logAndToast("Creating ANSWER...");
-				// Create answer. Answer SDP will be sent to offering client in
-				// PeerConnectionEvents.onLocalDescription event.
-				peerConnectionClient.createAnswer();
-			}
-			if (params.iceCandidates != null) {
-				// Add remote ICE candidates from room.
-				for (IceCandidate iceCandidate : params.iceCandidates) {
-					peerConnectionClient.addRemoteIceCandidate(iceCandidate);
-				}
-			}
-		}
+//		if (signalingParameters.initiator) {
+//			logAndToast("Creating OFFER...");
+//			// Create offer. Offer SDP will be sent to answering client in
+//			// PeerConnectionEvents.onLocalDescription event.
+//			peerConnectionClient.createOffer();
+//		} else {
+//			if (params.offerSdp != null) {
+//				peerConnectionClient.setRemoteDescription(params.offerSdp);
+//				logAndToast("Creating ANSWER...");
+//				// Create answer. Answer SDP will be sent to offering client in
+//				// PeerConnectionEvents.onLocalDescription event.
+//				peerConnectionClient.createAnswer();
+//			}
+//			if (params.iceCandidates != null) {
+//				// Add remote ICE candidates from room.
+//				for (IceCandidate iceCandidate : params.iceCandidates) {
+//					peerConnectionClient.addRemoteIceCandidate(iceCandidate);
+//				}
+//			}
+//		}
 	}
 
 	private final JanusCallback mJanusCallback
@@ -856,18 +855,19 @@ public class CallActivity extends BaseActivity
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					if (peerConnectionClient == null) {
+					if (janusClient == null) {
 						Log.e(TAG, "Received remote SDP for non-initialized peer connection.");
 						return;
 					}
 					logAndToast("Received remote " + sdp.type + ", delay=" + delta + "ms");
-					peerConnectionClient.setRemoteDescription(sdp);
-					if (!signalingParameters.initiator) {
-						logAndToast("Creating ANSWER...");
-						// Create answer. Answer SDP will be sent to offering client in
-						// PeerConnectionEvents.onLocalDescription event.
-						peerConnectionClient.createAnswer();
-					}
+					// FIXME
+//					peerConnectionClient.setRemoteDescription(sdp);
+//					if (!signalingParameters.initiator) {
+//						logAndToast("Creating ANSWER...");
+//						// Create answer. Answer SDP will be sent to offering client in
+//						// PeerConnectionEvents.onLocalDescription event.
+//						peerConnectionClient.createAnswer();
+//					}
 				}
 			});
 		}
@@ -878,11 +878,12 @@ public class CallActivity extends BaseActivity
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					if (peerConnectionClient == null) {
+					if (janusClient == null) {
 						Log.e(TAG, "Received ICE candidate for a non-initialized peer connection.");
 						return;
 					}
-					peerConnectionClient.addRemoteIceCandidate(candidate);
+					// FIXME
+//					peerConnectionClient.addRemoteIceCandidate(candidate);
 				}
 			});
 		}
@@ -893,11 +894,12 @@ public class CallActivity extends BaseActivity
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					if (peerConnectionClient == null) {
+					if (janusClient == null) {
 						Log.e(TAG, "Received ICE candidate removals for a non-initialized peer connection.");
 						return;
 					}
-					peerConnectionClient.removeRemoteIceCandidates(candidates);
+					// FIXME
+//					peerConnectionClient.removeRemoteIceCandidates(candidates);
 				}
 			});
 		}
@@ -921,6 +923,17 @@ public class CallActivity extends BaseActivity
 
 		@Override
 		public void onConnectServer(@NonNull final JanusRTCClient client) {
+			if (DEBUG) Log.v(TAG, "onConnectServer:");
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					VideoCapturer videoCapturer = null;
+					if (peerConnectionParameters.videoCallEnabled) {
+						videoCapturer = createVideoCapturer();
+					}
+					client.createPeerConnection(localProxyVideoSink, remoteRenderers, videoCapturer);
+				}
+			});
 		}
 		
 		@Override
@@ -955,7 +968,7 @@ public class CallActivity extends BaseActivity
 					if (peerConnectionParameters.videoMaxBitrate > 0) {
 						if (DEBUG) Log.d(TAG, "Set video maximum bitrate: "
 							+ peerConnectionParameters.videoMaxBitrate);
-						peerConnectionClient.setVideoMaxBitrate(
+						janusClient.setVideoMaxBitrate(
 							peerConnectionParameters.videoMaxBitrate);
 					}
 				}

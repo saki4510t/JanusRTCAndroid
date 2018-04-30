@@ -2,6 +2,7 @@ package com.serenegiant.janus;
 
 import android.content.Context;
 import android.os.Environment;
+import android.os.ParcelFileDescriptor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
@@ -19,19 +20,38 @@ import com.serenegiant.janus.response.Session;
 import org.appspot.apprtc.PeerConnectionParameters;
 import org.appspot.apprtc.RecordedAudioToFileController;
 import org.appspot.apprtc.RoomConnectionParameters;
+import org.appspot.apprtc.RtcEventLog;
 import org.appspot.apprtc.SignalingParameters;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.webrtc.AudioSource;
+import org.webrtc.AudioTrack;
+import org.webrtc.CameraVideoCapturer;
+import org.webrtc.DataChannel;
 import org.webrtc.DefaultVideoDecoderFactory;
 import org.webrtc.DefaultVideoEncoderFactory;
 import org.webrtc.EglBase;
 import org.webrtc.IceCandidate;
+import org.webrtc.Logging;
+import org.webrtc.MediaConstraints;
+import org.webrtc.MediaStream;
+import org.webrtc.MediaStreamTrack;
+import org.webrtc.PeerConnection;
 import org.webrtc.PeerConnectionFactory;
+import org.webrtc.RtpParameters;
+import org.webrtc.RtpReceiver;
+import org.webrtc.RtpSender;
+import org.webrtc.RtpTransceiver;
 import org.webrtc.SessionDescription;
 import org.webrtc.SoftwareVideoDecoderFactory;
 import org.webrtc.SoftwareVideoEncoderFactory;
+import org.webrtc.VideoCapturer;
 import org.webrtc.VideoDecoderFactory;
 import org.webrtc.VideoEncoderFactory;
+import org.webrtc.VideoRenderer;
+import org.webrtc.VideoSink;
+import org.webrtc.VideoSource;
+import org.webrtc.VideoTrack;
 import org.webrtc.audio.AudioDeviceModule;
 import org.webrtc.audio.JavaAudioDeviceModule;
 import org.webrtc.audio.LegacyAudioDeviceModule;
@@ -44,10 +64,16 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.math.BigInteger;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -83,7 +109,7 @@ public class JanusRTCClient implements JanusClient {
 	 * peer connection API calls to ensure new peer connection factory is
 	 * created on the same thread as previously destroyed factory.
 	 */
-	private static final ExecutorService executor = Executors.newSingleThreadExecutor();
+	static final ExecutorService executor = Executors.newSingleThreadExecutor();
 
 	private final Object mSync = new Object();
 	private final WeakReference<Context> mWeakContext;
@@ -95,10 +121,13 @@ public class JanusRTCClient implements JanusClient {
 	private final String baseUrl;
 	@NonNull
 	private final JanusCallback mCallback;
-
+	private final boolean dataChannelEnabled;
+//--------------------------------------------------------------------------------
+	private final Timer statsTimer = new Timer();
 	@Nullable
 	private PeerConnectionFactory factory;
 	private boolean preferIsac;
+	private boolean videoCapturerStopped;
 	private boolean isError;
 	/**
 	 * Implements the WebRtcAudioRecordSamplesReadyCallback interface and writes
@@ -106,6 +135,43 @@ public class JanusRTCClient implements JanusClient {
 	 */
 	@Nullable
 	private RecordedAudioToFileController saveRecordedAudioToFile = null;
+	@Nullable
+	private VideoSink localRender;
+	@Nullable
+	private VideoTrack localVideoTrack;
+	@Nullable
+	private RtpSender localVideoSender;
+	@Nullable
+	private VideoCapturer videoCapturer;
+	@Nullable
+	private VideoSource videoSource;
+	@Nullable
+	private List<VideoRenderer.Callbacks> remoteRenders;
+	@Nullable
+	private AudioSource audioSource;
+	@Nullable
+	private AudioTrack localAudioTrack;
+	private int videoWidth;
+	private int videoHeight;
+	private int videoFps;
+	private MediaConstraints audioConstraints;
+	private MediaConstraints sdpMediaConstraints;
+	/** Enable org.appspot.apprtc.RtcEventLog. */
+	/**
+	 * Queued remote ICE candidates are consumed only after both local and
+	 * remote descriptions are set. Similarly local ICE candidates are sent to
+	 * remote peer after both local and remote description are set.
+	 */
+	@Nullable
+	private List<IceCandidate> queuedRemoteCandidates;
+	private boolean isInitiator;
+	/** enableAudio is set to true if audio should be sent. */
+	private boolean enableAudio = true;
+	/**
+	 * enableVideo is set to true if video should be rendered and sent.
+	 */
+	private boolean renderVideo = true;
+//--------------------------------------------------------------------------------
 
 	private VideoRoom mJanus;
 	private LongPoll mLongPoll;
@@ -128,7 +194,22 @@ public class JanusRTCClient implements JanusClient {
 		this.peerConnectionParameters = peerConnectionParameters;
 		this.mCallback = callback;
 		this.baseUrl = baseUrl;
+
 		this.mConnectionState = ConnectionState.UNINITIALIZED;
+		this.dataChannelEnabled = peerConnectionParameters.dataChannelParameters != null;
+
+		final String fieldTrials = peerConnectionParameters.getFieldTrials();
+		executor.execute(() -> {
+			if (DEBUG) Log.d(TAG,
+				"Initialize WebRTC. Field trials: " + fieldTrials + " Enable video HW acceleration: "
+					+ peerConnectionParameters.videoCodecHwAcceleration);
+			PeerConnectionFactory.initialize(
+				PeerConnectionFactory.InitializationOptions.builder(appContext)
+					.setFieldTrials(fieldTrials)
+					.setEnableVideoHwAcceleration(peerConnectionParameters.videoCodecHwAcceleration)
+					.setEnableInternalTracer(true)
+					.createInitializationOptions());
+		});
 	}
 	
 	@Override
@@ -153,10 +234,150 @@ public class JanusRTCClient implements JanusClient {
 	public void createPeerConnectionFactory(
 		@Nullable final PeerConnectionFactory.Options options) {
 
+		if (DEBUG) Log.v(TAG, "createPeerConnectionFactory:");
 		if (factory != null) {
 			throw new IllegalStateException("PeerConnectionFactory has already been constructed");
 		}
 		executor.execute(() -> createPeerConnectionFactoryInternal(options));
+	}
+	
+	/**
+	 * Publisher用のPeerConnectionを生成する
+	 * @param localRender
+	 * @param remoteRenders
+	 * @param videoCapturer
+	 */
+	public void createPeerConnection(final VideoSink localRender,
+		final List<VideoRenderer.Callbacks> remoteRenders,
+		final VideoCapturer videoCapturer) {
+
+		if (DEBUG) Log.v(TAG, "createPeerConnection:");
+		this.localRender = localRender;
+		this.remoteRenders = remoteRenders;
+		this.videoCapturer = videoCapturer;
+		executor.execute(() -> {
+			try {
+				createMediaConstraintsInternal();
+				createPeerConnectionInternal();
+			} catch (Exception e) {
+				reportError(e);
+				throw e;
+			}
+		});
+	}
+
+	@Override
+	public void startVideoSource() {
+		if (DEBUG) Log.v(TAG, "startVideoSource:");
+		executor.execute(() -> {
+			if (videoCapturer != null && videoCapturerStopped) {
+				if (DEBUG) Log.d(TAG, "Restart video source.");
+				videoCapturer.startCapture(videoWidth, videoHeight, videoFps);
+				videoCapturerStopped = false;
+			}
+		});
+	}
+
+	@Override
+	public void stopVideoSource() {
+		if (DEBUG) Log.v(TAG, "stopVideoSource:");
+		executor.execute(() -> {
+			if (videoCapturer != null && !videoCapturerStopped) {
+				if (DEBUG) Log.d(TAG, "Stop video source.");
+				try {
+					videoCapturer.stopCapture();
+				} catch (InterruptedException e) {
+				}
+				videoCapturerStopped = true;
+			}
+		});
+	}
+	
+	@Override
+	public void setVideoMaxBitrate(final int maxBitrateKbps) {
+		if (DEBUG) Log.v(TAG, "maxBitrateKbps:");
+		executor.execute(() -> {
+			if (localVideoSender == null || isError) {
+				return;
+			}
+			if (DEBUG) Log.d(TAG, "Requested max video bitrate: " + maxBitrateKbps);
+			if (localVideoSender == null) {
+				Log.w(TAG, "Sender is not ready.");
+				return;
+			}
+			
+			RtpParameters parameters = localVideoSender.getParameters();
+			if (parameters.encodings.size() == 0) {
+				Log.w(TAG, "RtpParameters are not ready.");
+				return;
+			}
+			
+			for (RtpParameters.Encoding encoding : parameters.encodings) {
+				// Null value means no limit.
+				encoding.maxBitrateBps = maxBitrateKbps == 0 ? null : maxBitrateKbps * BPS_IN_KBPS;
+			}
+			if (!localVideoSender.setParameters(parameters)) {
+				Log.e(TAG, "RtpSender.setParameters failed.");
+			}
+			if (DEBUG) Log.d(TAG, "Configured max video bitrate to: " + maxBitrateKbps);
+		});
+	}
+
+	@Override
+	public void enableStatsEvents(boolean enable, int periodMs) {
+		if (DEBUG) Log.v(TAG, "enableStatsEvents:");
+		if (enable) {
+			try {
+				statsTimer.schedule(new TimerTask() {
+					@Override
+					public void run() {
+						executor.execute(() -> getStats());
+					}
+				}, 0, periodMs);
+			} catch (Exception e) {
+				Log.e(TAG, "Can not schedule statistics timer", e);
+			}
+		} else {
+			statsTimer.cancel();
+		}
+	}
+
+	@Override
+	public void switchCamera() {
+		if (DEBUG) Log.v(TAG, "switchCamera:");
+		executor.execute(this::switchCameraInternal);
+	}
+	
+	@Override
+	public void changeCaptureFormat(final int width, final int height, final int framerate) {
+		if (DEBUG) Log.v(TAG, "changeCaptureFormat:");
+		executor.execute(() -> changeCaptureFormatInternal(width, height, framerate));
+	}
+	
+	@Override
+	public void setAudioEnabled(final boolean enable) {
+		if (DEBUG) Log.v(TAG, "setAudioEnabled:");
+		executor.execute(() -> {
+			enableAudio = enable;
+			if (localAudioTrack != null) {
+				localAudioTrack.setEnabled(enableAudio);
+			}
+		});
+	}
+	
+	@Override
+	public void setVideoEnabled(final boolean enable) {
+		if (DEBUG) Log.v(TAG, "setVideoEnabled:");
+		executor.execute(() -> {
+			renderVideo = enable;
+			if (localVideoTrack != null) {
+				localVideoTrack.setEnabled(renderVideo);
+			}
+			// FIXME
+//			if (remoteVideoTrack != null) {
+//				remoteVideoTrack.setEnabled(renderVideo);
+//			}
+		});
 	}
 
 	@Override
@@ -300,6 +521,7 @@ public class JanusRTCClient implements JanusClient {
 
 	@SuppressWarnings("deprecation")
 	private AudioDeviceModule createLegacyAudioDevice() {
+		if (DEBUG) Log.v(TAG, "createLegacyAudioDevice:");
 		// Enable/disable OpenSL ES playback.
 		if (!peerConnectionParameters.useOpenSLES) {
 			if (DEBUG) Log.d(TAG, "Disable OpenSL ES audio even if device supports it");
@@ -378,6 +600,7 @@ public class JanusRTCClient implements JanusClient {
 	}
 	
 	private AudioDeviceModule createJavaAudioDevice() {
+		if (DEBUG) Log.v(TAG, "createJavaAudioDevice:");
 		// Enable/disable OpenSL ES playback.
 		if (!peerConnectionParameters.useOpenSLES) {
 			Log.w(TAG, "External OpenSLES ADM not implemented yet.");
@@ -443,6 +666,336 @@ public class JanusRTCClient implements JanusClient {
 			.setAudioTrackErrorCallback(audioTrackErrorCallback)
 			.createAudioDeviceModule();
 	}
+
+	private boolean isVideoCallEnabled() {
+		return peerConnectionParameters.videoCallEnabled
+			&& (videoCapturer != null);
+	}
+
+	private void createMediaConstraintsInternal() {
+		if (DEBUG) Log.v(TAG, "createMediaConstraintsInternal:");
+		// Create video constraints if video call is enabled.
+		if (isVideoCallEnabled()) {
+			videoWidth = peerConnectionParameters.videoWidth;
+			videoHeight = peerConnectionParameters.videoHeight;
+			videoFps = peerConnectionParameters.videoFps;
+			
+			// If video resolution is not specified, default to HD.
+			if (videoWidth == 0 || videoHeight == 0) {
+				videoWidth = HD_VIDEO_WIDTH;
+				videoHeight = HD_VIDEO_HEIGHT;
+			}
+			
+			// If fps is not specified, default to 30.
+			if (videoFps == 0) {
+				videoFps = 30;
+			}
+			Logging.d(TAG, "Capturing format: " + videoWidth + "x" + videoHeight + "@" + videoFps);
+		}
+		
+		// Create audio constraints.
+		audioConstraints = new MediaConstraints();
+		// added for audio performance measurements
+		if (peerConnectionParameters.noAudioProcessing) {
+			if (DEBUG) Log.d(TAG, "Disabling audio processing");
+			audioConstraints.mandatory.add(
+				new MediaConstraints.KeyValuePair(AUDIO_ECHO_CANCELLATION_CONSTRAINT, "false"));
+			audioConstraints.mandatory.add(
+				new MediaConstraints.KeyValuePair(AUDIO_AUTO_GAIN_CONTROL_CONSTRAINT, "false"));
+			audioConstraints.mandatory.add(
+				new MediaConstraints.KeyValuePair(AUDIO_HIGH_PASS_FILTER_CONSTRAINT, "false"));
+			audioConstraints.mandatory.add(
+				new MediaConstraints.KeyValuePair(AUDIO_NOISE_SUPPRESSION_CONSTRAINT, "false"));
+		}
+		// Create SDP constraints.
+		sdpMediaConstraints = new MediaConstraints();
+		sdpMediaConstraints.mandatory.add(
+			new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
+		sdpMediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair(
+			"OfferToReceiveVideo", Boolean.toString(isVideoCallEnabled())));
+	}
+	
+	private void createPeerConnectionInternal() {
+		if (DEBUG) Log.v(TAG, "createPeerConnectionInternal:");
+		final Context context = getContext();
+		if ((context == null) || (factory == null) || isError) {
+			Log.e(TAG, "Peerconnection factory is not created");
+			return;
+		}
+		if (DEBUG) Log.d(TAG, "Create peer connection.");
+		
+		PeerConnection peerConnection = null;
+		DataChannel dataChannel = null;
+		queuedRemoteCandidates = new ArrayList<>();
+		
+		if (isVideoCallEnabled()) {
+			factory.setVideoHwAccelerationOptions(
+				rootEglBase.getEglBaseContext(), rootEglBase.getEglBaseContext());
+		}
+		
+		final PeerConnection.RTCConfiguration rtcConfig =
+			new PeerConnection.RTCConfiguration(mCallback.getIceServers(this));
+		// TCP candidates are only useful when connecting to a server that supports
+		// ICE-TCP.
+		rtcConfig.tcpCandidatePolicy = PeerConnection.TcpCandidatePolicy.DISABLED;
+		rtcConfig.bundlePolicy = PeerConnection.BundlePolicy.MAXBUNDLE;
+		rtcConfig.rtcpMuxPolicy = PeerConnection.RtcpMuxPolicy.REQUIRE;
+		rtcConfig.continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY;
+		// Use ECDSA encryption.
+		rtcConfig.keyType = PeerConnection.KeyType.ECDSA;
+		// Enable DTLS for normal calls and disable for loopback calls.
+		rtcConfig.enableDtlsSrtp = !peerConnectionParameters.loopback;
+		rtcConfig.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
+		
+		peerConnection = factory.createPeerConnection(rtcConfig, mPeerConnectionObserver);
+		
+		if (dataChannelEnabled) {
+			final DataChannel.Init init = new DataChannel.Init();
+			init.ordered = peerConnectionParameters.dataChannelParameters.ordered;
+			init.negotiated = peerConnectionParameters.dataChannelParameters.negotiated;
+			init.maxRetransmits = peerConnectionParameters.dataChannelParameters.maxRetransmits;
+			init.maxRetransmitTimeMs = peerConnectionParameters.dataChannelParameters.maxRetransmitTimeMs;
+			init.id = peerConnectionParameters.dataChannelParameters.id;
+			init.protocol = peerConnectionParameters.dataChannelParameters.protocol;
+			dataChannel = peerConnection.createDataChannel("ApprtcDemo data", init);
+		}
+		isInitiator = false;
+		
+		// Set INFO libjingle logging.
+		// NOTE: this _must_ happen while |factory| is alive!
+		Logging.enableLogToDebugOutput(Logging.Severity.LS_INFO);
+		
+		final List<String> mediaStreamLabels = Collections.singletonList("ARDAMS");
+		if (isVideoCallEnabled()) {
+			peerConnection.addTrack(createVideoTrack(videoCapturer), mediaStreamLabels);
+			// Publisherは送信のみなのでリモートビデオトラックは不要
+//			// We can add the renderers right away because we don't need to wait for an
+//			// answer to get the remote track.
+//			remoteVideoTrack = getRemoteVideoTrack();
+//			remoteVideoTrack.setEnabled(renderVideo);
+//			for (VideoRenderer.Callbacks remoteRender : remoteRenders) {
+//				remoteVideoTrack.addRenderer(new VideoRenderer(remoteRender));
+//			}
+		}
+		peerConnection.addTrack(createAudioTrack(), mediaStreamLabels);
+		if (isVideoCallEnabled()) {
+			findVideoSender(peerConnection);
+		}
+		
+		if (peerConnectionParameters.aecDump) {
+			try {
+				final ParcelFileDescriptor aecDumpFileDescriptor =
+					ParcelFileDescriptor.open(new File(
+						Environment.getExternalStorageDirectory().getPath()
+							+ File.separator + "Download/audio.aecdump"),
+						ParcelFileDescriptor.MODE_READ_WRITE | ParcelFileDescriptor.MODE_CREATE
+							| ParcelFileDescriptor.MODE_TRUNCATE);
+				factory.startAecDump(aecDumpFileDescriptor.detachFd(), -1);
+			} catch (IOException e) {
+				Log.e(TAG, "Can not open aecdump file", e);
+			}
+		}
+		
+		if (saveRecordedAudioToFile != null) {
+			if (saveRecordedAudioToFile.start()) {
+				if (DEBUG) Log.d(TAG, "Recording input audio to file is activated");
+			}
+		}
+
+		RtcEventLog rtcEventLog = null;
+		if (peerConnectionParameters.enableRtcEventLog) {
+			rtcEventLog = new RtcEventLog(peerConnection);
+			rtcEventLog.start(createRtcEventLogOutputFile());
+		} else {
+			if (DEBUG) Log.d(TAG, "org.appspot.apprtc.RtcEventLog is disabled.");
+		}
+		if (DEBUG) Log.d(TAG, "Peer connection created.");
+		// FIXME ここでPeerConnection等を渡してPublisherを生成する
+		final JanusPlugin.Publisher publisher
+			= new JanusPlugin.Publisher(
+				mJanus, mSession, mJanusPluginCallback,
+				peerConnection, dataChannel, rtcEventLog);
+		// ローカルのPublisherは1つしかないので検索の手間を省くために
+		// BigInteger.ZEROをキーとして登録しておく。
+		// attachした時点で実際のプラグインのidでも登録される
+		addPlugin(BigInteger.ZERO, publisher);
+		publisher.attach();
+	}
+
+	private File createRtcEventLogOutputFile() {
+		if (DEBUG) Log.v(TAG, "createRtcEventLogOutputFile:");
+		DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_hhmm_ss", Locale.getDefault());
+		Date date = new Date();
+		final String outputFileName = "event_log_" + dateFormat.format(date) + ".log";
+		return new File(
+			getContext().getDir(RTCEVENTLOG_OUTPUT_DIR_NAME, Context.MODE_PRIVATE), outputFileName);
+	}
+
+	@Nullable
+	private AudioTrack createAudioTrack() {
+		if (DEBUG) Log.v(TAG, "createAudioTrack:");
+		audioSource = factory.createAudioSource(audioConstraints);
+		localAudioTrack = factory.createAudioTrack(AUDIO_TRACK_ID, audioSource);
+		localAudioTrack.setEnabled(enableAudio);
+		return localAudioTrack;
+	}
+	
+	@Nullable
+	private VideoTrack createVideoTrack(final VideoCapturer capturer) {
+		if (DEBUG) Log.v(TAG, "createVideoTrack:");
+		videoSource = factory.createVideoSource(capturer);
+		capturer.startCapture(videoWidth, videoHeight, videoFps);
+		
+		localVideoTrack = factory.createVideoTrack(VIDEO_TRACK_ID, videoSource);
+		localVideoTrack.setEnabled(renderVideo);
+		localVideoTrack.addSink(localRender);
+		return localVideoTrack;
+	}
+	
+	private void findVideoSender(@NonNull final PeerConnection peerConnection) {
+		if (DEBUG) Log.v(TAG, "findVideoSender:");
+		for (RtpSender sender : peerConnection.getSenders()) {
+			if (sender.track() != null) {
+				String trackType = sender.track().kind();
+				if (trackType.equals(VIDEO_TRACK_TYPE)) {
+					if (DEBUG) Log.d(TAG, "Found video sender.");
+					localVideoSender = sender;
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Returns the remote VideoTrack, assuming there is only one.
+	 * @param peerConnection
+	 * @return
+	 */
+	@Nullable
+	private VideoTrack getRemoteVideoTrack(@NonNull final PeerConnection peerConnection) {
+		if (DEBUG) Log.v(TAG, "getRemoteVideoTrack:");
+		for (RtpTransceiver transceiver : peerConnection.getTransceivers()) {
+			MediaStreamTrack track = transceiver.getReceiver().track();
+			if (track instanceof VideoTrack) {
+				return (VideoTrack) track;
+			}
+		}
+		return null;
+	}
+	
+	private void drainCandidates(@NonNull final PeerConnection peerConnection) {
+		if (DEBUG) Log.v(TAG, "drainCandidates:");
+		if (queuedRemoteCandidates != null) {
+			if (DEBUG) Log.d(TAG, "Add " + queuedRemoteCandidates.size() + " remote candidates");
+			for (IceCandidate candidate : queuedRemoteCandidates) {
+				peerConnection.addIceCandidate(candidate);
+			}
+			queuedRemoteCandidates = null;
+		}
+	}
+	
+	private void switchCameraInternal() {
+		if (DEBUG) Log.v(TAG, "switchCameraInternal:");
+		if (videoCapturer instanceof CameraVideoCapturer) {
+			if (!isVideoCallEnabled() || isError) {
+				Log.e(TAG,
+					"Failed to switch camera. Video: " + isVideoCallEnabled() + ". Error : " + isError);
+				return; // No video is sent or only one camera is available or error happened.
+			}
+			if (DEBUG) Log.d(TAG, "Switch camera");
+			CameraVideoCapturer cameraVideoCapturer = (CameraVideoCapturer) videoCapturer;
+			cameraVideoCapturer.switchCamera(null);
+		} else {
+			if (DEBUG) Log.d(TAG, "Will not switch camera, video caputurer is not a camera");
+		}
+	}
+	
+	private void changeCaptureFormatInternal(int width, int height, int framerate) {
+		if (DEBUG) Log.v(TAG, "changeCaptureFormatInternal:");
+		if (!isVideoCallEnabled() || isError || videoCapturer == null) {
+			Log.e(TAG,
+				"Failed to change capture format. Video: " + isVideoCallEnabled()
+					+ ". Error : " + isError);
+			return;
+		}
+		if (DEBUG) Log.d(TAG, "changeCaptureFormat: " + width + "x" + height + "@" + framerate);
+		videoSource.adaptOutputFormat(width, height, framerate);
+	}
+
+	@SuppressWarnings("deprecation") // TODO(sakal): getStats is deprecated.
+	private void getStats() {
+		if (DEBUG) Log.v(TAG, "getStats:");
+		// FIXME 未実装 PublisherのPeerConnectionから取得する
+//		if (peerConnection == null || isError) {
+//			return;
+//		}
+//		boolean success = peerConnection.getStats(new StatsObserver() {
+//			@Override
+//			public void onComplete(final StatsReport[] reports) {
+//				events.onPeerConnectionStatsReady(reports);
+//			}
+//		}, null);
+//		if (!success) {
+//			Log.e(TAG, "getStats() returns false!");
+//		}
+	}
+
+	private final PeerConnection.Observer
+		mPeerConnectionObserver = new PeerConnection.Observer() {
+		@Override
+		public void onSignalingChange(final PeerConnection.SignalingState newState) {
+			if (DEBUG) Log.v(TAG, "onSignalingChange:" + newState);
+		}
+		
+		@Override
+		public void onIceConnectionChange(final PeerConnection.IceConnectionState newState) {
+			if (DEBUG) Log.v(TAG, "onIceConnectionChange:" + newState);
+		}
+		
+		@Override
+		public void onIceConnectionReceivingChange(final boolean receiving) {
+			if (DEBUG) Log.v(TAG, "onIceConnectionReceivingChange:receiving=" + receiving);
+		}
+		
+		@Override
+		public void onIceGatheringChange(final PeerConnection.IceGatheringState newState) {
+			if (DEBUG) Log.v(TAG, "onIceGatheringChange:" + newState);
+		}
+		
+		@Override
+		public void onIceCandidate(final IceCandidate candidate) {
+			if (DEBUG) Log.v(TAG, "onIceCandidate:");
+		}
+		
+		@Override
+		public void onIceCandidatesRemoved(final IceCandidate[] candidates) {
+			if (DEBUG) Log.v(TAG, "onIceCandidatesRemoved:");
+		}
+		
+		@Override
+		public void onAddStream(final MediaStream stream) {
+			if (DEBUG) Log.v(TAG, "onAddStream:");
+		}
+		
+		@Override
+		public void onRemoveStream(final MediaStream stream) {
+			if (DEBUG) Log.v(TAG, "onRemoveStream:");
+		}
+		
+		@Override
+		public void onDataChannel(final DataChannel channel) {
+			if (DEBUG) Log.v(TAG, "onDataChannel:");
+		}
+		
+		@Override
+		public void onRenegotiationNeeded() {
+			if (DEBUG) Log.v(TAG, "onRenegotiationNeeded:");
+		}
+		
+		@Override
+		public void onAddTrack(final RtpReceiver receiver, final MediaStream[] streams) {
+			if (DEBUG) Log.v(TAG, "onAddTrack:");
+		}
+	};
 
 //--------------------------------------------------------------------------------
 	@Nullable
@@ -690,14 +1243,7 @@ public class JanusRTCClient implements JanusClient {
 						// パブリッシャーをVideoRoomプラグインにアタッチ
 						executor.execute(() -> {
 							longPoll();
-							final JanusPlugin.Publisher publisher
-								= new JanusPlugin.Publisher(
-									mJanus, mSession, mJanusPluginCallback);
-							// ローカルのPublisherは1つしかないので検索の手間を省くために
-							// BigInteger.ZEROをキーとして登録しておく。
-							// attachした時点で実際のプラグインのidでも登録される
-							addPlugin(BigInteger.ZERO, publisher);
-							publisher.attach();
+							mCallback.onConnectServer(JanusRTCClient.this);
 						});
 					} else {
 						mSession = null;
@@ -761,6 +1307,51 @@ public class JanusRTCClient implements JanusClient {
 		mConnectionState = ConnectionState.CLOSED;
 		TransactionManager.clearTransactions();
 		mJanus = null;
+		statsTimer.cancel();
+		if (DEBUG) Log.d(TAG, "Closing audio source.");
+		if (audioSource != null) {
+			audioSource.dispose();
+			audioSource = null;
+		}
+		if (DEBUG) Log.d(TAG, "Stopping capture.");
+		if (videoCapturer != null) {
+			try {
+				videoCapturer.stopCapture();
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+			videoCapturerStopped = true;
+			videoCapturer.dispose();
+			videoCapturer = null;
+		}
+		if (DEBUG) Log.d(TAG, "Closing video source.");
+		if (videoSource != null) {
+			videoSource.dispose();
+			videoSource = null;
+		}
+		if (saveRecordedAudioToFile != null) {
+			if (DEBUG) Log.d(TAG, "Closing audio file for recorded input audio.");
+			saveRecordedAudioToFile.stop();
+			saveRecordedAudioToFile = null;
+		}
+		localRender = null;
+		remoteRenders = null;
+		if (factory != null && peerConnectionParameters.aecDump) {
+			factory.stopAecDump();
+		}
+		if (videoSource != null) {
+			videoSource.dispose();
+			videoSource = null;
+		}
+		if (DEBUG) Log.d(TAG, "Closing peer connection factory.");
+		if (factory != null) {
+			factory.dispose();
+			factory = null;
+		}
+		rootEglBase.release();
+		if (DEBUG) Log.d(TAG, "Closing peer connection done.");
+		PeerConnectionFactory.stopInternalTracingCapture();
+		PeerConnectionFactory.shutdownInternalTracer();
 	}
 
 	/**

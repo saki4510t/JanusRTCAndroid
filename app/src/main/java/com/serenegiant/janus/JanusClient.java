@@ -23,6 +23,15 @@ public interface JanusClient {
 	public void createPeerConnectionFactory(
 		@Nullable final PeerConnectionFactory.Options options);
 
+	public void stopVideoSource();
+	public void startVideoSource();
+	public void switchCamera();
+	public void changeCaptureFormat(final int width, final int height, final int framerate);
+	public void setAudioEnabled(final boolean enable);
+	public void setVideoEnabled(final boolean enable);
+	public void enableStatsEvents(boolean enable, int periodMs);
+	public void setVideoMaxBitrate(final int maxBitrateKbps);
+
 	/**
 	 * Asynchronously connect to an AppRTC room URL using supplied connection
 	 * parameters. Once connection is established onConnectedToRoom()

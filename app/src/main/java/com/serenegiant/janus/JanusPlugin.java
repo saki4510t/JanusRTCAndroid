@@ -20,12 +20,11 @@ import com.serenegiant.janus.response.Plugin;
 import com.serenegiant.janus.response.PublisherInfo;
 import com.serenegiant.janus.response.Session;
 
+import org.appspot.apprtc.RtcEventLog;
 import org.json.JSONObject;
 import org.webrtc.DataChannel;
 import org.webrtc.IceCandidate;
-import org.webrtc.MediaStream;
 import org.webrtc.PeerConnection;
-import org.webrtc.RtpReceiver;
 import org.webrtc.SdpObserver;
 import org.webrtc.SessionDescription;
 
@@ -34,7 +33,8 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+
+import javax.annotation.Nullable;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -53,7 +53,8 @@ import retrofit2.Response;
 		public void onDetach(@NonNull final JanusPlugin plugin);
 		public void onLeave(@NonNull final JanusPlugin plugin, @NonNull final BigInteger pluginId);
 		public void onRemoteIceCandidate(@NonNull final JanusPlugin plugin,
-										 final IceCandidate remoteCandidate);
+			final IceCandidate remoteCandidate);
+
 		/**
 		 * リモート側のSessionDescriptionを受信した時
 		 * これを呼び出すと通話中の状態になる
@@ -75,13 +76,20 @@ import retrofit2.Response;
 		ERROR }
 
 	protected final String TAG = "JanusPlugin:" + getClass().getSimpleName();
+
+	private PeerConnection peerConnection;
+	@Nullable
+	RtcEventLog rtcEventLog;
+	@Nullable
+	private DataChannel dataChannel;
+
 	@NonNull
 	protected final VideoRoom mVideoRoom;
 	@NonNull
 	protected final Session mSession;
 	@NonNull
 	protected final JanusPluginCallback mCallback;
-	protected final ExecutorService executor = Executors.newSingleThreadExecutor();
+	protected final ExecutorService executor = JanusRTCClient.executor;
 	protected final List<Call<?>> mCurrentCalls = new ArrayList<>();
 	protected RoomState mRoomState = RoomState.UNINITIALIZED;
 	protected Plugin mPlugin;
@@ -96,13 +104,28 @@ import retrofit2.Response;
 	 */
 	/*package*/ JanusPlugin(@NonNull VideoRoom videoRoom,
 		@NonNull final Session session,
-		@NonNull final JanusPluginCallback callback) {
+		@NonNull final JanusPluginCallback callback,
+		@NonNull final PeerConnection peerConnection,
+		@Nullable final DataChannel dataChannel,
+		@Nullable final RtcEventLog rtcEventLog) {
 		
 		this.mVideoRoom = videoRoom;
 		this.mSession = session;
 		this.mCallback = callback;
+		this.peerConnection = peerConnection;
+		this.dataChannel = dataChannel;
+		this.rtcEventLog = rtcEventLog;
 	}
-
+	
+	@Override
+	protected void finalize() throws Throwable {
+		try {
+			detach();
+		} finally {
+			super.finalize();
+		}
+	}
+	
 	BigInteger id() {
 		return mPlugin != null ? mPlugin.id() : null;
 	}
@@ -220,6 +243,20 @@ import retrofit2.Response;
 		mRoomState = RoomState.CLOSED;
 		mRoom = null;
 		mPlugin = null;
+		if (DEBUG) Log.d(TAG, "Closing peer connection.");
+		if (dataChannel != null) {
+			dataChannel.dispose();
+			dataChannel = null;
+		}
+		if (rtcEventLog != null) {
+			// org.appspot.apprtc.RtcEventLog should stop before the peer connection is disposed.
+			rtcEventLog.stop();
+			rtcEventLog = null;
+		}
+		if (peerConnection != null) {
+			peerConnection.dispose();
+			peerConnection = null;
+		}
 	}
 
 	/*package*/ void sendOfferSdp(final SessionDescription sdp, final boolean isLoopback) {
@@ -599,65 +636,6 @@ import retrofit2.Response;
 		}
 	}
 
-
-	private final PeerConnection.Observer
-		mPeerConnectionObserver = new PeerConnection.Observer() {
-		@Override
-		public void onSignalingChange(final PeerConnection.SignalingState newState) {
-			if (DEBUG) Log.v(TAG, "onSignalingChange:" + newState);
-		}
-		
-		@Override
-		public void onIceConnectionChange(final PeerConnection.IceConnectionState newState) {
-			if (DEBUG) Log.v(TAG, "onIceConnectionChange:" + newState);
-		}
-		
-		@Override
-		public void onIceConnectionReceivingChange(final boolean receiving) {
-			if (DEBUG) Log.v(TAG, "onIceConnectionReceivingChange:receiving=" + receiving);
-		}
-		
-		@Override
-		public void onIceGatheringChange(final PeerConnection.IceGatheringState newState) {
-			if (DEBUG) Log.v(TAG, "onIceGatheringChange:" + newState);
-		}
-		
-		@Override
-		public void onIceCandidate(final IceCandidate candidate) {
-			if (DEBUG) Log.v(TAG, "onIceCandidate:");
-		}
-		
-		@Override
-		public void onIceCandidatesRemoved(final IceCandidate[] candidates) {
-			if (DEBUG) Log.v(TAG, "onIceCandidatesRemoved:");
-		}
-		
-		@Override
-		public void onAddStream(final MediaStream stream) {
-			if (DEBUG) Log.v(TAG, "onAddStream:");
-		}
-		
-		@Override
-		public void onRemoveStream(final MediaStream stream) {
-			if (DEBUG) Log.v(TAG, "onRemoveStream:");
-		}
-		
-		@Override
-		public void onDataChannel(final DataChannel channel) {
-			if (DEBUG) Log.v(TAG, "onDataChannel:");
-		}
-		
-		@Override
-		public void onRenegotiationNeeded() {
-			if (DEBUG) Log.v(TAG, "onRenegotiationNeeded:");
-		}
-		
-		@Override
-		public void onAddTrack(final RtpReceiver receiver, final MediaStream[] streams) {
-			if (DEBUG) Log.v(TAG, "onAddTrack:");
-		}
-	};
-	
 	private final SdpObserver mSdpObserver = new SdpObserver() {
 		@Override
 		public void onCreateSuccess(final SessionDescription origSdp) {
@@ -688,9 +666,13 @@ import retrofit2.Response;
 		 */
 		/*package*/ Publisher(@NonNull VideoRoom videoRoom,
 			@NonNull final Session session,
-			@NonNull final JanusPluginCallback callback) {
+			@NonNull final JanusPluginCallback callback,
+			@NonNull final PeerConnection peerConnection,
+			@Nullable final DataChannel dataChannel,
+			@Nullable final RtcEventLog rtcEventLog) {
 
-			super(videoRoom, session, callback);
+			super(videoRoom, session, callback,
+				peerConnection, dataChannel, rtcEventLog);
 			if (DEBUG) Log.v(TAG, "Publisher:");
 		}
 		
@@ -740,7 +722,8 @@ import retrofit2.Response;
 						executor.execute(() -> {
 							if (DEBUG) Log.v(TAG, "checkPublishers:attach new Subscriber");
 							final Subscriber subscriber = new Subscriber(mVideoRoom,
-								mSession, mCallback, info.id, mLocalSdp, mRemoteSdp);
+								mSession, mCallback, info.id, mLocalSdp, mRemoteSdp,
+								null, null, null);
 							subscriber.attach();
 						});
 					}
@@ -761,9 +744,14 @@ import retrofit2.Response;
 			@NonNull final JanusPluginCallback callback,
 			@NonNull final BigInteger feederId,
 			@NonNull final SessionDescription localSdp,
-			@NonNull final SessionDescription remoteSdp) {
+			@NonNull final SessionDescription remoteSdp,
+			@NonNull final PeerConnection peerConnection,
+			@Nullable final DataChannel dataChannel,
+			@Nullable final RtcEventLog rtcEventLog) {
 
-			super(videoRoom, session, callback);
+			super(videoRoom, session, callback,
+				peerConnection, dataChannel, rtcEventLog);
+
 			if (DEBUG) Log.v(TAG, "Subscriber:local=" + localSdp + ",remote=" + remoteSdp);
 			this.feederId = feederId;
 			this.mLocalSdp = localSdp;
