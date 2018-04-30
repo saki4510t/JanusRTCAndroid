@@ -701,32 +701,6 @@ public class JanusRTCClient implements JanusClient {
 				rootEglBase.getEglBaseContext(), rootEglBase.getEglBaseContext());
 		}
 		
-		final PeerConnection.RTCConfiguration rtcConfig =
-			new PeerConnection.RTCConfiguration(mCallback.getIceServers(this));
-		// TCP candidates are only useful when connecting to a server that supports
-		// ICE-TCP.
-		rtcConfig.tcpCandidatePolicy = PeerConnection.TcpCandidatePolicy.DISABLED;
-		rtcConfig.bundlePolicy = PeerConnection.BundlePolicy.MAXBUNDLE;
-		rtcConfig.rtcpMuxPolicy = PeerConnection.RtcpMuxPolicy.REQUIRE;
-		rtcConfig.continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY;
-		// Use ECDSA encryption.
-		rtcConfig.keyType = PeerConnection.KeyType.ECDSA;
-		// Enable DTLS for normal calls and disable for loopback calls.
-		rtcConfig.enableDtlsSrtp = !peerConnectionParameters.loopback;
-		rtcConfig.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
-		
-		peerConnection = factory.createPeerConnection(rtcConfig, mPeerConnectionObserver);
-		
-		if (dataChannelEnabled) {
-			final DataChannel.Init init = new DataChannel.Init();
-			init.ordered = peerConnectionParameters.dataChannelParameters.ordered;
-			init.negotiated = peerConnectionParameters.dataChannelParameters.negotiated;
-			init.maxRetransmits = peerConnectionParameters.dataChannelParameters.maxRetransmits;
-			init.maxRetransmitTimeMs = peerConnectionParameters.dataChannelParameters.maxRetransmitTimeMs;
-			init.id = peerConnectionParameters.dataChannelParameters.id;
-			init.protocol = peerConnectionParameters.dataChannelParameters.protocol;
-			dataChannel = peerConnection.createDataChannel("ApprtcDemo data", init);
-		}
 		// FIXME まだ設定が正しくない
 		// Create audio constraints.
 		final MediaConstraints audioConstraints = new MediaConstraints();
@@ -745,10 +719,38 @@ public class JanusRTCClient implements JanusClient {
 		// Create SDP constraints.
 		final MediaConstraints sdpMediaConstraints = new MediaConstraints();
 		sdpMediaConstraints.mandatory.add(
-			new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
+			new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "false"));
 		sdpMediaConstraints.mandatory.add(
-			new MediaConstraints.KeyValuePair(
-				"OfferToReceiveVideo", Boolean.toString(isVideoCallEnabled())));
+			new MediaConstraints.KeyValuePair("OfferToReceiveVideo", "false"));
+		sdpMediaConstraints.optional.add(
+			new MediaConstraints.KeyValuePair("DtlsSrtpKeyAgreement", "true"));
+
+		final PeerConnection.RTCConfiguration rtcConfig =
+			new PeerConnection.RTCConfiguration(mCallback.getIceServers(this));
+		// TCP candidates are only useful when connecting to a server that supports
+		// ICE-TCP.
+		rtcConfig.tcpCandidatePolicy = PeerConnection.TcpCandidatePolicy.DISABLED;
+		rtcConfig.bundlePolicy = PeerConnection.BundlePolicy.MAXBUNDLE;
+		rtcConfig.rtcpMuxPolicy = PeerConnection.RtcpMuxPolicy.REQUIRE;
+		rtcConfig.continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY;
+		// Use ECDSA encryption.
+		rtcConfig.keyType = PeerConnection.KeyType.ECDSA;
+		// Enable DTLS for normal calls and disable for loopback calls.
+		rtcConfig.enableDtlsSrtp = !peerConnectionParameters.loopback;
+		rtcConfig.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
+		
+		peerConnection = factory.createPeerConnection(rtcConfig, sdpMediaConstraints, mPeerConnectionObserver);
+		
+		if (dataChannelEnabled) {
+			final DataChannel.Init init = new DataChannel.Init();
+			init.ordered = peerConnectionParameters.dataChannelParameters.ordered;
+			init.negotiated = peerConnectionParameters.dataChannelParameters.negotiated;
+			init.maxRetransmits = peerConnectionParameters.dataChannelParameters.maxRetransmits;
+			init.maxRetransmitTimeMs = peerConnectionParameters.dataChannelParameters.maxRetransmitTimeMs;
+			init.id = peerConnectionParameters.dataChannelParameters.id;
+			init.protocol = peerConnectionParameters.dataChannelParameters.protocol;
+			dataChannel = peerConnection.createDataChannel("ApprtcDemo data", init);
+		}
 
 		// Set INFO libjingle logging.
 		// NOTE: this _must_ happen while |factory| is alive!
@@ -836,33 +838,6 @@ public class JanusRTCClient implements JanusClient {
 				rootEglBase.getEglBaseContext(), rootEglBase.getEglBaseContext());
 		}
 		
-		final PeerConnection.RTCConfiguration rtcConfig =
-			new PeerConnection.RTCConfiguration(mCallback.getIceServers(this));
-		// TCP candidates are only useful when connecting to a server that supports
-		// ICE-TCP.
-		rtcConfig.tcpCandidatePolicy = PeerConnection.TcpCandidatePolicy.DISABLED;
-		rtcConfig.bundlePolicy = PeerConnection.BundlePolicy.MAXBUNDLE;
-		rtcConfig.rtcpMuxPolicy = PeerConnection.RtcpMuxPolicy.REQUIRE;
-		rtcConfig.continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY;
-		// Use ECDSA encryption.
-		rtcConfig.keyType = PeerConnection.KeyType.ECDSA;
-		// Enable DTLS for normal calls and disable for loopback calls.
-		rtcConfig.enableDtlsSrtp = !peerConnectionParameters.loopback;
-		rtcConfig.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
-		
-		peerConnection = factory.createPeerConnection(rtcConfig, mPeerConnectionObserver);
-		
-		if (dataChannelEnabled) {
-			final DataChannel.Init init = new DataChannel.Init();
-			init.ordered = peerConnectionParameters.dataChannelParameters.ordered;
-			init.negotiated = peerConnectionParameters.dataChannelParameters.negotiated;
-			init.maxRetransmits = peerConnectionParameters.dataChannelParameters.maxRetransmits;
-			init.maxRetransmitTimeMs = peerConnectionParameters.dataChannelParameters.maxRetransmitTimeMs;
-			init.id = peerConnectionParameters.dataChannelParameters.id;
-			init.protocol = peerConnectionParameters.dataChannelParameters.protocol;
-			dataChannel = peerConnection.createDataChannel("ApprtcDemo data", init);
-		}
-		
 		// FIXME まだ設定が正しくない
 		// Create audio constraints.
 		final MediaConstraints audioConstraints = new MediaConstraints();
@@ -883,9 +858,37 @@ public class JanusRTCClient implements JanusClient {
 		sdpMediaConstraints.mandatory.add(
 			new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
 		sdpMediaConstraints.mandatory.add(
-			new MediaConstraints.KeyValuePair(
-				"OfferToReceiveVideo", Boolean.toString(isVideoCallEnabled())));
+			new MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"));
+		sdpMediaConstraints.optional.add(
+			new MediaConstraints.KeyValuePair("DtlsSrtpKeyAgreement", "true"));
 
+		final PeerConnection.RTCConfiguration rtcConfig =
+			new PeerConnection.RTCConfiguration(mCallback.getIceServers(this));
+		// TCP candidates are only useful when connecting to a server that supports
+		// ICE-TCP.
+		rtcConfig.tcpCandidatePolicy = PeerConnection.TcpCandidatePolicy.DISABLED;
+		rtcConfig.bundlePolicy = PeerConnection.BundlePolicy.MAXBUNDLE;
+		rtcConfig.rtcpMuxPolicy = PeerConnection.RtcpMuxPolicy.REQUIRE;
+		rtcConfig.continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY;
+		// Use ECDSA encryption.
+		rtcConfig.keyType = PeerConnection.KeyType.ECDSA;
+		// Enable DTLS for normal calls and disable for loopback calls.
+		rtcConfig.enableDtlsSrtp = !peerConnectionParameters.loopback;
+		rtcConfig.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
+		
+		peerConnection = factory.createPeerConnection(rtcConfig, sdpMediaConstraints, mPeerConnectionObserver);
+		
+		if (dataChannelEnabled) {
+			final DataChannel.Init init = new DataChannel.Init();
+			init.ordered = peerConnectionParameters.dataChannelParameters.ordered;
+			init.negotiated = peerConnectionParameters.dataChannelParameters.negotiated;
+			init.maxRetransmits = peerConnectionParameters.dataChannelParameters.maxRetransmits;
+			init.maxRetransmitTimeMs = peerConnectionParameters.dataChannelParameters.maxRetransmitTimeMs;
+			init.id = peerConnectionParameters.dataChannelParameters.id;
+			init.protocol = peerConnectionParameters.dataChannelParameters.protocol;
+			dataChannel = peerConnection.createDataChannel("ApprtcDemo data", init);
+		}
+		
 //		final List<String> mediaStreamLabels = Collections.singletonList("ARDAMS");
 		if (isVideoCallEnabled()) {
 //			peerConnection.addTrack(createVideoTrack(videoCapturer), mediaStreamLabels);
