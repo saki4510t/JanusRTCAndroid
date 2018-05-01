@@ -16,22 +16,22 @@ public interface JanusCallback {
 	 * Callback fired once the room's signaling parameters
 	 * SignalingParameters are extracted.
 	 */
-	void onConnectedToRoom(final boolean initiator);
+	public void onConnectedToRoom(final boolean initiator);
 	
 	/**
 	 * Callback fired once remote SDP is received.
 	 */
-	void onRemoteDescription(final SessionDescription sdp);
+	public void onRemoteDescription(final SessionDescription sdp);
 	
 	/**
 	 * Callback fired once remote Ice candidate is received.
 	 */
-	void onRemoteIceCandidate(final IceCandidate candidate);
+	public void onRemoteIceCandidate(final IceCandidate candidate);
 	
 	/**
 	 * Callback fired once remote Ice candidate removals are received.
 	 */
-	void onRemoteIceCandidatesRemoved(final IceCandidate[] candidates);
+	public void onRemoteIceCandidatesRemoved(final IceCandidate[] candidates);
 
 	/**
 	 * Callback fired once connection is established (IceConnectionState is
@@ -48,16 +48,16 @@ public interface JanusCallback {
 	/**
 	 * Callback fired once channel is closed.
 	 */
-	void onChannelClose();
+	public void onChannelClose();
 	
 	/**
 	 * Callback fired once peer connection is closed.
 	 */
-	public void onPeerConnectionClosed();
+	public void onDisconnected();
 
 	/**
 	 * Callback fired once channel error happened.
 	 */
-	void onChannelError(final String description);
+	public void onChannelError(final String description);
 
 }

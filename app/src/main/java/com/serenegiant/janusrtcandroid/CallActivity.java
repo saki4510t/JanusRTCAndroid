@@ -833,8 +833,8 @@ public class CallActivity extends BaseActivity
 		}
 
 		@Override
-		public void onPeerConnectionClosed() {
-			if (DEBUG) Log.v(TAG, "onPeerConnectionClosed:");
+		public void onDisconnected() {
+			if (DEBUG) Log.v(TAG, "onDisconnected:");
 		}
 
 		@Override
@@ -885,7 +885,6 @@ public class CallActivity extends BaseActivity
 				public void run() {
 					if (janusClient == null) {
 						Log.e(TAG, "Received ICE candidate removals for a non-initialized peer connection.");
-						return;
 					}
 				}
 			});

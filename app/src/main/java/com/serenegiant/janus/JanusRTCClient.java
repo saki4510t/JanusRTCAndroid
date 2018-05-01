@@ -1354,6 +1354,7 @@ public class JanusRTCClient implements JanusClient {
 		}
 		rootEglBase.release();
 		if (DEBUG) Log.d(TAG, "Closing peer connection done.");
+		mCallback.onDisconnected();
 		PeerConnectionFactory.stopInternalTracingCapture();
 		PeerConnectionFactory.shutdownInternalTracer();
 	}
