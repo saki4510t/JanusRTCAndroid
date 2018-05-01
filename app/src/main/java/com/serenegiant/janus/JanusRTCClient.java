@@ -1389,6 +1389,7 @@ public class JanusRTCClient implements JanusClient {
 		@Override
 		public void onDetach(@NonNull final JanusPlugin plugin) {
 			if (DEBUG) Log.v(TAG, "onDetach:" + plugin);
+
 			removePlugin(plugin);
 		}
 		
@@ -1397,16 +1398,22 @@ public class JanusRTCClient implements JanusClient {
 			@NonNull final BigInteger pluginId) {
 			
 			if (DEBUG) Log.v(TAG, "onLeave:" + plugin + ",leave=" + pluginId);
+			// FIXME 未実装
 		}
 		
 		@Override
-		public void onAddRemoteStream(@NonNull final JanusPlugin plugin, @NonNull final MediaStream stream) {
+		public void onAddRemoteStream(@NonNull final JanusPlugin plugin,
+			@NonNull final MediaStream stream) {
+
+			if (DEBUG) Log.v(TAG, "onAddRemoteStream:" + plugin);
 			executor.execute(() -> JanusRTCClient.this.onAddRemoteStream(stream));
 		}
 		
 		@Override
-		public void onRemoveStream(@NonNull final JanusPlugin plugin, @NonNull final MediaStream stream) {
+		public void onRemoveStream(@NonNull final JanusPlugin plugin,
+			@NonNull final MediaStream stream) {
 		
+			if (DEBUG) Log.v(TAG, "onRemoveStream:" + plugin);
 		}
 		
 		@Override
@@ -1420,11 +1427,13 @@ public class JanusRTCClient implements JanusClient {
 		
 		@Override
 		public void onIceConnected(@NonNull final JanusPlugin plugin) {
+			if (DEBUG) Log.v(TAG, "onIceConnected:" + plugin);
 			mCallback.onIceConnected();
 		}
 		
 		@Override
 		public void onIceDisconnected(@NonNull final JanusPlugin plugin) {
+			if (DEBUG) Log.v(TAG, "onIceDisconnected:" + plugin);
 			mCallback.onIceDisconnected();
 		}
 		
@@ -1432,7 +1441,7 @@ public class JanusRTCClient implements JanusClient {
 		public void onLocalDescription(@NonNull final JanusPlugin plugin,
 			final SessionDescription sdp) {
 
-			if (DEBUG) Log.v(TAG, "onLocalDescription:");
+			if (DEBUG) Log.v(TAG, "onLocalDescription:" + plugin);
 //			final long delta = System.currentTimeMillis() - callStartedTimeMs;
 			executor.execute(() -> {
 //				logAndToast("Sending " + sdp.type + ", delay=" + delta + "ms");
@@ -1452,12 +1461,17 @@ public class JanusRTCClient implements JanusClient {
 
 		@NonNull
 		@Override
-		public PeerConnectionParameters getPeerConnectionParameters(@NonNull final JanusPlugin plugin) {
+		public PeerConnectionParameters getPeerConnectionParameters(
+			@NonNull final JanusPlugin plugin) {
+
+			if (DEBUG) Log.v(TAG, "getPeerConnectionParameters:" + plugin);
 			return peerConnectionParameters;
 		}
 	
 		@Override
 		public boolean isVideoCallEnabled(@NonNull final JanusPlugin plugin) {
+
+			if (DEBUG) Log.v(TAG, "isVideoCallEnabled:");
 			return JanusRTCClient.this.isVideoCallEnabled();
 		}
 		
@@ -1465,6 +1479,7 @@ public class JanusRTCClient implements JanusClient {
 		public void createSubscriber(@NonNull final JanusPlugin plugin,
 			@NonNull final BigInteger feederId) {
 
+			if (DEBUG) Log.v(TAG, "createSubscriber:" + plugin);
 			executor.execute(() -> {
 				JanusRTCClient.this.createSubscriber(feederId);
 			});
