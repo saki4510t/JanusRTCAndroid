@@ -1584,11 +1584,19 @@ public class JanusRTCClient implements JanusClient {
 			try {
 				final JSONObject body = new JSONObject(responseBody.string());
 				final String transaction = body.optString("transaction");
+				final BigInteger sender = BigInteger.valueOf(body.optLong("sender"));
 				if (!TextUtils.isEmpty(transaction)) {
 					// トランザクションコールバックでの処理を試みる
 					// WebRTCイベントはトランザクションがない
 					if (TransactionManager.handleTransaction(transaction, body)) {
 						return;	// 処理済みの時はここで終了
+					}
+				}
+				final JanusPlugin plugin = getPlugin(sender);
+				if (plugin != null) {
+					if (DEBUG) Log.v(TAG, "handlePluginEvent: try handle message on plugin specified by sender");
+					if (plugin.onReceived("", body)) {
+						return;
 					}
 				}
 
@@ -1637,13 +1645,6 @@ public class JanusRTCClient implements JanusClient {
 		final Gson gson = new Gson();
 		final EventRoom event = gson.fromJson(body.toString(), EventRoom.class);
 
-		// Senderフィールドは対象のプラグインのidなので対応するプラグインを探して実行を試みる
-		final JanusPlugin plugin = getPlugin(event.sender);
-		if (plugin != null) {
-			if (DEBUG) Log.v(TAG, "handlePluginEvent: try handle message on plugin specified by sender");
-			if (plugin.onReceived("", body)) return;
-		}
-		
 		if (DEBUG) Log.v(TAG, "handlePluginEvent: unhandled event");
 	}
 	
