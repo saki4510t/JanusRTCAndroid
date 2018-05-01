@@ -381,63 +381,6 @@ public class JanusRTCClient implements JanusClient {
 		});
 	}
 	
-//	@Deprecated
-//	@Override
-//	public void sendOfferSdp(final SessionDescription sdp) {
-//		if (DEBUG) Log.v(TAG, "sendOfferSdp:" + sdp);
-//		executor.execute(() -> {
-//			sendOfferSdpInternal(sdp);
-//		});
-//	}
-	
-//	@Deprecated
-//	@Override
-//	public void sendAnswerSdp(final SessionDescription sdp) {
-//		if (DEBUG) Log.v(TAG, "sendAnswerSdp:" + sdp);
-//		executor.execute(() -> {
-//			sendAnswerSdpInternal(sdp);
-//		});
-//	}
-	
-//	@Deprecated
-//	@Override
-//	public void sendLocalIceCandidate(final IceCandidate candidate) {
-//		if (DEBUG) Log.v(TAG, "sendLocalIceCandidate:");
-//		executor.execute(() -> {
-//			sendLocalIceCandidateInternal(candidate);
-//		});
-//	}
-	
-//	@Deprecated
-//	@Override
-//	public void sendLocalIceCandidateRemovals(final IceCandidate[] candidates) {
-//		if (DEBUG) Log.v(TAG, "sendLocalIceCandidateRemovals:");
-//		executor.execute(() -> {
-//			// FIXME 未実装
-////			final JSONObject json = new JSONObject();
-////			jsonPut(json, "type", "remove-candidates");
-////			final JSONArray jsonArray = new JSONArray();
-////			for (final IceCandidate candidate : candidates) {
-////				jsonArray.put(toJsonCandidate(candidate));
-////			}
-////			jsonPut(json, "candidates", jsonArray);
-////			if (initiator) {
-////				// Call initiator sends ice candidates to GAE server.
-////				if (mConnectionState != WebSocketRTCClient.ConnectionState.CONNECTED) {
-////					reportError("Sending ICE candidate removals in non connected state.");
-////					return;
-////				}
-////				sendPostMessage(WebSocketRTCClient.MessageType.MESSAGE, messageUrl, json.toString());
-////				if (connectionParameters.loopback) {
-////					events.onRemoteIceCandidatesRemoved(candidates);
-////				}
-////			} else {
-////				// Call receiver sends ice candidates to websocket server.
-////				wsClient.send(json.toString());
-////			}
-//		});
-//	}
-	
 	@Override
 	public void disconnectFromRoom() {
 		if (DEBUG) Log.v(TAG, "disconnectFromRoom:");
@@ -1102,135 +1045,6 @@ public class JanusRTCClient implements JanusClient {
 //		}
 	}
 
-//	private final PeerConnection.Observer
-//		mPeerConnectionObserver = new PeerConnection.Observer() {
-//		@Override
-//		public void onSignalingChange(final PeerConnection.SignalingState newState) {
-//			if (DEBUG) Log.v(TAG, "onSignalingChange:" + newState);
-//			// 今は何もしない
-//		}
-//
-//		@Override
-//		public void onIceConnectionChange(final PeerConnection.IceConnectionState newState) {
-//			if (DEBUG) Log.v(TAG, "onIceConnectionChange:" + newState);
-//			executor.execute(() -> {
-//				if (DEBUG) Log.d(TAG, "IceConnectionState: " + newState);
-//				switch (newState) {
-//				case CONNECTED:
-//					mCallback.onIceConnected();
-//					break;
-//				case DISCONNECTED:
-//					mCallback.onIceDisconnected();
-//					break;
-//				case FAILED:
-//					Log.w(TAG, "ICE connection failed.");
-//					// FIXME なぜだかこれが起こる、映像は少なくとも片方向はながれているので接続はできてそうなんだけど
-////					reportError(new RuntimeException("ICE connection failed."));
-//					break;
-//				default:
-//					break;
-//				}
-//			});
-//		}
-//
-//		@Override
-//		public void onIceConnectionReceivingChange(final boolean receiving) {
-//			if (DEBUG) Log.v(TAG, "onIceConnectionReceivingChange:receiving=" + receiving);
-//			// 今は何もしない
-//		}
-//
-//		@Override
-//		public void onIceGatheringChange(final PeerConnection.IceGatheringState newState) {
-//			if (DEBUG) Log.v(TAG, "onIceGatheringChange:" + newState);
-//			switch (newState) {
-//			case NEW:
-//				break;
-//			case GATHERING:
-//				break;
-//			case COMPLETE:
-//				executor.execute(() -> sendLocalIceCandidateInternal(null));
-//				break;
-//			default:
-//				break;
-//			}
-//		}
-//
-//		@Override
-//		public void onIceCandidate(final IceCandidate candidate) {
-//			if (DEBUG) Log.v(TAG, "onIceCandidate:");
-//
-//			executor.execute(() -> sendLocalIceCandidate(candidate));
-//		}
-//
-//		@Override
-//		public void onIceCandidatesRemoved(final IceCandidate[] candidates) {
-//			if (DEBUG) Log.v(TAG, "onIceCandidatesRemoved:");
-//
-//			executor.execute(() -> sendLocalIceCandidateRemovals(candidates));
-//		}
-//
-//		@Override
-//		public void onAddStream(final MediaStream stream) {
-//			if (DEBUG) Log.v(TAG, "onAddStream:" + stream);
-//
-//			executor.execute(() -> onAddRemoteStream(stream));
-//		}
-//
-//		@Override
-//		public void onRemoveStream(final MediaStream stream) {
-//			if (DEBUG) Log.v(TAG, "onRemoveStream:" + stream);
-//
-//		}
-//
-//		@Override
-//		public void onDataChannel(final DataChannel channel) {
-//			if (DEBUG) Log.v(TAG, "onDataChannel:");
-//			if (!dataChannelEnabled)
-//				return;
-//
-//			// FIXME これはAppRTCMobileのままで単にログを出力するだけ
-//			channel.registerObserver(new DataChannel.Observer() {
-//				@Override
-//				public void onBufferedAmountChange(long previousAmount) {
-//					if (DEBUG) Log.d(TAG,
-//						 "Data channel buffered amount changed: "
-//						 + channel.label() + ": " + channel.state());
-//				}
-//
-//				@Override
-//				public void onStateChange() {
-//					if (DEBUG) Log.d(TAG,
-//						"Data channel state changed: "
-//						+ channel.label() + ": " + channel.state());
-//				}
-//
-//				@Override
-//				public void onMessage(final DataChannel.Buffer buffer) {
-//					if (buffer.binary) {
-//						if (DEBUG) Log.d(TAG, "Received binary msg over " + channel);
-//						return;
-//					}
-//					final ByteBuffer data = buffer.data;
-//					final byte[] bytes = new byte[data.capacity()];
-//					data.get(bytes);
-//					String strData = new String(bytes, Charset.forName("UTF-8"));
-//					Log.d(TAG, "Got msg: " + strData + " over " + channel);
-//				}
-//			});
-//		}
-//
-//		@Override
-//		public void onRenegotiationNeeded() {
-//			if (DEBUG) Log.v(TAG, "onRenegotiationNeeded:");
-//			// 今は何もしない
-//		}
-//
-//		@Override
-//		public void onAddTrack(final RtpReceiver receiver, final MediaStream[] streams) {
-//			if (DEBUG) Log.v(TAG, "onAddTrack:" + receiver);
-//			// 今は何もしない
-//		}
-//	};
 
 //--------------------------------------------------------------------------------
 	@Nullable
@@ -1240,7 +1054,6 @@ public class JanusRTCClient implements JanusClient {
 
 	private void onAddRemoteStream(final MediaStream remoteStream) {
 		if (DEBUG) Log.v(TAG, "onAddRemoteStream:remoteVideoTrack=" + remoteVideoTrack);
-		// FIXME 破棄するタイミングが悪いのかもしれないけどここでaddRendererすると通話終了時にクラッシュする
 		if (remoteVideoTrack == null) {
 			mRemoteStream = remoteStream;
 			final VideoTrack videoTrack = remoteStream.videoTracks.get(0);
@@ -1376,69 +1189,10 @@ public class JanusRTCClient implements JanusClient {
 		if ((mConnectionState == ConnectionState.CONNECTED)) {
 
 			if (DEBUG) Log.d(TAG, "Closing room.");
-			detach();
+			detachAll();
 		}
 		destroy();
 	}
-	
-//	private void sendOfferSdpInternal(final SessionDescription sdp) {
-//		if (DEBUG) Log.v(TAG, "sendOfferSdpInternal:");
-//		if (mConnectionState != ConnectionState.CONNECTED) {
-//			reportError(new RuntimeException("Sending offer SDP in non connected state."));
-//			return;
-//		}
-//		final JanusPlugin plugin;
-//		synchronized (mAttachedPlugins) {
-//			plugin = mAttachedPlugins.containsKey(BigInteger.ZERO)
-//				? mAttachedPlugins.get(BigInteger.ZERO) : null;
-//		}
-//		if (plugin != null) {
-//			plugin.sendOfferSdp(sdp, connectionParameters.loopback);
-//		} else {
-//			reportError(new IllegalStateException("publisher not found"));
-//		}
-//	}
-	
-//	private void sendAnswerSdpInternal(final SessionDescription sdp) {
-//		if (DEBUG) Log.v(TAG, "sendAnswerSdpInternal:");
-//		if (connectionParameters.loopback) {
-//			Log.e(TAG, "Sending answer in loopback mode.");
-//			return;
-//		}
-//		final JanusPlugin plugin;
-//		synchronized (mAttachedPlugins) {
-//			plugin = mAttachedPlugins.containsKey(BigInteger.ZERO)
-//				? mAttachedPlugins.get(BigInteger.ZERO) : null;
-//		}
-//		if (plugin != null) {
-//			plugin.sendAnswerSdp(sdp, connectionParameters.loopback);
-//		} else {
-//			reportError(new IllegalStateException("publisher not found"));
-//		}
-//	}
-
-//	/**
-//	 * sendLocalIceCandidateの実体、ワーカースレッド上で実行
-//	 * @param candidate
-//	 */
-//	private void sendLocalIceCandidateInternal(final IceCandidate candidate) {
-//		if (DEBUG) Log.v(TAG, "sendLocalIceCandidateInternal:");
-//		if (mConnectionState != ConnectionState.CONNECTED) {
-//			if (DEBUG) Log.d(TAG, "already disconnected");
-//			return;
-//		}
-//		final JanusPlugin plugin;
-//		synchronized (mAttachedPlugins) {
-//			plugin = mAttachedPlugins.containsKey(BigInteger.ZERO)
-//				? mAttachedPlugins.get(BigInteger.ZERO) : null;
-//		}
-//		if (plugin != null) {
-//			plugin.sendLocalIceCandidate(candidate,
-//				connectionParameters.loopback);
-//		} else {
-//			reportError(new IllegalStateException("there is no publisher"));
-//		}
-//	}
 	
 //--------------------------------------------------------------------
 	private void requestServerInfo() {
@@ -1513,10 +1267,10 @@ public class JanusRTCClient implements JanusClient {
 	}
 
 	/**
-	 * detach from VideoRoom plugin
+	 * detachAll from VideoRoom plugin
 	 */
-	private void detach() {
-		if (DEBUG) Log.v(TAG, "detach:");
+	private void detachAll() {
+		if (DEBUG) Log.v(TAG, "detachAll:");
 		cancelCall();
 		mConnectionState = ConnectionState.CLOSED;
 		synchronized (mAttachedPlugins) {
@@ -1539,7 +1293,7 @@ public class JanusRTCClient implements JanusClient {
 	private void destroy() {
 		if (DEBUG) Log.v(TAG, "destroy:");
 		cancelCall();
-		detach();
+		detachAll();
 		if (mSession != null) {
 			final Destroy destroy = new Destroy(mSession, null);
 			final Call<Void> call = mJanus.destroy(mSession.id(), destroy);
@@ -1605,6 +1359,7 @@ public class JanusRTCClient implements JanusClient {
 		PeerConnectionFactory.shutdownInternalTracer();
 	}
 
+//--------------------------------------------------------------------------------
 	/**
 	 * JanusPluginからのコールバックリスナーの実装
 	 */
@@ -1723,20 +1478,6 @@ public class JanusRTCClient implements JanusClient {
 				+ "\n" + sdp);
 
 			mCallback.onRemoteDescription(sdp);
-//			plugin.setRemoteDescription(sdp);
-//			if (plugin instanceof JanusPlugin.Publisher) {
-//				mCallback.onRemoteDescription(sdp);
-//				plugin.setRemoteDescription(sdp);
-//			} else if (plugin instanceof JanusPlugin.Subscriber) {
-//				if (sdp.type == SessionDescription.Type.ANSWER) {
-//					mCallback.onRemoteDescription(sdp);
-//				} else {
-//					final SessionDescription answerSdp
-//						= new SessionDescription(SessionDescription.Type.ANSWER,
-//							sdp.description);
-//					mCallback.onRemoteDescription(answerSdp);
-//				}
-//			}
 		}
 		
 		@Override
@@ -1747,6 +1488,7 @@ public class JanusRTCClient implements JanusClient {
 		}
 	};
 
+//--------------------------------------------------------------------------------
 	/**
 	 * TransactionManagerからのコールバック
 	 */
