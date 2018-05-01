@@ -764,11 +764,7 @@ public class JanusRTCClient implements JanusClient {
 		}
 		if (DEBUG) Log.d(TAG, "Peer connection created.");
 
-		// ローカルのPublisherは1つしかないので検索の手間を省くために
-		// BigInteger.ZEROをキーとして登録しておく。
-		// attachした時点で実際のプラグインのidでも登録される
 		publisher.setPeerConnection(peerConnection, dataChannel, rtcEventLog);
-		addPlugin(BigInteger.ZERO, publisher);
 		publisher.attach();
 	}
 	
@@ -1069,13 +1065,6 @@ public class JanusRTCClient implements JanusClient {
 				mAttachedPlugins.remove(key);
 			}
 		});
-		if (plugin instanceof JanusPlugin.Publisher) {
-			executor.execute(() -> {
-				synchronized (mAttachedPlugins) {
-					mAttachedPlugins.remove(BigInteger.ZERO);
-				}
-			});
-		}
 	}
 
 	private JanusPlugin getPlugin(@Nullable final BigInteger key) {
@@ -1247,11 +1236,7 @@ public class JanusRTCClient implements JanusClient {
 			for (final Map.Entry<BigInteger, JanusPlugin> entry:
 				mAttachedPlugins.entrySet()) {
 
-				// key === BigInteger.ZEROはPublisherのキーの別名で、
-				// 本当のidでも別途登録されているはずなのでここでは呼ばない
-				if (!BigInteger.ZERO.equals(entry.getKey())) {
-					entry.getValue().detach();
-				}
+				entry.getValue().detach();
 			}
 			mAttachedPlugins.clear();
 		}
