@@ -21,7 +21,6 @@ import org.appspot.apprtc.PeerConnectionParameters;
 import org.appspot.apprtc.RecordedAudioToFileController;
 import org.appspot.apprtc.RoomConnectionParameters;
 import org.appspot.apprtc.RtcEventLog;
-import org.appspot.apprtc.SignalingParameters;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.webrtc.AudioSource;
@@ -1378,11 +1377,11 @@ public class JanusRTCClient implements JanusClient {
 			if (DEBUG) Log.v(TAG, "onJoin:" + plugin);
 			if (plugin instanceof JanusPlugin.Publisher) {
 				mConnectionState = ConnectionState.CONNECTED;
-				handleOnJoin(plugin, room);	// FIXME publisherの時はhandleJoin呼んじゃダメかも
+				handleOnJoin(plugin, room);
 				plugin.createOffer();
 			} else if (plugin instanceof JanusPlugin.Subscriber) {
 				handleOnJoin(plugin, room);
-				plugin.createAnswer();	// FIXME ここで呼ぶべき？
+				plugin.createAnswer();
 			}
 		}
 		
@@ -1641,14 +1640,8 @@ public class JanusRTCClient implements JanusClient {
 
 		if (DEBUG) Log.v(TAG, "handleOnJoin:");
 		// roomにjoinできた
-		final SignalingParameters params = new SignalingParameters(
-			mCallback.getIceServers(this),
-				true,						// initiator=trueならこの端末側がofferする
-				room.plugindata.data.id.toString(),	// clientId
-				null, null,
-				null, null);	// この2つはinitiator=falseの時有効
-		// Fire connection and signaling parameters events.
-		mCallback.onConnectedToRoom(params);
+		// Fire connection and signaling events.
+		mCallback.onConnectedToRoom(true);
 	}
 
 	/**

@@ -40,7 +40,6 @@ import org.appspot.apprtc.AppRTCAudioManager.AudioDevice;
 import org.appspot.apprtc.AppRTCAudioManager.AudioManagerEvents;
 import com.serenegiant.janus.JanusClient;
 import org.appspot.apprtc.RoomConnectionParameters;
-import org.appspot.apprtc.SignalingParameters;
 import org.appspot.apprtc.DataChannelParameters;
 import org.appspot.apprtc.PeerConnectionParameters;
 import org.appspot.apprtc.UnhandledExceptionHandler;
@@ -188,8 +187,6 @@ public class CallActivity extends BaseActivity
 	@Nullable
 	private JanusClient janusClient;
 	@Nullable
-	private SignalingParameters signalingParameters;
-	@Nullable
 	private AppRTCAudioManager audioManager = null;
 	@Nullable
 	private SurfaceViewRenderer pipRenderer;
@@ -238,7 +235,6 @@ public class CallActivity extends BaseActivity
 		setContentView(R.layout.activity_call);
 
 		iceConnected = false;
-		signalingParameters = null;
 
 		// Create UI controls.
 		pipRenderer = findViewById(R.id.pip_video_view);
@@ -793,19 +789,16 @@ public class CallActivity extends BaseActivity
 	// -----Implementation of com.serenegiant.janus.JanusClient.AppRTCSignalingEvents ---------------
 	// All callbacks are invoked from websocket signaling looper thread and
 	// are routed to UI thread.
-	private void onConnectedToRoomInternal(final SignalingParameters params) {
+	private void onConnectedToRoomInternal(final boolean initiator) {
 		if (DEBUG) Log.v(TAG, "onConnectedToRoomInternal:");
 		final long delta = System.currentTimeMillis() - callStartedTimeMs;
 
-		signalingParameters = params;
 		logAndToast("Creating peer connection, delay=" + delta + "ms");
 
-		if (signalingParameters.initiator) {
+		if (initiator) {
 			logAndToast("Creating OFFER...");
 		} else {
-			if (params.offerSdp != null) {
-				logAndToast("Creating ANSWER...");
-			}
+			logAndToast("Creating ANSWER...");
 		}
 	}
 
@@ -845,12 +838,12 @@ public class CallActivity extends BaseActivity
 		}
 
 		@Override
-		public void onConnectedToRoom(final SignalingParameters params) {
+		public void onConnectedToRoom(final boolean initiator) {
 			if (DEBUG) Log.v(TAG, "onConnectedToRoom:");
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					onConnectedToRoomInternal(params);
+					onConnectedToRoomInternal(initiator);
 				}
 			});
 		}
