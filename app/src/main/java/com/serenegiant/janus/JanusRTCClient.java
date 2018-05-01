@@ -304,6 +304,10 @@ public class JanusRTCClient implements JanusClient {
 	public void enableStatsEvents(boolean enable, int periodMs) {
 		if (DEBUG) Log.v(TAG, "enableStatsEvents:");
 		if (enable) {
+			// 多重で呼び出されるのを防ぐため1つだけに限定する
+			// これ以外でタイマーを使いまわすのであれば
+			// TimerTask#cancelを呼んだほうがいい
+			statsTimer.cancel();
 			try {
 				statsTimer.schedule(new TimerTask() {
 					@Override
@@ -366,6 +370,7 @@ public class JanusRTCClient implements JanusClient {
 	
 	@Override
 	public void disconnectFromRoom() {
+		statsTimer.cancel();
 		if (mConnectionState != ConnectionState.CLOSED) {
 			if (DEBUG) Log.v(TAG, "disconnectFromRoom:");
 			cancelCall();
