@@ -74,8 +74,8 @@ public class Room {
 
 		final List<PublisherInfo> result;
 		if (newPublishers != null) {
-			result = Arrays.asList(newPublishers);
 			final List<PublisherInfo> src = Arrays.asList(newPublishers);
+			result = new ArrayList<>(src);
 			
 			synchronized (this.publishers) {
 				// 既にRoomに登録されているPublisherを除く=未登録分
