@@ -42,7 +42,6 @@ import com.serenegiant.janus.JanusClient;
 import org.appspot.apprtc.RoomConnectionParameters;
 import org.appspot.apprtc.SignalingParameters;
 import org.appspot.apprtc.DataChannelParameters;
-import org.appspot.apprtc.PeerConnectionEvents;
 import org.appspot.apprtc.PeerConnectionParameters;
 import org.appspot.apprtc.UnhandledExceptionHandler;
 import org.webrtc.Camera1Enumerator;
@@ -57,7 +56,6 @@ import org.webrtc.PeerConnectionFactory;
 import org.webrtc.RendererCommon.ScalingType;
 import org.webrtc.ScreenCapturerAndroid;
 import org.webrtc.SessionDescription;
-import org.webrtc.StatsReport;
 import org.webrtc.SurfaceViewRenderer;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoFileRenderer;
@@ -892,14 +890,6 @@ public class CallActivity extends BaseActivity
 						return;
 					}
 					logAndToast("Received remote " + sdp.type + ", delay=" + delta + "ms");
-					// FIXME
-//					peerConnectionClient.setRemoteDescription(sdp);
-//					if (!signalingParameters.initiator) {
-//						logAndToast("Creating ANSWER...");
-//						// Create answer. Answer SDP will be sent to offering client in
-//						// PeerConnectionEvents.onLocalDescription event.
-//						peerConnectionClient.createAnswer();
-//					}
 				}
 			});
 		}
@@ -912,10 +902,7 @@ public class CallActivity extends BaseActivity
 				public void run() {
 					if (janusClient == null) {
 						Log.e(TAG, "Received ICE candidate for a non-initialized peer connection.");
-						return;
 					}
-					// FIXME
-//					peerConnectionClient.addRemoteIceCandidate(candidate);
 				}
 			});
 		}
@@ -930,8 +917,6 @@ public class CallActivity extends BaseActivity
 						Log.e(TAG, "Received ICE candidate removals for a non-initialized peer connection.");
 						return;
 					}
-					// FIXME
-//					peerConnectionClient.removeRemoteIceCandidates(candidates);
 				}
 			});
 		}
@@ -971,122 +956,6 @@ public class CallActivity extends BaseActivity
 		@Override
 		public List<PeerConnection.IceServer> getIceServers(@NonNull final JanusRTCClient client) {
 			return new ArrayList<PeerConnection.IceServer>();
-		}
-	};
-
-// -----Implementation of org.appspot.apprtc.PeerConnectionClient.PeerConnectionEvents.---------
-// ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓
-// Send local peer connection SDP and ICE candidates to remote party.
-// All callbacks are invoked from peer connection client looper thread and
-// are routed to UI thread.
-	private final PeerConnectionEvents
-		mPeerConnectionEvents = new PeerConnectionEvents() {
-
-		@Override
-		public void onLocalDescription(final SessionDescription sdp) {
-			if (DEBUG) Log.v(TAG, "onLocalDescription:");
-			final long delta = System.currentTimeMillis() - callStartedTimeMs;
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					if (janusClient != null) {
-						logAndToast("Sending " + sdp.type + ", delay=" + delta + "ms");
-						if (signalingParameters.initiator) {
-							janusClient.sendOfferSdp(sdp);
-						} else {
-							janusClient.sendAnswerSdp(sdp);
-						}
-					}
-					if (peerConnectionParameters.videoMaxBitrate > 0) {
-						if (DEBUG) Log.d(TAG, "Set video maximum bitrate: "
-							+ peerConnectionParameters.videoMaxBitrate);
-						janusClient.setVideoMaxBitrate(
-							peerConnectionParameters.videoMaxBitrate);
-					}
-				}
-			});
-		}
-	
-		@Override
-		public void onIceCandidate(final IceCandidate candidate) {
-			if (DEBUG) Log.v(TAG, "onIceCandidate:");
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					if (janusClient != null) {
-						janusClient.sendLocalIceCandidate(candidate);
-					}
-				}
-			});
-		}
-	
-		@Override
-		public void onIceCandidatesRemoved(final IceCandidate[] candidates) {
-			if (DEBUG) Log.v(TAG, "onIceCandidatesRemoved:");
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					if (janusClient != null) {
-						janusClient.sendLocalIceCandidateRemovals(candidates);
-					}
-				}
-			});
-		}
-	
-		@Override
-		public void onSignalingChange(final PeerConnection.SignalingState newState) {
-			if (DEBUG) Log.v(TAG, "onSignalingChange:newState=" + newState);
-		}
-		
-		@Override
-		public void onIceConnected() {
-			if (DEBUG) Log.v(TAG, "onIceConnected:");
-			final long delta = System.currentTimeMillis() - callStartedTimeMs;
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					logAndToast("ICE connected, delay=" + delta + "ms");
-					iceConnected = true;
-					callConnected();
-				}
-			});
-		}
-	
-		@Override
-		public void onIceDisconnected() {
-			if (DEBUG) Log.v(TAG, "onIceDisconnected:");
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					logAndToast("ICE disconnected");
-					iceConnected = false;
-					disconnect();
-				}
-			});
-		}
-	
-		@Override
-		public void onPeerConnectionClosed() {
-			if (DEBUG) Log.v(TAG, "onPeerConnectionClosed:");
-		}
-	
-		@Override
-		public void onPeerConnectionStatsReady(final StatsReport[] reports) {
-			if (DEBUG) Log.v(TAG, "onPeerConnectionStatsReady:");
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					if (!isError && iceConnected) {
-						hudFragment.updateEncoderStatistics(reports);
-					}
-				}
-			});
-		}
-	
-		@Override
-		public void onPeerConnectionError(final String description) {
-			if (DEBUG) Log.v(TAG, "onPeerConnectionError:");
-			reportError(description);
 		}
 	};
 }
