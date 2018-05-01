@@ -159,6 +159,8 @@ public class JanusRTCClient implements JanusClient {
 	private int videoWidth;
 	private int videoHeight;
 	private int videoFps;
+	private MediaStream mLocalStream;
+	private MediaStream mRemoteStream;
 	/** enableAudio is set to true if audio should be sent. */
 	private boolean enableAudio = true;
 	/**
@@ -742,6 +744,7 @@ public class JanusRTCClient implements JanusClient {
 		
 		if (SDP_SEMANTICS == PeerConnection.SdpSemantics.UNIFIED_PLAN) {
 			peerConnection = factory.createPeerConnection(rtcConfig, mPeerConnectionObserver);
+//			peerConnection = factory.createPeerConnection(rtcConfig, sdpMediaConstraints, mPeerConnectionObserver);
 			
 			if (dataChannelEnabled) {
 				final DataChannel.Init init = new DataChannel.Init();
@@ -783,11 +786,13 @@ public class JanusRTCClient implements JanusClient {
 					stream.addTrack(videoTrack);
 				}
 			}
+			peerConnection = factory.createPeerConnection(rtcConfig, mPeerConnectionObserver);
 //			peerConnection = factory.createPeerConnection(rtcConfig, sdpMediaConstraints, mPeerConnectionObserver);
-			peerConnection = factory.createPeerConnection(new ArrayList<PeerConnection.IceServer>(),
-				sdpMediaConstraints, mPeerConnectionObserver);
+//			peerConnection = factory.createPeerConnection(new ArrayList<PeerConnection.IceServer>(),
+//				sdpMediaConstraints, mPeerConnectionObserver);
 			if (stream != null) {
 				peerConnection.addStream(stream);
+				mLocalStream = stream;
 			}
 			if (dataChannelEnabled) {
 				final DataChannel.Init init = new DataChannel.Init();
@@ -905,7 +910,8 @@ public class JanusRTCClient implements JanusClient {
 		rtcConfig.sdpSemantics = SDP_SEMANTICS;
 		
 		if (SDP_SEMANTICS == PeerConnection.SdpSemantics.UNIFIED_PLAN) {
-			peerConnection = factory.createPeerConnection(rtcConfig, sdpMediaConstraints, mPeerConnectionObserver);
+			peerConnection = factory.createPeerConnection(rtcConfig, mPeerConnectionObserver);
+//			peerConnection = factory.createPeerConnection(rtcConfig, sdpMediaConstraints, mPeerConnectionObserver);
 			
 			if (dataChannelEnabled) {
 				final DataChannel.Init init = new DataChannel.Init();
@@ -952,28 +958,10 @@ public class JanusRTCClient implements JanusClient {
 //				}
 //			}
 		} else {
-			VideoTrack videoTrack = null;
-			AudioTrack audioTrack = null;
-			MediaStream stream = null;
-//			if (isVideoCallEnabled()) {
-//				videoTrack = createVideoTrack(videoCapturer);
-//			}
-//			audioTrack = createAudioTrack(audioConstraints);
-			if ((videoTrack != null) || (audioTrack != null)) {
-				stream = factory.createLocalMediaStream("ARDAMS");
-				if (audioTrack != null) {
-					stream.addTrack(audioTrack);
-				}
-				if (videoTrack != null) {
-					stream.addTrack(videoTrack);
-				}
-			}
+			peerConnection = factory.createPeerConnection(rtcConfig, mPeerConnectionObserver);
 //			peerConnection = factory.createPeerConnection(rtcConfig, sdpMediaConstraints, mPeerConnectionObserver);
-			peerConnection = factory.createPeerConnection(new ArrayList<PeerConnection.IceServer>(),
-				sdpMediaConstraints, mPeerConnectionObserver);
-			if (stream != null) {
-				peerConnection.addStream(stream);
-			}
+//			peerConnection = factory.createPeerConnection(new ArrayList<PeerConnection.IceServer>(),
+//				sdpMediaConstraints, mPeerConnectionObserver);
 			if (dataChannelEnabled) {
 				final DataChannel.Init init = new DataChannel.Init();
 				init.ordered = peerConnectionParameters.dataChannelParameters.ordered;
@@ -1040,7 +1028,7 @@ public class JanusRTCClient implements JanusClient {
 	
 	private void findVideoSender(@NonNull final PeerConnection peerConnection) {
 		if (DEBUG) Log.v(TAG, "findVideoSender:");
-		for (RtpSender sender : peerConnection.getSenders()) {
+		for (final RtpSender sender : peerConnection.getSenders()) {
 			if (sender.track() != null) {
 				String trackType = sender.track().kind();
 				if (trackType.equals(VIDEO_TRACK_TYPE)) {
@@ -1059,8 +1047,9 @@ public class JanusRTCClient implements JanusClient {
 	@Nullable
 	private VideoTrack getRemoteVideoTrack(@NonNull final PeerConnection peerConnection) {
 		if (DEBUG) Log.v(TAG, "getRemoteVideoTrack:");
-		for (RtpTransceiver transceiver : peerConnection.getTransceivers()) {
+		for (final RtpTransceiver transceiver : peerConnection.getTransceivers()) {
 			final MediaStreamTrack track = transceiver.getReceiver().track();
+			if (DEBUG) Log.v(TAG, "getRemoteVideoTrack:transceiver=" + transceiver + ",track=" + track);
 			if (track instanceof VideoTrack) {
 				return (VideoTrack) track;
 			}
@@ -1183,14 +1172,14 @@ public class JanusRTCClient implements JanusClient {
 		
 		@Override
 		public void onAddStream(final MediaStream stream) {
-			if (DEBUG) Log.v(TAG, "onAddStream:");
-			// 今は何もしない
+			if (DEBUG) Log.v(TAG, "onAddStream:" + stream);
+			executor.execute(() -> onAddRemoteStream(stream));
 		}
 		
 		@Override
 		public void onRemoveStream(final MediaStream stream) {
-			if (DEBUG) Log.v(TAG, "onRemoveStream:");
-			// 今は何もしない
+			if (DEBUG) Log.v(TAG, "onRemoveStream:" + stream);
+			
 		}
 		
 		@Override
@@ -1238,7 +1227,7 @@ public class JanusRTCClient implements JanusClient {
 		
 		@Override
 		public void onAddTrack(final RtpReceiver receiver, final MediaStream[] streams) {
-			if (DEBUG) Log.v(TAG, "onAddTrack:");
+			if (DEBUG) Log.v(TAG, "onAddTrack:" + receiver);
 			// 今は何もしない
 		}
 	};
@@ -1247,6 +1236,23 @@ public class JanusRTCClient implements JanusClient {
 	@Nullable
 	private Context getContext() {
 		return mWeakContext.get();
+	}
+
+	private void onAddRemoteStream(final MediaStream remoteStream) {
+		if (DEBUG) Log.v(TAG, "onAddRemoteStream:remoteVideoTrack=" + remoteVideoTrack);
+		// FIXME 破棄するタイミングが悪いのかもしれないけどここでaddRendererすると通話終了時にクラッシュする
+		if (remoteVideoTrack == null) {
+			mRemoteStream = remoteStream;
+			final VideoTrack videoTrack = remoteStream.videoTracks.get(0);
+			if (videoTrack != null) {
+				for (VideoRenderer.Callbacks remoteRender : remoteRenders) {
+					if (DEBUG) Log.v(TAG, "onAddRemoteStream:add " + remoteRender);
+					videoTrack.addRenderer(new VideoRenderer(remoteRender));
+				}
+				videoTrack.setEnabled(renderVideo);
+				remoteVideoTrack = videoTrack;
+			}
+		} else if (DEBUG) Log.v(TAG, "onAddRemoteStream:already add remote renderers");
 	}
 
 	/**
@@ -1553,6 +1559,8 @@ public class JanusRTCClient implements JanusClient {
 		mConnectionState = ConnectionState.CLOSED;
 		TransactionManager.clearTransactions();
 		mJanus = null;
+		mLocalStream = null;
+		mRemoteStream = null;
 		statsTimer.cancel();
 		if (DEBUG) Log.d(TAG, "Closing audio source.");
 		if (audioSource != null) {
