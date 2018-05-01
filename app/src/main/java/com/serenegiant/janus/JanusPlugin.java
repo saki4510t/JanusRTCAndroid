@@ -359,7 +359,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 				final EventRoom join = response.body();
 				if ("event".equals(join.janus)) {
 					if (DEBUG) Log.v(TAG, "多分ここにはこない, ackが返ってくるはず");
-					handlePluginEventJoined(message.transaction, join);
+					handlePluginEvent(message.transaction, join);
 				} else if (!"ack".equals(join.janus)
 					&& !"keepalive".equals(join.janus)) {
 
@@ -723,9 +723,13 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 				// do nothing
 				return true;
 			case "event":
+			{
 				// プラグインイベント
-				handled = handlePluginEvent(transaction, body);
+				final Gson gson = new Gson();
+				final EventRoom event = gson.fromJson(body.toString(), EventRoom.class);
+				handled = handlePluginEvent(transaction, event);
 				break;
+			}
 			case "media":
 			case "webrtcup":
 			case "slowlink":
@@ -748,28 +752,26 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 
 	/**
 	 * プラグイン向けのイベントメッセージの処理
-	 * @param body
+	 * @param room
 	 * @return
 	 */
 	protected boolean handlePluginEvent(@NonNull final String transaction,
-		final JSONObject body) {
+		@NonNull final EventRoom room) {
 
 		if (DEBUG) Log.v(TAG, "handlePluginEvent:");
-		final Gson gson = new Gson();
-		final EventRoom event = gson.fromJson(body.toString(), EventRoom.class);
 		// XXX このsenderはPublisherとして接続したときのVideoRoomプラグインのidらしい
-		final BigInteger sender = event.sender;
-		final String eventType = (event.plugindata != null) && (event.plugindata.data != null)
-			? event.plugindata.data.videoroom : null;
-		if (DEBUG) Log.v(TAG, "handlePluginEvent:" + event);
+		final BigInteger sender = room.sender;
+		final String eventType = (room.plugindata != null) && (room.plugindata.data != null)
+			? room.plugindata.data.videoroom : null;
+		if (DEBUG) Log.v(TAG, "handlePluginEvent:" + room);
 		if (!TextUtils.isEmpty(eventType)) {
 			switch (eventType) {
 			case "attached":
-				return handlePluginEventAttached(transaction, event);
+				return handlePluginEventAttached(transaction, room);
 			case "joined":
-				return handlePluginEventJoined(transaction, event);
+				return handlePluginEventJoined(transaction, room);
 			case "event":
-				return handlePluginEventEvent(transaction, event);
+				return handlePluginEventEvent(transaction, room);
 			}
 		}
 		return false;	// true: handled
@@ -819,15 +821,10 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		if (DEBUG) Log.v(TAG, "handlePluginEventJoined:");
 		mRoomState = RoomState.CONNECTED;
 		mRoom.publisherId = room.plugindata.data.id;
-		onJoin(room);
+		mCallback.onJoin(this, room);
 		return true;	// true: 処理済み
 	}
 	
-	protected void onJoin(@NonNull final EventRoom room) {
-		if (DEBUG) Log.v(TAG, "onJoin:");
-		mCallback.onJoin(this, room);
-	}
-
 	/**
 	 * eventTypeが"event"のときの処理
 	 * @param room
@@ -1029,16 +1026,19 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		protected String getPType() {
 			return "publisher";
 		}
-	
-		@Override
-		protected boolean handlePluginEventEvent(@NonNull final String transaction,
-			@NonNull final EventRoom event) {
 
-			super.handlePluginEventEvent(transaction, event);
-			checkPublishers(event);
-			return true;
+		protected boolean handlePluginEvent(@NonNull final String transaction,
+			@NonNull final EventRoom room) {
+			
+			final boolean result = super.handlePluginEvent(transaction, room);
+			checkPublishers(room);
+			return result;
 		}
 	
+		/**
+		 * リモート側のPublisherをチェックして増減があれば接続/切断する
+		 * @param room
+		 */
 		private void checkPublishers(final EventRoom room) {
 			if (DEBUG) Log.v(TAG, "checkPublishers:");
 			if ((room.plugindata != null)
@@ -1053,7 +1053,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 							changed.remove(info);
 						}
 					}
-					// FIXME 存在しなくなったPublisherの処理
+					// FIXME 存在しなくなったPublisherの処理, leaveメッセージで処理すべき?
 				}
 				if (!changed.isEmpty()) {
 					if (DEBUG) Log.v(TAG, "checkPublishers:number of publishers changed");
