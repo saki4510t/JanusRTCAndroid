@@ -210,7 +210,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		if (DEBUG) Log.v(TAG, "addRemoteIceCandidate:");
 		executor.execute(() -> {
 			if (peerConnection != null && !isError) {
-					queuedRemoteCandidates.add(candidate);
+				queuedRemoteCandidates.add(candidate);
 			}
 		});
 	}
@@ -765,7 +765,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 	private final SdpObserver mSdpObserver = new SdpObserver() {
 		@Override
 		public void onCreateSuccess(final SessionDescription origSdp) {
-			if (DEBUG) Log.v(TAG, "onCreateSuccess:");
+			if (DEBUG) Log.v(TAG, "SdpObserver#onCreateSuccess:");
 			if (mLocalSdp != null) {
 				reportError(new RuntimeException("Multiple SDP create."));
 				return;
@@ -784,7 +784,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 			mLocalSdp = sdp;
 			executor.execute(() -> {
 				if (peerConnection != null && !isError) {
-					Log.d(TAG, "Set local SDP from " + sdp.type);
+					Log.d(TAG, "SdpObserver: Set local SDP from " + sdp.type);
 					peerConnection.setLocalDescription(mSdpObserver, sdp);
 				}
 			});
@@ -792,7 +792,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		
 		@Override
 		public void onSetSuccess() {
-			if (DEBUG) Log.v(TAG, "onSetSuccess:");
+			if (DEBUG) Log.v(TAG, "SdpObserver#onSetSuccess:");
 			executor.execute(() -> {
 				if (peerConnection == null || isError) {
 					return;
@@ -802,12 +802,12 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 					// local SDP, then after receiving answer set remote SDP.
 					if (peerConnection.getRemoteDescription() == null) {
 						// We've just set our local SDP so time to send it.
-						if (DEBUG) Log.d(TAG, "Local SDP set successfully");
+						if (DEBUG) Log.d(TAG, "SdpObserver: Local SDP set successfully");
 						mCallback.onLocalDescription(JanusPlugin.this, mLocalSdp);
 					} else {
 						// We've just set remote description, so drain remote
 						// and send local ICE candidates.
-						if (DEBUG) Log.d(TAG, "Remote SDP set successfully");
+						if (DEBUG) Log.d(TAG, "SdpObserver: Remote SDP set successfully");
 						drainCandidates();
 					}
 				} else {
@@ -816,13 +816,13 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 					if (peerConnection.getLocalDescription() != null) {
 						// We've just set our local SDP so time to send it, drain
 						// remote and send local ICE candidates.
-						if (DEBUG) Log.d(TAG, "Local SDP set successfully");
+						if (DEBUG) Log.d(TAG, "SdpObserver: Local SDP set successfully");
 						mCallback.onLocalDescription(JanusPlugin.this, mLocalSdp);
 						drainCandidates();
 					} else {
 						// We've just set remote SDP - do nothing for now -
 						// answer will be created soon.
-						if (DEBUG) Log.d(TAG, "Remote SDP set successfully");
+						if (DEBUG) Log.d(TAG, "SdpObserver: Remote SDP set successfully");
 					}
 				}
 			});
