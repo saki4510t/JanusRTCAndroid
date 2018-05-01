@@ -37,9 +37,17 @@ public class Room {
 	 */
 	public BigInteger publisherId;
 	
+	/**
+	 * holds list of connected remote publisher
+	 */
 	private final List<PublisherInfo> publishers
 		= new ArrayList<>();
-
+	
+	/**
+	 * Constructor
+	 * @param session
+	 * @param plugin
+	 */
 	public Room(@NonNull final Session session, @NonNull final Plugin plugin) {
 		this.sessionId = session.id();
 		this.pluginId = plugin.id();
@@ -56,7 +64,7 @@ public class Room {
 	}
 
 	/**
-	 * Publisherをセット
+	 * janus-gateway serverに接続されているリモートPublisherの一覧を更新
 	 * @param newPublishers
 	 * @return 追加または削除されたPublisherのリスト
 	 */

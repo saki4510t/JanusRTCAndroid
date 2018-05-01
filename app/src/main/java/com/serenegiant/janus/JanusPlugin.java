@@ -57,16 +57,55 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 	/**
 	 * callback interface for JanusPlugin
 	 */
-	public interface JanusPluginCallback {
+	interface JanusPluginCallback {
+		/**
+		 * callback when attached to plugin
+		 * @param plugin
+		 */
 		public void onAttach(@NonNull final JanusPlugin plugin);
+		
+		/**
+		 * callback when jointed to room
+		 * @param plugin
+		 * @param room
+		 */
 		public void onJoin(@NonNull final JanusPlugin plugin, final EventRoom room);
+		
+		/**
+		 * callback when detached from plugin
+		 * @param plugin
+		 */
 		public void onDetach(@NonNull final JanusPlugin plugin);
+		
+		/**
+		 * callback when other publisher leaved from room
+		 * @param plugin
+		 * @param pluginId
+		 */
 		public void onLeave(@NonNull final JanusPlugin plugin,
 			@NonNull final BigInteger pluginId);
+		
+		/**
+		 * callback when MediaStream is added to PeerConnection
+		 * @param plugin
+		 * @param remoteStream
+		 */
 		public void onAddRemoteStream(@NonNull final JanusPlugin plugin,
 			@NonNull final MediaStream remoteStream);
+		
+		/**
+		 * callback when MediaStream is removed from PeerConnection
+		 * @param plugin
+		 * @param stream
+		 */
 		public void onRemoveStream(@NonNull final JanusPlugin plugin,
 			@NonNull final MediaStream stream);
+		
+		/**
+		 * callback when IceCandidate is updated
+		 * @param plugin
+		 * @param remoteCandidate
+		 */
 		public void onRemoteIceCandidate(@NonNull final JanusPlugin plugin,
 			final IceCandidate remoteCandidate);
 		/**
@@ -79,15 +118,14 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		 * Callback fired once connection is closed (IceConnectionState is
 		 * DISCONNECTED).
 		 */
+
 		public void onIceDisconnected(@NonNull final JanusPlugin plugin);
 		/**
 		 * Callback fired once local SDP is created and set.
 		 */
-		public void onLocalDescription(@NonNull final JanusPlugin plugin, final SessionDescription sdp);
-
-		@NonNull
-		public PeerConnectionParameters getPeerConnectionParameters(@NonNull final JanusPlugin plugin);
-
+		public void onLocalDescription(@NonNull final JanusPlugin plugin,
+			final SessionDescription sdp);
+		
 		public void createSubscriber(@NonNull final JanusPlugin plugin,
 			@NonNull final BigInteger feederId);
 
@@ -115,6 +153,8 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 
 	@NonNull
 	private final MediaConstraints sdpMediaConstraints;
+	@NonNull
+	private final PeerConnectionParameters peerConnectionParameters;
 	private PeerConnection peerConnection;
 	/** Enable org.appspot.apprtc.RtcEventLog. */
 	@Nullable
@@ -156,18 +196,18 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 	public JanusPlugin(@NonNull VideoRoom videoRoom,
 		@NonNull final Session session,
 		@NonNull final JanusPluginCallback callback,
+		@NonNull final PeerConnectionParameters peerConnectionParameters,
 		@NonNull final MediaConstraints sdpMediaConstraints,
-		final boolean isVideoCallEnabled, final boolean isLoopback) {
+		final boolean isVideoCallEnabled) {
 		
 		this.mVideoRoom = videoRoom;
 		this.mSession = session;
 		this.mCallback = callback;
+		this.peerConnectionParameters = peerConnectionParameters;
 		this.sdpMediaConstraints = sdpMediaConstraints;
 		this.isVideoCallEnabled = isVideoCallEnabled;
-		this.isLoopback = isLoopback;
+		this.isLoopback = peerConnectionParameters.loopback;
 		
-		final PeerConnectionParameters peerConnectionParameters
-			= callback.getPeerConnectionParameters(this);
 		// Check if ISAC is used by default.
 		preferIsac = peerConnectionParameters.audioCodec != null
 			&& peerConnectionParameters.audioCodec.equals(AUDIO_CODEC_ISAC);
@@ -267,8 +307,6 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 			if (peerConnection == null || isError) {
 				return;
 			}
-			final PeerConnectionParameters peerConnectionParameters
-				= mCallback.getPeerConnectionParameters(JanusPlugin.this);
 			String sdpDescription = sdp.description;
 			if (preferIsac) {
 				sdpDescription = SdpUtils.preferCodec(sdpDescription, AUDIO_CODEC_ISAC, true);
@@ -955,8 +993,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 			if (isVideoCallEnabled) {
 				sdpDescription =
 					SdpUtils.preferCodec(sdpDescription,
-						mCallback.getPeerConnectionParameters(JanusPlugin.this)
-							.getSdpVideoCodecName(), false);
+						peerConnectionParameters.getSdpVideoCodecName(), false);
 			}
 			final SessionDescription sdp = new SessionDescription(origSdp.type, sdpDescription);
 			mLocalSdp = sdp;
@@ -1026,13 +1063,14 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		public Publisher(@NonNull VideoRoom videoRoom,
 			@NonNull final Session session,
 			@NonNull final JanusPluginCallback callback,
+			@NonNull final PeerConnectionParameters peerConnectionParameters,
 			@NonNull final MediaConstraints sdpMediaConstraints,
-			final boolean isVideoCallEnabled,
-			final boolean isLoopback) {
+			final boolean isVideoCallEnabled) {
 
 			super(videoRoom, session, callback,
+				peerConnectionParameters,
 				sdpMediaConstraints,
-				isVideoCallEnabled, isLoopback);
+				isVideoCallEnabled);
 			if (DEBUG) Log.v(TAG, "Publisher:");
 		}
 		
@@ -1099,14 +1137,15 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		public Subscriber(@NonNull VideoRoom videoRoom,
 			@NonNull final Session session,
 			@NonNull final JanusPluginCallback callback,
+			@NonNull final PeerConnectionParameters peerConnectionParameters,
+						  @NonNull final MediaConstraints sdpMediaConstraints,
 			@NonNull final BigInteger feederId,
-			@NonNull final MediaConstraints sdpMediaConstraints,
-			final boolean isVideoCallEnabled,
-			final boolean isLoopback) {
+			final boolean isVideoCallEnabled) {
 
 			super(videoRoom, session, callback,
+				peerConnectionParameters,
 				sdpMediaConstraints,
-				isVideoCallEnabled, isLoopback);
+				isVideoCallEnabled);
 
 			if (DEBUG) Log.v(TAG, "Subscriber:");
 			this.feederId = feederId;

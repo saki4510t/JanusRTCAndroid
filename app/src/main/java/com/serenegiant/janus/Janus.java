@@ -15,6 +15,9 @@ import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
 
+/**
+ * API interface of janus-gateway over http://https
+ */
 public interface Janus {
 	@POST("/janus")
 	public Call<Session> create(@Body final Creator create);

@@ -9,6 +9,9 @@ import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
 
+/**
+ * API interface of janus-gateway for long poll over http/https
+ */
 public interface LongPoll {
 	@GET("/janus/{session_id}")
 	public Call<ResponseBody> getEvent(

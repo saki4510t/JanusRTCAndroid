@@ -123,6 +123,7 @@ public class JanusRTCClient implements JanusClient {
 	private final JanusCallback mCallback;
 	private final boolean dataChannelEnabled;
 //--------------------------------------------------------------------------------
+	@NonNull
 	private final Timer statsTimer = new Timer();
 	@Nullable
 	private PeerConnectionFactory factory;
@@ -167,14 +168,23 @@ public class JanusRTCClient implements JanusClient {
 
 	private VideoRoom mJanus;
 	private LongPoll mLongPoll;
+	@NonNull
 	private final List<Call<?>> mCurrentCalls = new ArrayList<>();
+	@NonNull
 	private final Map<BigInteger, JanusPlugin> mAttachedPlugins
 		= new ConcurrentHashMap<BigInteger, JanusPlugin>();
-	private RoomConnectionParameters connectionParameters;
 	private ConnectionState mConnectionState;
 	private ServerInfo mServerInfo;
 	private Session mSession;
 
+	/**
+	 * コンストラクタ
+	 * @param appContext
+	 * @param eglBase
+	 * @param peerConnectionParameters
+	 * @param callback
+	 * @param baseUrl
+	 */
 	public JanusRTCClient(@NonNull final Context appContext,
 		@NonNull final EglBase eglBase,
 		@NonNull final PeerConnectionParameters peerConnectionParameters,
@@ -213,6 +223,9 @@ public class JanusRTCClient implements JanusClient {
 		}
 	}
 	
+	/**
+	 * disconnect and release related resources
+	 */
 	public void release() {
 		disconnectFromRoom();
 	}
@@ -223,6 +236,7 @@ public class JanusRTCClient implements JanusClient {
 	/**
 	 * This function should only be called once.
 	 */
+	@Override
 	public void createPeerConnectionFactory(
 		@Nullable final PeerConnectionFactory.Options options) {
 
@@ -239,6 +253,7 @@ public class JanusRTCClient implements JanusClient {
 	 * @param remoteRenders
 	 * @param videoCapturer
 	 */
+	@Override
 	public void createPeerConnection(final VideoSink localRender,
 		final List<VideoRenderer.Callbacks> remoteRenders,
 		final VideoCapturer videoCapturer) {
@@ -373,7 +388,6 @@ public class JanusRTCClient implements JanusClient {
 	@Override
 	public void connectToRoom(final RoomConnectionParameters connectionParameters) {
 		if (DEBUG) Log.v(TAG, "connectToRoom:");
-		this.connectionParameters = connectionParameters;
 		executor.execute(() -> {
 			connectToRoomInternal();
 		});
@@ -381,11 +395,13 @@ public class JanusRTCClient implements JanusClient {
 	
 	@Override
 	public void disconnectFromRoom() {
-		if (DEBUG) Log.v(TAG, "disconnectFromRoom:");
-		cancelCall();
-		executor.execute(() -> {
-			disconnectFromRoomInternal();
-		});
+		if (mConnectionState != mConnectionState) {
+			if (DEBUG) Log.v(TAG, "disconnectFromRoom:");
+			cancelCall();
+			executor.execute(() -> {
+				disconnectFromRoomInternal();
+			});
+		}
 	}
 
 //================================================================================
@@ -632,15 +648,11 @@ public class JanusRTCClient implements JanusClient {
 		}
 		if (DEBUG) Log.d(TAG, "Create peer connection.");
 		
-		PeerConnection peerConnection;
-		DataChannel dataChannel = null;
-		
 		if (isVideoCallEnabled()) {
 			factory.setVideoHwAccelerationOptions(
 				rootEglBase.getEglBaseContext(), rootEglBase.getEglBaseContext());
 		}
 		
-		// FIXME まだ設定が正しくない
 		// Create audio constraints.
 		final MediaConstraints audioConstraints = new MediaConstraints();
 		// added for audio performance measurements
@@ -681,13 +693,15 @@ public class JanusRTCClient implements JanusClient {
 		final List<String> mediaStreamLabels = Collections.singletonList("ARDAMS");
 		
 		final JanusPlugin.Publisher publisher
-			= new JanusPlugin.Publisher(
-				mJanus, mSession, mJanusPluginCallback, sdpMediaConstraints,
-				isVideoCallEnabled(), peerConnectionParameters.loopback);
+			= new JanusPlugin.Publisher(mJanus, mSession,
+				mJanusPluginCallback,
+				peerConnectionParameters, sdpMediaConstraints,
+				isVideoCallEnabled());
 
+		final PeerConnection peerConnection;
+		DataChannel dataChannel = null;
 		if (SDP_SEMANTICS == PeerConnection.SdpSemantics.UNIFIED_PLAN) {
 			peerConnection = factory.createPeerConnection(rtcConfig, publisher);
-//			peerConnection = factory.createPeerConnection(rtcConfig, sdpMediaConstraints, mPeerConnectionObserver);
 			
 			if (dataChannelEnabled) {
 				final DataChannel.Init init = new DataChannel.Init();
@@ -702,7 +716,7 @@ public class JanusRTCClient implements JanusClient {
 	
 			// Set INFO libjingle logging.
 			// NOTE: this _must_ happen while |factory| is alive!
-			Logging.enableLogToDebugOutput(Logging.Severity.LS_VERBOSE);
+			Logging.enableLogToDebugOutput(Logging.Severity.LS_INFO);
 			
 			if (isVideoCallEnabled()) {
 				peerConnection.addTrack(createVideoTrack(videoCapturer), mediaStreamLabels);
@@ -714,12 +728,11 @@ public class JanusRTCClient implements JanusClient {
 			}
 		} else {
 			VideoTrack videoTrack = null;
-			AudioTrack audioTrack = null;
 			MediaStream stream = null;
 			if (isVideoCallEnabled()) {
 				videoTrack = createVideoTrack(videoCapturer);
 			}
-			audioTrack = createAudioTrack(audioConstraints);
+			final AudioTrack audioTrack = createAudioTrack(audioConstraints);
 			if ((videoTrack != null) || (audioTrack != null)) {
 				stream = factory.createLocalMediaStream("ARDAMS");
 				if (audioTrack != null) {
@@ -730,9 +743,6 @@ public class JanusRTCClient implements JanusClient {
 				}
 			}
 			peerConnection = factory.createPeerConnection(rtcConfig, publisher);
-//			peerConnection = factory.createPeerConnection(rtcConfig, sdpMediaConstraints, mPeerConnectionObserver);
-//			peerConnection = factory.createPeerConnection(new ArrayList<PeerConnection.IceServer>(),
-//				sdpMediaConstraints, mPeerConnectionObserver);
 			if (stream != null) {
 				peerConnection.addStream(stream);
 				mLocalStream = stream;
@@ -802,29 +812,11 @@ public class JanusRTCClient implements JanusClient {
 		}
 		if (DEBUG) Log.d(TAG, "createSubscriber:Create peer connection.");
 		
-		PeerConnection peerConnection;
-		DataChannel dataChannel = null;
-		
 		if (isVideoCallEnabled()) {
 			factory.setVideoHwAccelerationOptions(
 				rootEglBase.getEglBaseContext(), rootEglBase.getEglBaseContext());
 		}
 		
-		// FIXME まだ設定が正しくない
-//		// Create audio constraints.
-//		final MediaConstraints audioConstraints = new MediaConstraints();
-//		// added for audio performance measurements
-//		if (peerConnectionParameters.noAudioProcessing) {
-//			if (DEBUG) Log.d(TAG, "Disabling audio processing");
-//			audioConstraints.mandatory.add(
-//				new MediaConstraints.KeyValuePair(AUDIO_ECHO_CANCELLATION_CONSTRAINT, "false"));
-//			audioConstraints.mandatory.add(
-//				new MediaConstraints.KeyValuePair(AUDIO_AUTO_GAIN_CONTROL_CONSTRAINT, "false"));
-//			audioConstraints.mandatory.add(
-//				new MediaConstraints.KeyValuePair(AUDIO_HIGH_PASS_FILTER_CONSTRAINT, "false"));
-//			audioConstraints.mandatory.add(
-//				new MediaConstraints.KeyValuePair(AUDIO_NOISE_SUPPRESSION_CONSTRAINT, "false"));
-//		}
 		// Create SDP constraints.
 		final MediaConstraints sdpMediaConstraints = new MediaConstraints();
 		sdpMediaConstraints.mandatory.add(
@@ -850,12 +842,13 @@ public class JanusRTCClient implements JanusClient {
 		
 		final JanusPlugin.Subscriber subscriber = new JanusPlugin.Subscriber(mJanus,
 			mSession, mJanusPluginCallback,
-			feederId, sdpMediaConstraints,
-			isVideoCallEnabled(), peerConnectionParameters.loopback);
+			peerConnectionParameters, sdpMediaConstraints,
+			feederId, isVideoCallEnabled());
 
+		final PeerConnection peerConnection;
+		DataChannel dataChannel = null;
 		if (SDP_SEMANTICS == PeerConnection.SdpSemantics.UNIFIED_PLAN) {
 			peerConnection = factory.createPeerConnection(rtcConfig, subscriber);
-//			peerConnection = factory.createPeerConnection(rtcConfig, sdpMediaConstraints, mPeerConnectionObserver);
 			
 			if (dataChannelEnabled) {
 				final DataChannel.Init init = new DataChannel.Init();
@@ -868,9 +861,7 @@ public class JanusRTCClient implements JanusClient {
 				dataChannel = peerConnection.createDataChannel("ApprtcDemo data", init);
 			}
 			
-//			final List<String> mediaStreamLabels = Collections.singletonList("ARDAMS");
 			if (isVideoCallEnabled()) {
-//				peerConnection.addTrack(createVideoTrack(videoCapturer), mediaStreamLabels);
 				// We can add the renderers right away because we don't need to wait for an
 				// answer to get the remote track.
 				remoteVideoTrack = getRemoteVideoTrack(peerConnection);
@@ -883,29 +874,8 @@ public class JanusRTCClient implements JanusClient {
 					Log.w(TAG, "createSubscriber: remoteVideoTrack is null");
 				}
 			}
-//			peerConnection.addTrack(createAudioTrack(audioConstraints), mediaStreamLabels);
-//			if (isVideoCallEnabled()) {
-//				findVideoSender(peerConnection);
-//			}
-
-//			if (peerConnectionParameters.aecDump) {
-//				try {
-//					final ParcelFileDescriptor aecDumpFileDescriptor =
-//						ParcelFileDescriptor.open(new File(
-//							Environment.getExternalStorageDirectory().getPath()
-//								+ File.separator + "Download/audio.aecdump"),
-//							ParcelFileDescriptor.MODE_READ_WRITE | ParcelFileDescriptor.MODE_CREATE
-//								| ParcelFileDescriptor.MODE_TRUNCATE);
-//					factory.startAecDump(aecDumpFileDescriptor.detachFd(), -1);
-//				} catch (IOException e) {
-//					Log.e(TAG, "Can not open aecdump file", e);
-//				}
-//			}
 		} else {
 			peerConnection = factory.createPeerConnection(rtcConfig, subscriber);
-//			peerConnection = factory.createPeerConnection(rtcConfig, sdpMediaConstraints, mPeerConnectionObserver);
-//			peerConnection = factory.createPeerConnection(new ArrayList<PeerConnection.IceServer>(),
-//				sdpMediaConstraints, mPeerConnectionObserver);
 			if (dataChannelEnabled) {
 				final DataChannel.Init init = new DataChannel.Init();
 				init.ordered = peerConnectionParameters.dataChannelParameters.ordered;
@@ -1454,15 +1424,6 @@ public class JanusRTCClient implements JanusClient {
 			});
 		}
 
-		@NonNull
-		@Override
-		public PeerConnectionParameters getPeerConnectionParameters(
-			@NonNull final JanusPlugin plugin) {
-
-			if (DEBUG) Log.v(TAG, "getPeerConnectionParameters:" + plugin);
-			return peerConnectionParameters;
-		}
-	
 		@Override
 		public void createSubscriber(@NonNull final JanusPlugin plugin,
 			@NonNull final BigInteger feederId) {

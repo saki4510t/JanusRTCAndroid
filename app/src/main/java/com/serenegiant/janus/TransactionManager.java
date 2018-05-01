@@ -9,11 +9,22 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+/**
+ * manage relation ship between request and response over network connection
+ */
 public class TransactionManager {
+	/**
+	 * helper class to generate random strings for transaction id
+	 */
 	private static class RandomString {
 		final String str = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 		final Random rnd = new Random();
 
+		/**
+		 * generate random string
+		 * @param length length of random string
+		 * @return
+		 */
 		public String get(int length) {
 			final StringBuilder sb = new StringBuilder(length);
 			for (int i = 0; i < length; i++) {
@@ -23,7 +34,14 @@ public class TransactionManager {
 		}
 	}
 
+	/**
+	 * statically hold RandomString instance to generate random strings for transaction id
+	 */
 	private static final RandomString mRandomString = new RandomString();
+	
+	/**
+	 * hold transaction id - TransactionCallback pair(s)
+	 */
 	private static final Map<String, TransactionCallback>
 		sTransactions = new HashMap<String, TransactionCallback>();
 	

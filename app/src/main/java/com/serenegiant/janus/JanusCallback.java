@@ -9,7 +9,17 @@ import org.webrtc.SessionDescription;
 import java.util.List;
 
 public interface JanusCallback {
+	/**
+	 * callback when JanusRTCClient connects janus-gateway server
+	 * @param client
+	 */
 	public void onConnectServer(@NonNull final JanusRTCClient client);
+	
+	/**
+	 * get list of IceServer
+	 * @param client
+	 * @return
+	 */
 	public List<PeerConnection.IceServer> getIceServers(@NonNull final JanusRTCClient client);
 
 	/**

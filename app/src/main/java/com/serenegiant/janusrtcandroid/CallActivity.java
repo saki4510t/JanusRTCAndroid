@@ -806,6 +806,46 @@ public class CallActivity extends BaseActivity
 		= new JanusCallback() {
 
 		@Override
+		public void onConnectServer(@NonNull final JanusRTCClient client) {
+			if (DEBUG) Log.v(TAG, "onConnectServer:");
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					VideoCapturer videoCapturer = null;
+					if (peerConnectionParameters.videoCallEnabled) {
+						videoCapturer = createVideoCapturer();
+					}
+					client.createPeerConnection(
+						localProxyVideoSink, remoteRenderers, videoCapturer);
+				}
+			});
+		}
+		
+		@Override
+		public List<PeerConnection.IceServer> getIceServers(
+			@NonNull final JanusRTCClient client) {
+
+			return new ArrayList<PeerConnection.IceServer>();
+		}
+
+		@Override
+		public void onConnectedToRoom(final boolean initiator) {
+			if (DEBUG) Log.v(TAG, "onConnectedToRoom:");
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					onConnectedToRoomInternal(initiator);
+				}
+			});
+		}
+
+		@Override
+		public void onDisconnected() {
+			if (DEBUG) Log.v(TAG, "onDisconnected:");
+			finish();
+		}
+	
+		@Override
 		public void onIceConnected() {
 			if (DEBUG) Log.v(TAG, "onIceConnected:");
 			final long delta = System.currentTimeMillis() - callStartedTimeMs;
@@ -832,22 +872,6 @@ public class CallActivity extends BaseActivity
 			});
 		}
 
-		@Override
-		public void onDisconnected() {
-			if (DEBUG) Log.v(TAG, "onDisconnected:");
-		}
-
-		@Override
-		public void onConnectedToRoom(final boolean initiator) {
-			if (DEBUG) Log.v(TAG, "onConnectedToRoom:");
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					onConnectedToRoomInternal(initiator);
-				}
-			});
-		}
-	
 		@Override
 		public void onRemoteDescription(final SessionDescription sdp) {
 			if (DEBUG) Log.v(TAG, "onRemoteDescription:");
@@ -907,24 +931,5 @@ public class CallActivity extends BaseActivity
 			reportError(description);
 		}
 
-		@Override
-		public void onConnectServer(@NonNull final JanusRTCClient client) {
-			if (DEBUG) Log.v(TAG, "onConnectServer:");
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					VideoCapturer videoCapturer = null;
-					if (peerConnectionParameters.videoCallEnabled) {
-						videoCapturer = createVideoCapturer();
-					}
-					client.createPeerConnection(localProxyVideoSink, remoteRenderers, videoCapturer);
-				}
-			});
-		}
-		
-		@Override
-		public List<PeerConnection.IceServer> getIceServers(@NonNull final JanusRTCClient client) {
-			return new ArrayList<PeerConnection.IceServer>();
-		}
 	};
 }
