@@ -1,12 +1,14 @@
 package com.serenegiant.janus;/*
  *  Copyright 2013 The WebRTC Project Authors. All rights reserved.
+ *  Modified 2018 by saki t_saki@serenegiant.com
  *
- *  Use of this source code is governed by a BSD-style license
- *  that can be found in the LICENSE file in the root of the source
- *  tree. An additional intellectual property rights grant can be found
- *  in the file PATENTS.  All contributing project authors may
- *  be found in the AUTHORS file in the root of the source tree.
- */
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+*/
 
 import android.support.annotation.Nullable;
 
