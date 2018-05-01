@@ -183,8 +183,6 @@ public class CallActivity extends BaseActivity
 
 	private final ProxyRenderer remoteProxyRenderer = new ProxyRenderer();
 	private final ProxyVideoSink localProxyVideoSink = new ProxyVideoSink();
-//	@Nullable
-//	private PeerConnectionClient peerConnectionClient = null;
 	@Nullable
 	private JanusClient janusClient;
 	@Nullable
@@ -691,10 +689,6 @@ public class CallActivity extends BaseActivity
 			janusClient.disconnectFromRoom();
 			janusClient = null;
 		}
-//		if (peerConnectionClient != null) {
-//			peerConnectionClient.close();
-//			peerConnectionClient = null;
-//		}
 		if (audioManager != null) {
 			audioManager.stop();
 			audioManager = null;

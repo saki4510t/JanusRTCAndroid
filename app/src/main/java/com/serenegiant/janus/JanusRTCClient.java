@@ -130,7 +130,6 @@ public class JanusRTCClient implements JanusClient {
 	private final Timer statsTimer = new Timer();
 	@Nullable
 	private PeerConnectionFactory factory;
-//	private boolean preferIsac;
 	private boolean videoCapturerStopped;
 	private boolean isError;
 	/**
@@ -160,8 +159,6 @@ public class JanusRTCClient implements JanusClient {
 	private int videoWidth;
 	private int videoHeight;
 	private int videoFps;
-//	private MediaConstraints audioConstraints;
-//	private MediaConstraints sdpMediaConstraints;
 	/** enableAudio is set to true if audio should be sent. */
 	private boolean enableAudio = true;
 	/**
@@ -764,13 +761,6 @@ public class JanusRTCClient implements JanusClient {
 			if (isVideoCallEnabled()) {
 				peerConnection.addTrack(createVideoTrack(videoCapturer), mediaStreamLabels);
 				// Publisherは送信のみなのでリモートビデオトラックは不要
-//				// We can add the renderers right away because we don't need to wait for an
-//				// answer to get the remote track.
-//				remoteVideoTrack = getRemoteVideoTrack();
-//				remoteVideoTrack.setEnabled(renderVideo);
-//				for (VideoRenderer.Callbacks remoteRender : remoteRenders) {
-//					remoteVideoTrack.addRenderer(new VideoRenderer(remoteRender));
-//				}
 			}
 			peerConnection.addTrack(createAudioTrack(audioConstraints), mediaStreamLabels);
 			if (isVideoCallEnabled()) {
