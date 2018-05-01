@@ -1086,6 +1086,31 @@ public class JanusRTCClient implements JanusClient {
 		}
 		return null;
 	}
+	
+	private void leavePlugin(@NonNull BigInteger leavePlugin) {
+		if (DEBUG) Log.v(TAG, "leavePlugin:" + leavePlugin);
+		JanusPlugin found = null;
+	
+		synchronized (mAttachedPlugins) {
+			// feederIdが一致するSubscriberを探す
+			for (Map.Entry<BigInteger, JanusPlugin> entry: mAttachedPlugins.entrySet()) {
+				final JanusPlugin plugin = entry.getValue();
+				if (plugin instanceof JanusPlugin.Subscriber) {
+					if (leavePlugin.equals(((JanusPlugin.Subscriber) plugin).feederId)) {
+						found = plugin;
+						break;
+					}
+				}
+			}
+		}
+		if (DEBUG) Log.v(TAG, "leavePlugin:found=" + found);
+		if (found != null) {
+			// feederIdが一致するSubscriberが見つかった時はdetachする
+			final JanusPlugin subscriber = found;
+			executor.execute(() -> subscriber.detach());
+		}
+	}
+
 //--------------------------------------------------------------------------------
 	/**
 	 * notify error
@@ -1373,7 +1398,9 @@ public class JanusRTCClient implements JanusClient {
 			@NonNull final BigInteger pluginId) {
 			
 			if (DEBUG) Log.v(TAG, "onLeave:" + plugin + ",leave=" + pluginId);
-			// FIXME 未実装
+
+			
+			executor.execute(() -> leavePlugin(pluginId));
 		}
 		
 		@Override
@@ -1403,13 +1430,19 @@ public class JanusRTCClient implements JanusClient {
 		@Override
 		public void onIceConnected(@NonNull final JanusPlugin plugin) {
 			if (DEBUG) Log.v(TAG, "onIceConnected:" + plugin);
-			executor.execute(() -> mCallback.onIceConnected());
+			if (plugin instanceof JanusPlugin.Publisher) {
+				// 複数のSubscriberが存在しうるのでPublisherからのイベントのみハンドリング
+				executor.execute(() -> mCallback.onIceConnected());
+			}
 		}
 		
 		@Override
 		public void onIceDisconnected(@NonNull final JanusPlugin plugin) {
 			if (DEBUG) Log.v(TAG, "onIceDisconnected:" + plugin);
-			executor.execute(() -> mCallback.onIceDisconnected());
+			if (plugin instanceof JanusPlugin.Publisher) {
+				// 複数のSubscriberが存在しうるのでPublisherからのイベントのみハンドリング
+				executor.execute(() -> mCallback.onIceDisconnected());
+			}
 		}
 		
 		@Override

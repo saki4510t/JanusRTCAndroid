@@ -885,6 +885,14 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 				onRemoteDescription(offerSdp);
 			}
 		}
+		if ((room.plugindata != null)
+			&& (room.plugindata.data != null)
+			&& (room.plugindata.data.leaving != null)) {
+			
+			executor.execute( () -> {
+				mCallback.onLeave(JanusPlugin.this, room.plugindata.data.leaving);
+			});
+		}
 		return true;	// true: 処理済み
 	}
 	
