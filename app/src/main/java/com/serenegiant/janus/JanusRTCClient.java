@@ -300,35 +300,6 @@ public class JanusRTCClient implements JanusClient {
 		});
 	}
 	
-	public void setVideoMaxBitrate(final int maxBitrateKbps) {
-		if (DEBUG) Log.v(TAG, "maxBitrateKbps:");
-		executor.execute(() -> {
-			if (localVideoSender == null || isError) {
-				return;
-			}
-			if (DEBUG) Log.d(TAG, "Requested max video bitrate: " + maxBitrateKbps);
-			if (localVideoSender == null) {
-				Log.w(TAG, "Sender is not ready.");
-				return;
-			}
-			
-			final RtpParameters parameters = localVideoSender.getParameters();
-			if (parameters.encodings.size() == 0) {
-				Log.w(TAG, "RtpParameters are not ready.");
-				return;
-			}
-			
-			for (RtpParameters.Encoding encoding : parameters.encodings) {
-				// Null value means no limit.
-				encoding.maxBitrateBps = maxBitrateKbps == 0 ? null : maxBitrateKbps * BPS_IN_KBPS;
-			}
-			if (!localVideoSender.setParameters(parameters)) {
-				Log.e(TAG, "RtpSender.setParameters failed.");
-			}
-			if (DEBUG) Log.d(TAG, "Configured max video bitrate to: " + maxBitrateKbps);
-		});
-	}
-
 	@Override
 	public void enableStatsEvents(boolean enable, int periodMs) {
 		if (DEBUG) Log.v(TAG, "enableStatsEvents:");
@@ -1329,6 +1300,35 @@ public class JanusRTCClient implements JanusClient {
 		PeerConnectionFactory.shutdownInternalTracer();
 	}
 
+	private void setVideoMaxBitrate(final int maxBitrateKbps) {
+		if (DEBUG) Log.v(TAG, "maxBitrateKbps:");
+		executor.execute(() -> {
+			if (localVideoSender == null || isError) {
+				return;
+			}
+			if (DEBUG) Log.d(TAG, "Requested max video bitrate: " + maxBitrateKbps);
+			if (localVideoSender == null) {
+				Log.w(TAG, "Sender is not ready.");
+				return;
+			}
+			
+			final RtpParameters parameters = localVideoSender.getParameters();
+			if (parameters.encodings.size() == 0) {
+				Log.w(TAG, "RtpParameters are not ready.");
+				return;
+			}
+			
+			for (RtpParameters.Encoding encoding : parameters.encodings) {
+				// Null value means no limit.
+				encoding.maxBitrateBps = maxBitrateKbps == 0 ? null : maxBitrateKbps * BPS_IN_KBPS;
+			}
+			if (!localVideoSender.setParameters(parameters)) {
+				Log.e(TAG, "RtpSender.setParameters failed.");
+			}
+			if (DEBUG) Log.d(TAG, "Configured max video bitrate to: " + maxBitrateKbps);
+		});
+	}
+
 //--------------------------------------------------------------------------------
 	/**
 	 * JanusPluginからのコールバックリスナーの実装
@@ -1392,19 +1392,19 @@ public class JanusRTCClient implements JanusClient {
 
 			if (DEBUG) Log.v(TAG, "onRemoteIceCandidate:" + plugin
 				+ "\n" + candidate);
-			mCallback.onRemoteIceCandidate(candidate);
+			executor.execute(() -> mCallback.onRemoteIceCandidate(candidate));
 		}
 		
 		@Override
 		public void onIceConnected(@NonNull final JanusPlugin plugin) {
 			if (DEBUG) Log.v(TAG, "onIceConnected:" + plugin);
-			mCallback.onIceConnected();
+			executor.execute(() -> mCallback.onIceConnected());
 		}
 		
 		@Override
 		public void onIceDisconnected(@NonNull final JanusPlugin plugin) {
 			if (DEBUG) Log.v(TAG, "onIceDisconnected:" + plugin);
-			mCallback.onIceDisconnected();
+			executor.execute(() -> mCallback.onIceDisconnected());
 		}
 		
 		@Override
@@ -1441,7 +1441,7 @@ public class JanusRTCClient implements JanusClient {
 			if (DEBUG) Log.v(TAG, "onRemoteDescription:" + plugin
 				+ "\n" + sdp);
 
-			mCallback.onRemoteDescription(sdp);
+			executor.execute(() -> mCallback.onRemoteDescription(sdp));
 		}
 		
 		@Override
