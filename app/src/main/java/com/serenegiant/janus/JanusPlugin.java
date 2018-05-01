@@ -694,9 +694,9 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 	 */
 	protected boolean onRemoteDescription(@NonNull final SessionDescription sdp) {
 		mRemoteSdp = sdp;
+		setRemoteDescription(sdp);
 //		// 通話準備完了
 		mCallback.onRemoteDescription(this, sdp);
-		setRemoteDescription(sdp);
 		return true;
 	}
 
