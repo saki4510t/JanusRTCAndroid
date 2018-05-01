@@ -348,11 +348,12 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 	 * detach from VideoRoom plugin
 	 */
 	public void detach() {
-		if (DEBUG) Log.v(TAG, "detach:");
 		if ((mRoomState == RoomState.CONNECTED)
 			|| (mRoomState == RoomState.ATTACHED)
-			|| (mPlugin != null)) {
+			|| (mPlugin != null)
+			|| (peerConnection != null)) {
 
+			if (DEBUG) Log.v(TAG, "detach:");
 			cancelCall();
 			final Call<Void> call = mVideoRoom.detach(mSession.id(), mPlugin.id(),
 				new Detach(mSession, mTransactionCallback));
@@ -363,23 +364,23 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 				if (DEBUG) Log.w(TAG, e);
 			}
 			removeCall(call);
-		}
-		mRoomState = RoomState.CLOSED;
-		mRoom = null;
-		mPlugin = null;
-		if (DEBUG) Log.d(TAG, "Closing peer connection.");
-		if (dataChannel != null) {
-			dataChannel.dispose();
-			dataChannel = null;
-		}
-		if (rtcEventLog != null) {
-			// org.appspot.apprtc.RtcEventLog should stop before the peer connection is disposed.
-			rtcEventLog.stop();
-			rtcEventLog = null;
-		}
-		if (peerConnection != null) {
-			peerConnection.dispose();
-			peerConnection = null;
+			if (DEBUG) Log.d(TAG, "Closing peer connection.");
+			mRoomState = RoomState.CLOSED;
+			mRoom = null;
+			mPlugin = null;
+			if (dataChannel != null) {
+				dataChannel.dispose();
+				dataChannel = null;
+			}
+			if (rtcEventLog != null) {
+				// RtcEventLog should stop before the peer connection is disposed.
+				rtcEventLog.stop();
+				rtcEventLog = null;
+			}
+			if (peerConnection != null) {
+				peerConnection.dispose();
+				peerConnection = null;
+			}
 		}
 	}
 
