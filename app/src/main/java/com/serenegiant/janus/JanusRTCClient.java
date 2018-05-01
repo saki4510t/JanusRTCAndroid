@@ -1533,9 +1533,8 @@ public class JanusRTCClient implements JanusClient {
 
 				if (DEBUG) Log.v(TAG, "longPoll:onResponse");
 				removeCall(call);
-				if ((mConnectionState != ConnectionState.ERROR)
-					&& (mConnectionState != ConnectionState.CLOSED)
-					&& (mConnectionState != ConnectionState.UNINITIALIZED)) {
+				if ((mConnectionState == ConnectionState.READY)
+					|| (mConnectionState == ConnectionState.CONNECTED)) {
 
 					try {
 						executor.execute(() -> {
