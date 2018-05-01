@@ -87,7 +87,6 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 
 		@NonNull
 		public PeerConnectionParameters getPeerConnectionParameters(@NonNull final JanusPlugin plugin);
-		public boolean isVideoCallEnabled(@NonNull final JanusPlugin plugin);
 
 		public void createSubscriber(@NonNull final JanusPlugin plugin,
 			@NonNull final BigInteger feederId);
@@ -139,6 +138,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 	protected final ExecutorService executor = JanusRTCClient.executor;
 	protected final List<Call<?>> mCurrentCalls = new ArrayList<>();
 	private final boolean isLoopback;
+	private final boolean isVideoCallEnabled;
 	protected RoomState mRoomState = RoomState.UNINITIALIZED;
 	protected Plugin mPlugin;
 	protected Room mRoom;
@@ -157,12 +157,13 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		@NonNull final Session session,
 		@NonNull final JanusPluginCallback callback,
 		@NonNull final MediaConstraints sdpMediaConstraints,
-		final boolean isLoopback) {
+		final boolean isVideoCallEnabled, final boolean isLoopback) {
 		
 		this.mVideoRoom = videoRoom;
 		this.mSession = session;
 		this.mCallback = callback;
 		this.sdpMediaConstraints = sdpMediaConstraints;
+		this.isVideoCallEnabled = isVideoCallEnabled;
 		this.isLoopback = isLoopback;
 		
 		final PeerConnectionParameters peerConnectionParameters
@@ -272,7 +273,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 			if (preferIsac) {
 				sdpDescription = SdpUtils.preferCodec(sdpDescription, AUDIO_CODEC_ISAC, true);
 			}
-			if (mCallback.isVideoCallEnabled(JanusPlugin.this)) {
+			if (isVideoCallEnabled) {
 				sdpDescription =
 					SdpUtils.preferCodec(sdpDescription,
 						peerConnectionParameters.getSdpVideoCodecName(), false);
@@ -290,9 +291,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 	@NonNull
 	protected abstract String getPType();
 
-	protected BigInteger getFeedId() {
-		return null;
-	}
+	protected abstract BigInteger getFeedId();
 
 	/**
 	 * attach to VideoRoom plugin
@@ -417,7 +416,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		}
 	}
 
-	public void sendOfferSdp(final SessionDescription sdp, final boolean isLoopback) {
+	private void sendOfferSdp(final SessionDescription sdp, final boolean isLoopback) {
 		if (DEBUG) Log.v(TAG, "sendOfferSdp:");
 		if (mRoomState != RoomState.CONNECTED) {
 			reportError(new RuntimeException("Sending offer SDP in non connected state."));
@@ -466,7 +465,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		}
 	}
 	
-	public void sendAnswerSdp(final SessionDescription sdp, final boolean isLoopback) {
+	private void sendAnswerSdp(final SessionDescription sdp, final boolean isLoopback) {
 		if (DEBUG) Log.v(TAG, "sendAnswerSdpInternal:");
 		if (isLoopback) {
 			Log.e(TAG, "Sending answer in loopback mode.");
@@ -787,7 +786,6 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		@NonNull final EventRoom room) {
 
 		if (DEBUG) Log.v(TAG, "handlePluginEventAttached:");
-		// FIXME これが来たときはofferが一緒に来ているはずなのでanswerを送り返さないといけない
 		if (room.jsep != null) {
 			if ("answer".equals(room.jsep.type)) {
 				if (DEBUG) Log.v(TAG, "handlePluginEventAttached:answer");
@@ -796,7 +794,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 					= new SessionDescription(
 						SessionDescription.Type.fromCanonicalForm("answer"),
 					room.jsep.sdp);
-				return onRemoteDescription(answerSdp);
+				onRemoteDescription(answerSdp);
 			} else if ("offer".equals(room.jsep.type)) {
 				if (DEBUG) Log.v(TAG, "handlePluginEventAttached:offer");
 				// Janus-gatewayの相手している時はたぶんいつもこっち
@@ -804,10 +802,10 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 					= new SessionDescription(
 						SessionDescription.Type.fromCanonicalForm("offer"),
 					room.jsep.sdp);
-				return onRemoteDescription(sdp);
+				onRemoteDescription(sdp);
 			}
 		}
-		return true;
+		return true;	// true: 処理済み
 	}
 	
 	/**
@@ -840,16 +838,29 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 					= new SessionDescription(
 						SessionDescription.Type.fromCanonicalForm("answer"),
 					room.jsep.sdp);
-				return onRemoteDescription(answerSdp);
+				onRemoteDescription(answerSdp);
 			} else if ("offer".equals(room.jsep.type)) {
 				final SessionDescription offerSdp
 					= new SessionDescription(
 						SessionDescription.Type.fromCanonicalForm("offer"),
 					room.jsep.sdp);
-				return onRemoteDescription(offerSdp);
+				onRemoteDescription(offerSdp);
 			}
 		}
 		return true;	// true: 処理済み
+	}
+	
+	private void onLocalDescription(@NonNull final SessionDescription sdp) {
+		if (DEBUG) Log.v(TAG, "onLocalDescription:");
+		mCallback.onLocalDescription(this, sdp);
+		executor.execute(() -> {
+
+			if (sdp.type == SessionDescription.Type.OFFER) {
+				sendOfferSdp(sdp, isLoopback);
+			} else {
+				sendAnswerSdp(sdp, isLoopback);
+			}
+		});
 	}
 	
 	/**
@@ -857,12 +868,11 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 	 * @param sdp
 	 * @return
 	 */
-	protected boolean onRemoteDescription(@NonNull final SessionDescription sdp) {
+	protected void onRemoteDescription(@NonNull final SessionDescription sdp) {
 		mRemoteSdp = sdp;
 		setRemoteDescription(sdp);
 //		// 通話準備完了
 		mCallback.onRemoteDescription(this, sdp);
-		return true;
 	}
 
 	/**
@@ -927,6 +937,9 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		}
 	}
 
+	/**
+	 * PeerConnectionからのコールバック
+	 */
 	private final SdpObserver mSdpObserver = new SdpObserver() {
 		@Override
 		public void onCreateSuccess(final SessionDescription origSdp) {
@@ -939,7 +952,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 			if (preferIsac) {
 				sdpDescription = SdpUtils.preferCodec(sdpDescription, AUDIO_CODEC_ISAC, true);
 			}
-			if (mCallback.isVideoCallEnabled(JanusPlugin.this)) {
+			if (isVideoCallEnabled) {
 				sdpDescription =
 					SdpUtils.preferCodec(sdpDescription,
 						mCallback.getPeerConnectionParameters(JanusPlugin.this)
@@ -968,7 +981,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 					if (peerConnection.getRemoteDescription() == null) {
 						// We've just set our local SDP so time to send it.
 						if (DEBUG) Log.d(TAG, "SdpObserver: Local SDP set successfully");
-						mCallback.onLocalDescription(JanusPlugin.this, mLocalSdp);
+						onLocalDescription(mLocalSdp);
 					} else {
 						// We've just set remote description, so drain remote
 						// and send local ICE candidates.
@@ -982,7 +995,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 						// We've just set our local SDP so time to send it, drain
 						// remote and send local ICE candidates.
 						if (DEBUG) Log.d(TAG, "SdpObserver: Local SDP set successfully");
-						mCallback.onLocalDescription(JanusPlugin.this, mLocalSdp);
+						onLocalDescription(mLocalSdp);
 						drainCandidates();
 					} else {
 						// We've just set remote SDP - do nothing for now -
@@ -1000,7 +1013,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		
 		@Override
 		public void onSetFailure(final String error) {
-			reportError(new RuntimeException("createSDP error: " + error));
+			reportError(new RuntimeException("setSDP error: " + error));
 		}
 	};
 //================================================================================
@@ -1014,10 +1027,12 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 			@NonNull final Session session,
 			@NonNull final JanusPluginCallback callback,
 			@NonNull final MediaConstraints sdpMediaConstraints,
+			final boolean isVideoCallEnabled,
 			final boolean isLoopback) {
 
 			super(videoRoom, session, callback,
-				sdpMediaConstraints, isLoopback);
+				sdpMediaConstraints,
+				isVideoCallEnabled, isLoopback);
 			if (DEBUG) Log.v(TAG, "Publisher:");
 		}
 		
@@ -1025,6 +1040,11 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		@Override
 		protected String getPType() {
 			return "publisher";
+		}
+
+		@Override
+		protected BigInteger getFeedId() {
+			return null;
 		}
 
 		protected boolean handlePluginEvent(@NonNull final String transaction,
@@ -1081,10 +1101,12 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 			@NonNull final JanusPluginCallback callback,
 			@NonNull final BigInteger feederId,
 			@NonNull final MediaConstraints sdpMediaConstraints,
+			final boolean isVideoCallEnabled,
 			final boolean isLoopback) {
 
 			super(videoRoom, session, callback,
-				sdpMediaConstraints, isLoopback);
+				sdpMediaConstraints,
+				isVideoCallEnabled, isLoopback);
 
 			if (DEBUG) Log.v(TAG, "Subscriber:");
 			this.feederId = feederId;
@@ -1101,14 +1123,13 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		}
 
 		@Override
-		protected boolean onRemoteDescription(@NonNull final SessionDescription sdp) {
+		protected void onRemoteDescription(@NonNull final SessionDescription sdp) {
 			if (DEBUG) Log.v(TAG, "onRemoteDescription:\n" + sdp.description);
 			
 			super.onRemoteDescription(sdp);
 			if (sdp.type == SessionDescription.Type.OFFER) {
 				createAnswer();
 			}
-			return true;
 		}
 
 	}

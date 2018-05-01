@@ -28,7 +28,6 @@ public interface JanusClient {
 	public void setAudioEnabled(final boolean enable);
 	public void setVideoEnabled(final boolean enable);
 	public void enableStatsEvents(boolean enable, int periodMs);
-	public void setVideoMaxBitrate(final int maxBitrateKbps);
 
 	/**
 	 * Asynchronously connect to an AppRTC room URL using supplied connection

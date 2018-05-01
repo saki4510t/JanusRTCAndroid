@@ -286,7 +286,6 @@ public class JanusRTCClient implements JanusClient {
 		});
 	}
 	
-	@Override
 	public void setVideoMaxBitrate(final int maxBitrateKbps) {
 		if (DEBUG) Log.v(TAG, "maxBitrateKbps:");
 		executor.execute(() -> {
@@ -299,7 +298,7 @@ public class JanusRTCClient implements JanusClient {
 				return;
 			}
 			
-			RtpParameters parameters = localVideoSender.getParameters();
+			final RtpParameters parameters = localVideoSender.getParameters();
 			if (parameters.encodings.size() == 0) {
 				Log.w(TAG, "RtpParameters are not ready.");
 				return;
@@ -684,8 +683,8 @@ public class JanusRTCClient implements JanusClient {
 		
 		final JanusPlugin.Publisher publisher
 			= new JanusPlugin.Publisher(
-				mJanus, mSession, mJanusPluginCallback,
-				sdpMediaConstraints, peerConnectionParameters.loopback);
+				mJanus, mSession, mJanusPluginCallback, sdpMediaConstraints,
+				isVideoCallEnabled(), peerConnectionParameters.loopback);
 
 		if (SDP_SEMANTICS == PeerConnection.SdpSemantics.UNIFIED_PLAN) {
 			peerConnection = factory.createPeerConnection(rtcConfig, publisher);
@@ -852,7 +851,8 @@ public class JanusRTCClient implements JanusClient {
 		
 		final JanusPlugin.Subscriber subscriber = new JanusPlugin.Subscriber(mJanus,
 			mSession, mJanusPluginCallback,
-			feederId, sdpMediaConstraints, peerConnectionParameters.loopback);
+			feederId, sdpMediaConstraints,
+			isVideoCallEnabled(), peerConnectionParameters.loopback);
 
 		if (SDP_SEMANTICS == PeerConnection.SdpSemantics.UNIFIED_PLAN) {
 			peerConnection = factory.createPeerConnection(rtcConfig, subscriber);
@@ -1445,11 +1445,6 @@ public class JanusRTCClient implements JanusClient {
 //			final long delta = System.currentTimeMillis() - callStartedTimeMs;
 			executor.execute(() -> {
 //				logAndToast("Sending " + sdp.type + ", delay=" + delta + "ms");
-				if (plugin instanceof JanusPlugin.Publisher) {
-					plugin.sendOfferSdp(sdp, connectionParameters.loopback);
-				} else {
-					plugin.sendAnswerSdp(sdp, connectionParameters.loopback);
-				}
 				if (peerConnectionParameters.videoMaxBitrate > 0) {
 					if (DEBUG) Log.d(TAG, "Set video maximum bitrate: "
 						+ peerConnectionParameters.videoMaxBitrate);
@@ -1468,13 +1463,6 @@ public class JanusRTCClient implements JanusClient {
 			return peerConnectionParameters;
 		}
 	
-		@Override
-		public boolean isVideoCallEnabled(@NonNull final JanusPlugin plugin) {
-
-			if (DEBUG) Log.v(TAG, "isVideoCallEnabled:");
-			return JanusRTCClient.this.isVideoCallEnabled();
-		}
-		
 		@Override
 		public void createSubscriber(@NonNull final JanusPlugin plugin,
 			@NonNull final BigInteger feederId) {
