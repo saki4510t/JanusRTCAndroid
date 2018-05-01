@@ -150,7 +150,7 @@ public class CallActivity extends BaseActivity
 		@Override
 		synchronized public void renderFrame(final VideoRenderer.I420Frame frame) {
 			if (target == null) {
-				if (DEBUG) Logging.d(TAG, "Dropping frame in proxy because target is null.");
+				if (DEBUG) Logging.d(TAG, "ProxyRenderer:Dropping frame in proxy because target is null.");
 				VideoRenderer.renderFrameDone(frame);
 				return;
 			}
@@ -159,6 +159,7 @@ public class CallActivity extends BaseActivity
 		}
 
 		synchronized public void setTarget(VideoRenderer.Callbacks target) {
+			if (DEBUG) Logging.d(TAG, "ProxyRenderer#setTarget:" + target);
 			this.target = target;
 		}
 	}
@@ -169,7 +170,7 @@ public class CallActivity extends BaseActivity
 		@Override
 		synchronized public void onFrame(final VideoFrame frame) {
 			if (target == null) {
-				if (DEBUG) Logging.d(TAG, "Dropping frame in proxy because target is null.");
+				if (DEBUG) Logging.d(TAG, "ProxyVideoSink: Dropping frame in proxy because target is null.");
 				return;
 			}
 
@@ -177,6 +178,7 @@ public class CallActivity extends BaseActivity
 		}
 
 		synchronized public void setTarget(final VideoSink target) {
+			if (DEBUG) Logging.d(TAG, "ProxyVideoSink#setTarget:" + target);
 			this.target = target;
 		}
 	}
