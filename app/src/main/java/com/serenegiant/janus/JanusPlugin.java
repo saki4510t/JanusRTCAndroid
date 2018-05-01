@@ -168,6 +168,11 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		return mPlugin != null ? mPlugin.id() : null;
 	}
 	
+	@Nullable
+	PeerConnection getPeerConnection() {
+		return peerConnection;
+	}
+
 	public void createOffer() {
 		if (DEBUG) Log.v(TAG, "createOffer:");
 		executor.execute(() -> {
