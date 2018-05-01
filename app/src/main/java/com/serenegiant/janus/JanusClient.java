@@ -39,29 +39,29 @@ public interface JanusClient {
 	 */
 	public void connectToRoom(final RoomConnectionParameters connectionParameters);
 	
-	/**
-	 * Send offer SDP to the other participant.
-	 */
-	@Deprecated
-	public void sendOfferSdp(final SessionDescription sdp);
+//	/**
+//	 * Send offer SDP to the other participant.
+//	 */
+//	@Deprecated
+//	public void sendOfferSdp(final SessionDescription sdp);
 	
-	/**
-	 * Send answer SDP to the other participant.
-	 */
-	@Deprecated
-	public void sendAnswerSdp(final SessionDescription sdp);
+//	/**
+//	 * Send answer SDP to the other participant.
+//	 */
+//	@Deprecated
+//	public void sendAnswerSdp(final SessionDescription sdp);
 	
-	/**
-	 * Send Ice candidate to the other participant.
-	 */
-	@Deprecated
-	public void sendLocalIceCandidate(final IceCandidate candidate);
+//	/**
+//	 * Send Ice candidate to the other participant.
+//	 */
+//	@Deprecated
+//	public void sendLocalIceCandidate(final IceCandidate candidate);
 	
-	/**
-	 * Send removed ICE candidates to the other participant.
-	 */
-	@Deprecated
-	public void sendLocalIceCandidateRemovals(final IceCandidate[] candidates);
+//	/**
+//	 * Send removed ICE candidates to the other participant.
+//	 */
+//	@Deprecated
+//	public void sendLocalIceCandidateRemovals(final IceCandidate[] candidates);
 	
 	/**
 	 * Disconnect from room.

@@ -27,12 +27,16 @@ import org.json.JSONObject;
 import org.webrtc.DataChannel;
 import org.webrtc.IceCandidate;
 import org.webrtc.MediaConstraints;
+import org.webrtc.MediaStream;
 import org.webrtc.PeerConnection;
+import org.webrtc.RtpReceiver;
 import org.webrtc.SdpObserver;
 import org.webrtc.SessionDescription;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -47,7 +51,7 @@ import retrofit2.Response;
 import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_ISAC;
 import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 
-/*package*/ abstract class JanusPlugin {
+/*package*/ abstract class JanusPlugin implements PeerConnection.Observer {
 	private static final boolean DEBUG = true;	// set false on production
 	
 	/**
@@ -57,9 +61,25 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		public void onAttach(@NonNull final JanusPlugin plugin);
 		public void onJoin(@NonNull final JanusPlugin plugin, final EventRoom room);
 		public void onDetach(@NonNull final JanusPlugin plugin);
-		public void onLeave(@NonNull final JanusPlugin plugin, @NonNull final BigInteger pluginId);
+		public void onLeave(@NonNull final JanusPlugin plugin,
+			@NonNull final BigInteger pluginId);
+		public void onAddRemoteStream(@NonNull final JanusPlugin plugin,
+			@NonNull final MediaStream remoteStream);
+		public void onRemoveStream(@NonNull final JanusPlugin plugin,
+			@NonNull final MediaStream stream);
 		public void onRemoteIceCandidate(@NonNull final JanusPlugin plugin,
 			final IceCandidate remoteCandidate);
+		/**
+		 * Callback fired once connection is established (IceConnectionState is
+		 * CONNECTED).
+		 */
+		public void onIceConnected(@NonNull final JanusPlugin plugin);
+		
+		/**
+		 * Callback fired once connection is closed (IceConnectionState is
+		 * DISCONNECTED).
+		 */
+		public void onIceDisconnected(@NonNull final JanusPlugin plugin);
 		/**
 		 * Callback fired once local SDP is created and set.
 		 */
@@ -118,6 +138,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 	protected final JanusPluginCallback mCallback;
 	protected final ExecutorService executor = JanusRTCClient.executor;
 	protected final List<Call<?>> mCurrentCalls = new ArrayList<>();
+	private final boolean isLoopback;
 	protected RoomState mRoomState = RoomState.UNINITIALIZED;
 	protected Plugin mPlugin;
 	protected Room mRoom;
@@ -136,17 +157,13 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		@NonNull final Session session,
 		@NonNull final JanusPluginCallback callback,
 		@NonNull final MediaConstraints sdpMediaConstraints,
-		@NonNull final PeerConnection peerConnection,
-		@Nullable final DataChannel dataChannel,
-		@Nullable final RtcEventLog rtcEventLog) {
+		final boolean isLoopback) {
 		
 		this.mVideoRoom = videoRoom;
 		this.mSession = session;
 		this.mCallback = callback;
 		this.sdpMediaConstraints = sdpMediaConstraints;
-		this.peerConnection = peerConnection;
-		this.dataChannel = dataChannel;
-		this.rtcEventLog = rtcEventLog;
+		this.isLoopback = isLoopback;
 		
 		final PeerConnectionParameters peerConnectionParameters
 			= callback.getPeerConnectionParameters(this);
@@ -171,6 +188,22 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 	@Nullable
 	PeerConnection getPeerConnection() {
 		return peerConnection;
+	}
+	
+	/**
+	 * PeerConnection関係をセット
+	 * @param peerConnection
+	 * @param dataChannel
+	 * @param rtcEventLog
+	 */
+	public void setPeerConnection(
+		@NonNull final PeerConnection peerConnection,
+		@Nullable final DataChannel dataChannel,
+		@Nullable final RtcEventLog rtcEventLog) {
+
+		this.peerConnection = peerConnection;
+		this.dataChannel = dataChannel;
+		this.rtcEventLog = rtcEventLog;
 	}
 
 	public void createOffer() {
@@ -353,6 +386,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 			|| (mPlugin != null)
 			|| (peerConnection != null)) {
 
+			mRoomState = RoomState.CLOSED;
 			if (DEBUG) Log.v(TAG, "detach:");
 			cancelCall();
 			final Call<Void> call = mVideoRoom.detach(mSession.id(), mPlugin.id(),
@@ -365,7 +399,6 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 			}
 			removeCall(call);
 			if (DEBUG) Log.d(TAG, "Closing peer connection.");
-			mRoomState = RoomState.CLOSED;
 			mRoom = null;
 			mPlugin = null;
 			if (dataChannel != null) {
@@ -461,6 +494,8 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 
 	public void sendLocalIceCandidate(final IceCandidate candidate, final boolean isLoopback) {
 		if (DEBUG) Log.v(TAG, "sendLocalIceCandidate:");
+		if ((mSession == null) || (mPlugin == null)) return;
+
 		final Call<EventRoom> call;
 		if (candidate != null) {
 			call = mVideoRoom.trickle(
@@ -510,6 +545,139 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 			detach();
 			reportError(e);
 		}
+	}
+
+//--------------------------------------------------------------------------------
+	
+	@Override
+	public void onSignalingChange(final PeerConnection.SignalingState newState) {
+		if (DEBUG) Log.v(TAG, "onSignalingChange:" + newState);
+		// 今は何もしない
+	}
+	
+	@Override
+	public void onIceConnectionChange(final PeerConnection.IceConnectionState newState) {
+		executor.execute(() -> {
+			if (DEBUG) Log.d(TAG, "IceConnectionState: " + newState);
+			switch (newState) {
+			case CONNECTED:
+				mCallback.onIceConnected(JanusPlugin.this);
+				break;
+			case DISCONNECTED:
+				mCallback.onIceDisconnected(JanusPlugin.this);
+				break;
+			case FAILED:
+				Log.w(TAG, "ICE connection failed.");
+				// FIXME なぜだかこれが起こる、映像は少なくとも片方向はながれているので接続はできてそうなんだけど
+//				reportError(new RuntimeException("ICE connection failed."));
+				break;
+			default:
+				break;
+			}
+		});
+	}
+	
+	@Override
+	public void onIceConnectionReceivingChange(final boolean receiving) {
+		if (DEBUG) Log.v(TAG, "onIceConnectionReceivingChange:receiving=" + receiving);
+		// 今は何もしない
+	}
+	
+	@Override
+	public void onIceGatheringChange(final PeerConnection.IceGatheringState newState) {
+		if (DEBUG) Log.v(TAG, "onIceGatheringChange:" + newState);
+		switch (newState) {
+		case NEW:
+			break;
+		case GATHERING:
+			break;
+		case COMPLETE:
+			executor.execute(() -> sendLocalIceCandidate(null, isLoopback));
+			break;
+		default:
+			break;
+		}
+	}
+	
+	@Override
+	public void onIceCandidate(final IceCandidate candidate) {
+		if (DEBUG) Log.v(TAG, "onIceCandidate:");
+		
+		if ((mRoomState == RoomState.CONNECTED)
+			|| (mRoomState == RoomState.ATTACHED)) {
+			executor.execute(() -> sendLocalIceCandidate(candidate, isLoopback));
+		}
+	}
+	
+	@Override
+	public void onIceCandidatesRemoved(final IceCandidate[] candidates) {
+		if (DEBUG) Log.v(TAG, "onIceCandidatesRemoved:");
+
+//		executor.execute(() -> sendLocalIceCandidateRemovals(candidates));
+	}
+	
+	@Override
+	public void onAddStream(final MediaStream stream) {
+		if (DEBUG) Log.v(TAG, "onAddStream:" + stream);
+
+		executor.execute(() -> mCallback.onAddRemoteStream(JanusPlugin.this, stream));
+	}
+	
+	@Override
+	public void onRemoveStream(final MediaStream stream) {
+		if (DEBUG) Log.v(TAG, "onRemoveStream:" + stream);
+	
+		executor.execute(() -> mCallback.onRemoveStream(JanusPlugin.this, stream));
+	}
+	
+	@Override
+	public void onDataChannel(final DataChannel channel) {
+		if (DEBUG) Log.v(TAG, "onDataChannel:");
+		if (dataChannel == null) {
+			return;
+		}
+		
+		// FIXME これはAppRTCMobileのままで単にログを出力するだけ
+		channel.registerObserver(new DataChannel.Observer() {
+			@Override
+			public void onBufferedAmountChange(long previousAmount) {
+				if (DEBUG) Log.d(TAG,
+					 "Data channel buffered amount changed: "
+					 + channel.label() + ": " + channel.state());
+			}
+			
+			@Override
+			public void onStateChange() {
+				if (DEBUG) Log.d(TAG,
+					"Data channel state changed: "
+					+ channel.label() + ": " + channel.state());
+			}
+			
+			@Override
+			public void onMessage(final DataChannel.Buffer buffer) {
+				if (buffer.binary) {
+					if (DEBUG) Log.d(TAG, "Received binary msg over " + channel);
+					return;
+				}
+				final ByteBuffer data = buffer.data;
+				final byte[] bytes = new byte[data.capacity()];
+				data.get(bytes);
+				String strData = new String(bytes, Charset.forName("UTF-8"));
+				Log.d(TAG, "Got msg: " + strData + " over " + channel);
+			}
+		});
+	}
+	
+	@Override
+	public void onRenegotiationNeeded() {
+		if (DEBUG) Log.v(TAG, "onRenegotiationNeeded:");
+		// 今は何もしない
+	}
+	
+	@Override
+	public void onAddTrack(final RtpReceiver receiver, final MediaStream[] streams) {
+		if (DEBUG) Log.v(TAG, "onAddTrack:");
+		// 今は何もしない
 	}
 
 //--------------------------------------------------------------------------------
@@ -849,13 +1017,10 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 			@NonNull final Session session,
 			@NonNull final JanusPluginCallback callback,
 			@NonNull final MediaConstraints sdpMediaConstraints,
-			@NonNull final PeerConnection peerConnection,
-			@Nullable final DataChannel dataChannel,
-			@Nullable final RtcEventLog rtcEventLog) {
+			final boolean isLoopback) {
 
 			super(videoRoom, session, callback,
-				sdpMediaConstraints,
-				peerConnection, dataChannel, rtcEventLog);
+				sdpMediaConstraints, isLoopback);
 			if (DEBUG) Log.v(TAG, "Publisher:");
 		}
 		
@@ -916,13 +1081,10 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 			@NonNull final JanusPluginCallback callback,
 			@NonNull final BigInteger feederId,
 			@NonNull final MediaConstraints sdpMediaConstraints,
-			@NonNull final PeerConnection peerConnection,
-			@Nullable final DataChannel dataChannel,
-			@Nullable final RtcEventLog rtcEventLog) {
+			final boolean isLoopback) {
 
 			super(videoRoom, session, callback,
-				sdpMediaConstraints,
-				peerConnection, dataChannel, rtcEventLog);
+				sdpMediaConstraints, isLoopback);
 
 			if (DEBUG) Log.v(TAG, "Subscriber:");
 			this.feederId = feederId;
