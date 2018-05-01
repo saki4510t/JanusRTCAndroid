@@ -99,6 +99,8 @@ public class JanusRTCClient implements JanusClient {
 	private static final boolean DEBUG = true;	// set false on production
 	private static final String TAG = JanusRTCClient.class.getSimpleName();
 	
+	private static PeerConnection.SdpSemantics SDP_SEMANTICS = PeerConnection.SdpSemantics.PLAN_B;
+
 	private static enum ConnectionState {
 		UNINITIALIZED,
 		READY,	// janus-gateway server is ready to access
@@ -253,7 +255,7 @@ public class JanusRTCClient implements JanusClient {
 		executor.execute(() -> {
 			try {
 				createMediaConstraintsInternal();
-				createPeerConnectionInternal();
+				createPublisherInternal();
 			} catch (Exception e) {
 				reportError(e);
 				throw e;
@@ -684,8 +686,8 @@ public class JanusRTCClient implements JanusClient {
 		}
 	}
 	
-	private void createPeerConnectionInternal() {
-		if (DEBUG) Log.v(TAG, "createPeerConnectionInternal:");
+	private void createPublisherInternal() {
+		if (DEBUG) Log.v(TAG, "createPublisherInternal:");
 		final Context context = getContext();
 		if ((context == null) || (factory == null) || isError) {
 			Log.e(TAG, "Peerconnection factory is not created");
@@ -737,42 +739,78 @@ public class JanusRTCClient implements JanusClient {
 		rtcConfig.keyType = PeerConnection.KeyType.ECDSA;
 		// Enable DTLS for normal calls and disable for loopback calls.
 		rtcConfig.enableDtlsSrtp = !peerConnectionParameters.loopback;
-		rtcConfig.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
+		rtcConfig.sdpSemantics = SDP_SEMANTICS;
+
+		final List<String> mediaStreamLabels = Collections.singletonList("ARDAMS");
 		
-		peerConnection = factory.createPeerConnection(rtcConfig, sdpMediaConstraints, mPeerConnectionObserver);
-		
-		if (dataChannelEnabled) {
-			final DataChannel.Init init = new DataChannel.Init();
-			init.ordered = peerConnectionParameters.dataChannelParameters.ordered;
-			init.negotiated = peerConnectionParameters.dataChannelParameters.negotiated;
-			init.maxRetransmits = peerConnectionParameters.dataChannelParameters.maxRetransmits;
-			init.maxRetransmitTimeMs = peerConnectionParameters.dataChannelParameters.maxRetransmitTimeMs;
-			init.id = peerConnectionParameters.dataChannelParameters.id;
-			init.protocol = peerConnectionParameters.dataChannelParameters.protocol;
-			dataChannel = peerConnection.createDataChannel("ApprtcDemo data", init);
+		if (SDP_SEMANTICS == PeerConnection.SdpSemantics.UNIFIED_PLAN) {
+			peerConnection = factory.createPeerConnection(rtcConfig, mPeerConnectionObserver);
+			
+			if (dataChannelEnabled) {
+				final DataChannel.Init init = new DataChannel.Init();
+				init.ordered = peerConnectionParameters.dataChannelParameters.ordered;
+				init.negotiated = peerConnectionParameters.dataChannelParameters.negotiated;
+				init.maxRetransmits = peerConnectionParameters.dataChannelParameters.maxRetransmits;
+				init.maxRetransmitTimeMs = peerConnectionParameters.dataChannelParameters.maxRetransmitTimeMs;
+				init.id = peerConnectionParameters.dataChannelParameters.id;
+				init.protocol = peerConnectionParameters.dataChannelParameters.protocol;
+				dataChannel = peerConnection.createDataChannel("ApprtcDemo data", init);
+			}
+	
+			// Set INFO libjingle logging.
+			// NOTE: this _must_ happen while |factory| is alive!
+			Logging.enableLogToDebugOutput(Logging.Severity.LS_INFO);
+			
+			if (isVideoCallEnabled()) {
+				peerConnection.addTrack(createVideoTrack(videoCapturer), mediaStreamLabels);
+				// Publisherは送信のみなのでリモートビデオトラックは不要
+//				// We can add the renderers right away because we don't need to wait for an
+//				// answer to get the remote track.
+//				remoteVideoTrack = getRemoteVideoTrack();
+//				remoteVideoTrack.setEnabled(renderVideo);
+//				for (VideoRenderer.Callbacks remoteRender : remoteRenders) {
+//					remoteVideoTrack.addRenderer(new VideoRenderer(remoteRender));
+//				}
+			}
+			peerConnection.addTrack(createAudioTrack(audioConstraints), mediaStreamLabels);
+			if (isVideoCallEnabled()) {
+				findVideoSender(peerConnection);
+			}
+		} else {
+			VideoTrack videoTrack = null;
+			AudioTrack audioTrack = null;
+			MediaStream stream = null;
+			if (isVideoCallEnabled()) {
+				videoTrack = createVideoTrack(videoCapturer);
+			}
+			audioTrack = createAudioTrack(audioConstraints);
+			if ((videoTrack != null) || (audioTrack != null)) {
+				stream = factory.createLocalMediaStream("ARDAMS");
+				if (audioTrack != null) {
+					stream.addTrack(audioTrack);
+				}
+				if (videoTrack != null) {
+					stream.addTrack(videoTrack);
+				}
+			}
+//			peerConnection = factory.createPeerConnection(rtcConfig, sdpMediaConstraints, mPeerConnectionObserver);
+			peerConnection = factory.createPeerConnection(new ArrayList<PeerConnection.IceServer>(),
+				sdpMediaConstraints, mPeerConnectionObserver);
+			if (stream != null) {
+				peerConnection.addStream(stream);
+			}
+			if (dataChannelEnabled) {
+				final DataChannel.Init init = new DataChannel.Init();
+				init.ordered = peerConnectionParameters.dataChannelParameters.ordered;
+				init.negotiated = peerConnectionParameters.dataChannelParameters.negotiated;
+				init.maxRetransmits = peerConnectionParameters.dataChannelParameters.maxRetransmits;
+				init.maxRetransmitTimeMs = peerConnectionParameters.dataChannelParameters.maxRetransmitTimeMs;
+				init.id = peerConnectionParameters.dataChannelParameters.id;
+				init.protocol = peerConnectionParameters.dataChannelParameters.protocol;
+				dataChannel = peerConnection.createDataChannel("ApprtcDemo data", init);
+			}
 		}
 
-		// Set INFO libjingle logging.
-		// NOTE: this _must_ happen while |factory| is alive!
-		Logging.enableLogToDebugOutput(Logging.Severity.LS_INFO);
-		
-		final List<String> mediaStreamLabels = Collections.singletonList("ARDAMS");
-		if (isVideoCallEnabled()) {
-			peerConnection.addTrack(createVideoTrack(videoCapturer), mediaStreamLabels);
-			// Publisherは送信のみなのでリモートビデオトラックは不要
-//			// We can add the renderers right away because we don't need to wait for an
-//			// answer to get the remote track.
-//			remoteVideoTrack = getRemoteVideoTrack();
-//			remoteVideoTrack.setEnabled(renderVideo);
-//			for (VideoRenderer.Callbacks remoteRender : remoteRenders) {
-//				remoteVideoTrack.addRenderer(new VideoRenderer(remoteRender));
-//			}
-		}
-		peerConnection.addTrack(createAudioTrack(audioConstraints), mediaStreamLabels);
-		if (isVideoCallEnabled()) {
-			findVideoSender(peerConnection);
-		}
-		
 		if (peerConnectionParameters.aecDump) {
 			try {
 				final ParcelFileDescriptor aecDumpFileDescriptor =
@@ -839,20 +877,20 @@ public class JanusRTCClient implements JanusClient {
 		}
 		
 		// FIXME まだ設定が正しくない
-		// Create audio constraints.
-		final MediaConstraints audioConstraints = new MediaConstraints();
-		// added for audio performance measurements
-		if (peerConnectionParameters.noAudioProcessing) {
-			if (DEBUG) Log.d(TAG, "Disabling audio processing");
-			audioConstraints.mandatory.add(
-				new MediaConstraints.KeyValuePair(AUDIO_ECHO_CANCELLATION_CONSTRAINT, "false"));
-			audioConstraints.mandatory.add(
-				new MediaConstraints.KeyValuePair(AUDIO_AUTO_GAIN_CONTROL_CONSTRAINT, "false"));
-			audioConstraints.mandatory.add(
-				new MediaConstraints.KeyValuePair(AUDIO_HIGH_PASS_FILTER_CONSTRAINT, "false"));
-			audioConstraints.mandatory.add(
-				new MediaConstraints.KeyValuePair(AUDIO_NOISE_SUPPRESSION_CONSTRAINT, "false"));
-		}
+//		// Create audio constraints.
+//		final MediaConstraints audioConstraints = new MediaConstraints();
+//		// added for audio performance measurements
+//		if (peerConnectionParameters.noAudioProcessing) {
+//			if (DEBUG) Log.d(TAG, "Disabling audio processing");
+//			audioConstraints.mandatory.add(
+//				new MediaConstraints.KeyValuePair(AUDIO_ECHO_CANCELLATION_CONSTRAINT, "false"));
+//			audioConstraints.mandatory.add(
+//				new MediaConstraints.KeyValuePair(AUDIO_AUTO_GAIN_CONTROL_CONSTRAINT, "false"));
+//			audioConstraints.mandatory.add(
+//				new MediaConstraints.KeyValuePair(AUDIO_HIGH_PASS_FILTER_CONSTRAINT, "false"));
+//			audioConstraints.mandatory.add(
+//				new MediaConstraints.KeyValuePair(AUDIO_NOISE_SUPPRESSION_CONSTRAINT, "false"));
+//		}
 		// Create SDP constraints.
 		final MediaConstraints sdpMediaConstraints = new MediaConstraints();
 		sdpMediaConstraints.mandatory.add(
@@ -874,54 +912,89 @@ public class JanusRTCClient implements JanusClient {
 		rtcConfig.keyType = PeerConnection.KeyType.ECDSA;
 		// Enable DTLS for normal calls and disable for loopback calls.
 		rtcConfig.enableDtlsSrtp = !peerConnectionParameters.loopback;
-		rtcConfig.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
+		rtcConfig.sdpSemantics = SDP_SEMANTICS;
 		
-		peerConnection = factory.createPeerConnection(rtcConfig, sdpMediaConstraints, mPeerConnectionObserver);
-		
-		if (dataChannelEnabled) {
-			final DataChannel.Init init = new DataChannel.Init();
-			init.ordered = peerConnectionParameters.dataChannelParameters.ordered;
-			init.negotiated = peerConnectionParameters.dataChannelParameters.negotiated;
-			init.maxRetransmits = peerConnectionParameters.dataChannelParameters.maxRetransmits;
-			init.maxRetransmitTimeMs = peerConnectionParameters.dataChannelParameters.maxRetransmitTimeMs;
-			init.id = peerConnectionParameters.dataChannelParameters.id;
-			init.protocol = peerConnectionParameters.dataChannelParameters.protocol;
-			dataChannel = peerConnection.createDataChannel("ApprtcDemo data", init);
-		}
-		
-//		final List<String> mediaStreamLabels = Collections.singletonList("ARDAMS");
-		if (isVideoCallEnabled()) {
-//			peerConnection.addTrack(createVideoTrack(videoCapturer), mediaStreamLabels);
-			// We can add the renderers right away because we don't need to wait for an
-			// answer to get the remote track.
-			remoteVideoTrack = getRemoteVideoTrack(peerConnection);
-			if (remoteVideoTrack != null) {
-				remoteVideoTrack.setEnabled(renderVideo);
-				for (VideoRenderer.Callbacks remoteRender : remoteRenders) {
-					remoteVideoTrack.addRenderer(new VideoRenderer(remoteRender));
+		if (SDP_SEMANTICS == PeerConnection.SdpSemantics.UNIFIED_PLAN) {
+			peerConnection = factory.createPeerConnection(rtcConfig, sdpMediaConstraints, mPeerConnectionObserver);
+			
+			if (dataChannelEnabled) {
+				final DataChannel.Init init = new DataChannel.Init();
+				init.ordered = peerConnectionParameters.dataChannelParameters.ordered;
+				init.negotiated = peerConnectionParameters.dataChannelParameters.negotiated;
+				init.maxRetransmits = peerConnectionParameters.dataChannelParameters.maxRetransmits;
+				init.maxRetransmitTimeMs = peerConnectionParameters.dataChannelParameters.maxRetransmitTimeMs;
+				init.id = peerConnectionParameters.dataChannelParameters.id;
+				init.protocol = peerConnectionParameters.dataChannelParameters.protocol;
+				dataChannel = peerConnection.createDataChannel("ApprtcDemo data", init);
+			}
+			
+//			final List<String> mediaStreamLabels = Collections.singletonList("ARDAMS");
+			if (isVideoCallEnabled()) {
+//				peerConnection.addTrack(createVideoTrack(videoCapturer), mediaStreamLabels);
+				// We can add the renderers right away because we don't need to wait for an
+				// answer to get the remote track.
+				remoteVideoTrack = getRemoteVideoTrack(peerConnection);
+				if (remoteVideoTrack != null) {
+					remoteVideoTrack.setEnabled(renderVideo);
+					for (VideoRenderer.Callbacks remoteRender : remoteRenders) {
+						remoteVideoTrack.addRenderer(new VideoRenderer(remoteRender));
+					}
+				} else {
+					Log.w(TAG, "createSubscriber: remoteVideoTrack is null");
 				}
-			} else {
-				Log.w(TAG, "createSubscriber: remoteVideoTrack is null");
+			}
+//			peerConnection.addTrack(createAudioTrack(audioConstraints), mediaStreamLabels);
+//			if (isVideoCallEnabled()) {
+//				findVideoSender(peerConnection);
+//			}
+
+//			if (peerConnectionParameters.aecDump) {
+//				try {
+//					final ParcelFileDescriptor aecDumpFileDescriptor =
+//						ParcelFileDescriptor.open(new File(
+//							Environment.getExternalStorageDirectory().getPath()
+//								+ File.separator + "Download/audio.aecdump"),
+//							ParcelFileDescriptor.MODE_READ_WRITE | ParcelFileDescriptor.MODE_CREATE
+//								| ParcelFileDescriptor.MODE_TRUNCATE);
+//					factory.startAecDump(aecDumpFileDescriptor.detachFd(), -1);
+//				} catch (IOException e) {
+//					Log.e(TAG, "Can not open aecdump file", e);
+//				}
+//			}
+		} else {
+			VideoTrack videoTrack = null;
+			AudioTrack audioTrack = null;
+			MediaStream stream = null;
+//			if (isVideoCallEnabled()) {
+//				videoTrack = createVideoTrack(videoCapturer);
+//			}
+//			audioTrack = createAudioTrack(audioConstraints);
+			if ((videoTrack != null) || (audioTrack != null)) {
+				stream = factory.createLocalMediaStream("ARDAMS");
+				if (audioTrack != null) {
+					stream.addTrack(audioTrack);
+				}
+				if (videoTrack != null) {
+					stream.addTrack(videoTrack);
+				}
+			}
+//			peerConnection = factory.createPeerConnection(rtcConfig, sdpMediaConstraints, mPeerConnectionObserver);
+			peerConnection = factory.createPeerConnection(new ArrayList<PeerConnection.IceServer>(),
+				sdpMediaConstraints, mPeerConnectionObserver);
+			if (stream != null) {
+				peerConnection.addStream(stream);
+			}
+			if (dataChannelEnabled) {
+				final DataChannel.Init init = new DataChannel.Init();
+				init.ordered = peerConnectionParameters.dataChannelParameters.ordered;
+				init.negotiated = peerConnectionParameters.dataChannelParameters.negotiated;
+				init.maxRetransmits = peerConnectionParameters.dataChannelParameters.maxRetransmits;
+				init.maxRetransmitTimeMs = peerConnectionParameters.dataChannelParameters.maxRetransmitTimeMs;
+				init.id = peerConnectionParameters.dataChannelParameters.id;
+				init.protocol = peerConnectionParameters.dataChannelParameters.protocol;
+				dataChannel = peerConnection.createDataChannel("ApprtcDemo data", init);
 			}
 		}
-//		peerConnection.addTrack(createAudioTrack(), mediaStreamLabels);
-//		if (isVideoCallEnabled()) {
-//			findVideoSender(peerConnection);
-//		}
-		
-//		if (peerConnectionParameters.aecDump) {
-//			try {
-//				final ParcelFileDescriptor aecDumpFileDescriptor =
-//					ParcelFileDescriptor.open(new File(
-//						Environment.getExternalStorageDirectory().getPath()
-//							+ File.separator + "Download/audio.aecdump"),
-//						ParcelFileDescriptor.MODE_READ_WRITE | ParcelFileDescriptor.MODE_CREATE
-//							| ParcelFileDescriptor.MODE_TRUNCATE);
-//				factory.startAecDump(aecDumpFileDescriptor.detachFd(), -1);
-//			} catch (IOException e) {
-//				Log.e(TAG, "Can not open aecdump file", e);
-//			}
-//		}
 		
 		if (saveRecordedAudioToFile != null) {
 			if (saveRecordedAudioToFile.start()) {
@@ -1064,12 +1137,20 @@ public class JanusRTCClient implements JanusClient {
 			if (DEBUG) Log.v(TAG, "onIceConnectionChange:" + newState);
 			executor.execute(() -> {
 				if (DEBUG) Log.d(TAG, "IceConnectionState: " + newState);
-				if (newState == PeerConnection.IceConnectionState.CONNECTED) {
+				switch (newState) {
+				case CONNECTED:
 					mCallback.onIceConnected();
-				} else if (newState == PeerConnection.IceConnectionState.DISCONNECTED) {
+					break;
+				case DISCONNECTED:
 					mCallback.onIceDisconnected();
-				} else if (newState == PeerConnection.IceConnectionState.FAILED) {
-					reportError(new RuntimeException("ICE connection failed."));
+					break;
+				case FAILED:
+					Log.w(TAG, "ICE connection failed.");
+					// FIXME なぜだかこれが起こる、映像は少なくとも片方向はながれているので接続はできてそうなんだけど
+//					reportError(new RuntimeException("ICE connection failed."));
+					break;
+				default:
+					break;
 				}
 			});
 		}
@@ -1586,9 +1667,9 @@ public class JanusRTCClient implements JanusClient {
 			executor.execute(() -> {
 //				logAndToast("Sending " + sdp.type + ", delay=" + delta + "ms");
 				if (plugin instanceof JanusPlugin.Publisher) {
-					sendOfferSdp(sdp);
+					plugin.sendOfferSdp(sdp, connectionParameters.loopback);
 				} else {
-					sendAnswerSdp(sdp);
+					plugin.sendAnswerSdp(sdp, connectionParameters.loopback);
 				}
 				if (peerConnectionParameters.videoMaxBitrate > 0) {
 					if (DEBUG) Log.d(TAG, "Set video maximum bitrate: "
@@ -1627,7 +1708,7 @@ public class JanusRTCClient implements JanusClient {
 				+ "\n" + sdp);
 
 			mCallback.onRemoteDescription(sdp);
-			plugin.setRemoteDescription(sdp);
+//			plugin.setRemoteDescription(sdp);
 //			if (plugin instanceof JanusPlugin.Publisher) {
 //				mCallback.onRemoteDescription(sdp);
 //				plugin.setRemoteDescription(sdp);
