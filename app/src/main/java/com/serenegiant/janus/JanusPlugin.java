@@ -107,8 +107,8 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 	 * remote descriptions are set. Similarly local ICE candidates are sent to
 	 * remote peer after both local and remote description are set.
 	 */
-	@android.support.annotation.Nullable
-	private List<IceCandidate> queuedRemoteCandidates;
+	@NonNull
+	private final List<IceCandidate> queuedRemoteCandidates = new ArrayList<>();
 
 	@NonNull
 	protected final VideoRoom mVideoRoom;
@@ -153,7 +153,6 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		// Check if ISAC is used by default.
 		preferIsac = peerConnectionParameters.audioCodec != null
 			&& peerConnectionParameters.audioCodec.equals(AUDIO_CODEC_ISAC);
-		queuedRemoteCandidates = new ArrayList<>();
 	}
 	
 	@Override
@@ -193,12 +192,12 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 	
 	private void drainCandidates() {
 		if (DEBUG) Log.v(TAG, "drainCandidates:");
-		if (queuedRemoteCandidates != null) {
+		if (!queuedRemoteCandidates.isEmpty()) {
 			if (DEBUG) Log.d(TAG, "Add " + queuedRemoteCandidates.size() + " remote candidates");
 			for (IceCandidate candidate : queuedRemoteCandidates) {
 				peerConnection.addIceCandidate(candidate);
 			}
-			queuedRemoteCandidates = null;
+			queuedRemoteCandidates.clear();
 		}
 	}
 
@@ -206,11 +205,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		if (DEBUG) Log.v(TAG, "addRemoteIceCandidate:");
 		executor.execute(() -> {
 			if (peerConnection != null && !isError) {
-				if (queuedRemoteCandidates != null) {
 					queuedRemoteCandidates.add(candidate);
-				} else {
-					peerConnection.addIceCandidate(candidate);
-				}
 			}
 		});
 	}
