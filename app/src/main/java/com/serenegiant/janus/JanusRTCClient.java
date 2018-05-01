@@ -366,7 +366,7 @@ public class JanusRTCClient implements JanusClient {
 	
 	@Override
 	public void disconnectFromRoom() {
-		if (mConnectionState != mConnectionState) {
+		if (mConnectionState != ConnectionState.CLOSED) {
 			if (DEBUG) Log.v(TAG, "disconnectFromRoom:");
 			cancelCall();
 			executor.execute(() -> {
