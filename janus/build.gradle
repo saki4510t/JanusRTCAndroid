@@ -69,7 +69,7 @@ uploadArchives {
 	repositories {
 		mavenDeployer {
             repository url: "file://${repo.absolutePath}"
-            pom.version = versionNameString
+            pom.version = janusVersionNameString
             pom.groupId = 'com.serenegiant'
             pom.artifactId = 'janus'
 
