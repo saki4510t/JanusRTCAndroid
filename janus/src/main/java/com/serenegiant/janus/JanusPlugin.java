@@ -72,7 +72,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_ISAC;
 import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 
 /*package*/ abstract class JanusPlugin implements PeerConnection.Observer {
-	private static final boolean DEBUG = true;	// set false on production
+	private static final boolean DEBUG = false;	// set false on production
 	
 	/**
 	 * callback interface for JanusPlugin

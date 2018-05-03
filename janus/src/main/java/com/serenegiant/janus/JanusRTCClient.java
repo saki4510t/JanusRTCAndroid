@@ -111,7 +111,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import static com.serenegiant.janus.Const.*;
 
 public class JanusRTCClient implements JanusClient {
-	private static final boolean DEBUG = true;	// set false on production
+	private static final boolean DEBUG = false;	// set false on production
 	private static final String TAG = JanusRTCClient.class.getSimpleName();
 	
 	private static PeerConnection.SdpSemantics SDP_SEMANTICS = PeerConnection.SdpSemantics.UNIFIED_PLAN;
