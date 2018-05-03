@@ -609,6 +609,7 @@ public class JanusRTCClient implements JanusClient {
 
 	private boolean isVideoCallEnabled() {
 		return peerConnectionParameters.videoCallEnabled
+			&& (remoteRenders != null)
 			&& (videoCapturer != null);
 	}
 
@@ -1014,18 +1015,20 @@ public class JanusRTCClient implements JanusClient {
 
 	private void onAddRemoteStream(final MediaStream remoteStream) {
 		if (DEBUG) Log.v(TAG, "onAddRemoteStream:remoteVideoTrack=" + remoteVideoTrack);
-		if (remoteVideoTrack == null) {
-			mRemoteStream = remoteStream;
-			final VideoTrack videoTrack = remoteStream.videoTracks.get(0);
-			if (videoTrack != null) {
-				for (VideoRenderer.Callbacks remoteRender : remoteRenders) {
-					if (DEBUG) Log.v(TAG, "onAddRemoteStream:add " + remoteRender);
-					videoTrack.addRenderer(new VideoRenderer(remoteRender));
+		if (isVideoCallEnabled()) {
+			if (remoteVideoTrack == null) {
+				mRemoteStream = remoteStream;
+				final VideoTrack videoTrack = remoteStream.videoTracks.get(0);
+				if (videoTrack != null) {
+					for (VideoRenderer.Callbacks remoteRender : remoteRenders) {
+						if (DEBUG) Log.v(TAG, "onAddRemoteStream:add " + remoteRender);
+						videoTrack.addRenderer(new VideoRenderer(remoteRender));
+					}
+					videoTrack.setEnabled(renderVideo);
+					remoteVideoTrack = videoTrack;
 				}
-				videoTrack.setEnabled(renderVideo);
-				remoteVideoTrack = videoTrack;
-			}
-		} else if (DEBUG) Log.v(TAG, "onAddRemoteStream:already add remote renderers");
+			} else if (DEBUG) Log.v(TAG, "onAddRemoteStream:already add remote renderers");
+		}
 	}
 
 	/**
