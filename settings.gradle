@@ -1,1 +1,1 @@
-include ':app', ':autobanh-jar', ':janus-android', ':janus'
+include ':app', ':autobanh-jar', ':janus'
