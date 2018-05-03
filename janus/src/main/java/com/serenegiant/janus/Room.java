@@ -113,4 +113,10 @@ public class Room {
 		}
 		return result;
 	}
+	
+	public int getNumPublishers() {
+		synchronized (this.publishers) {
+			return this.publishers.size();
+		}
+	}
 }
