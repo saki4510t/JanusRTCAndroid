@@ -21,7 +21,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.serenegiant.janusrtcandroid.R;
+import com.serenegiant.janus.R;
 
 import org.appspot.apprtc.util.AppRTCUtils;
 import org.webrtc.ThreadUtils;
@@ -31,10 +31,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * org.appspot.apprtc.AppRTCAudioManager manages all audio related parts of the AppRTC demo.
+ * AppRTCAudioManager manages all audio related parts of the AppRTC demo.
  */
 public class AppRTCAudioManager {
-	private static final String TAG = "org.appspot.apprtc.AppRTCAudioManager";
+	private static final String TAG = "AppRTCAudioManager";
 	private static final String SPEAKERPHONE_AUTO = "auto";
 	private static final String SPEAKERPHONE_TRUE = "true";
 	private static final String SPEAKERPHONE_FALSE = "false";

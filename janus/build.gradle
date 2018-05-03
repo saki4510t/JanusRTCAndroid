@@ -1,0 +1,78 @@
+apply plugin: 'com.android.library'
+
+android {
+	compileSdkVersion versionCompiler
+	buildToolsVersion versionBuildTool
+
+	compileOptions {
+		sourceCompatibility javaSourceCompatibility
+		targetCompatibility javaTargetCompatibility
+	}
+
+	defaultConfig {
+		targetSdkVersion versionTarget
+		versionCode versionCodeNum
+		versionName versionNameString
+		vectorDrawables.useSupportLibrary = true
+
+		testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+	}
+
+	buildTypes {
+		release {
+			minifyEnabled false
+			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+		}
+	}
+
+}
+
+dependencies {
+	api fileTree(dir: 'libs', include: ['*.jar'])
+
+	implementation "com.android.support:support-v4:${supportLibVersion}"
+	implementation "com.android.support:appcompat-v7:${supportLibVersion}"
+
+	testImplementation 'junit:junit:4.12'
+	androidTestImplementation 'com.android.support.test:runner:1.0.2'
+	androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+
+	api "com.google.code.gson:gson:${gsonVersion}"
+	api "com.squareup.okhttp3:okhttp:${okHttpVersion}"
+	testImplementation "com.squareup.okhttp3:mockwebserver:${okHttpVersion}"
+	api "com.squareup.okhttp3:logging-interceptor:${okHttpVersion}"
+	api "com.squareup.retrofit2:retrofit:${retrofit2Version}"
+	api "com.squareup.retrofit2:converter-gson:${retrofit2Version}"
+//	api "com.squareup.retrofit2:adapter-rxjava2:${retrofit2Version}"
+//	api "io.reactivex.rxjava2:rxandroid:${rxandroidVersion}"
+//	api "io.reactivex.rxjava2:rxjava:${rxjavaVersion}"
+
+	api ("io.socket:socket.io-client:${socketIOClientJavaVersion}") {
+	  // excluding org.json which is provided by Android
+		exclude group: 'org.json', module: 'json'
+	}
+
+	api "org.webrtc:google-webrtc:${webRTCVersion}"
+	api project(':autobanh-jar')
+
+	implementation("com.serenegiant:common:${commonLibVersion}") {
+		exclude module: 'support-v4'
+	}
+}
+
+def repo = new File(rootDir, "repository")
+
+apply plugin: 'maven'
+
+uploadArchives {
+	repositories {
+		mavenDeployer {
+            repository url: "file://${repo.absolutePath}"
+            pom.version = versionNameString
+            pom.groupId = 'com.serenegiant'
+            pom.artifactId = 'janus'
+
+		}
+    }
+}

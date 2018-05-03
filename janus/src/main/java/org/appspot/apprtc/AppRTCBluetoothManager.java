@@ -33,11 +33,11 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * org.appspot.apprtc.AppRTCProximitySensor manages functions related to Bluetoth devices in the
+ * AppRTCProximitySensor manages functions related to Bluetoth devices in the
  * AppRTC demo.
  */
 public class AppRTCBluetoothManager {
-	private static final String TAG = "org.appspot.apprtc.AppRTCBluetoothManager";
+	private static final String TAG = "AppRTCBluetoothManager";
 
 	// Timeout interval for starting or stopping audio to a Bluetooth SCO device.
 	private static final int BLUETOOTH_SCO_TIMEOUT_MS = 4000;
@@ -233,7 +233,7 @@ public class AppRTCBluetoothManager {
 	 * is connected and enabled:
 	 * UNINITIALIZED --> HEADSET_UNAVAILABLE --> HEADSET_AVAILABLE -->
 	 * SCO_CONNECTING --> SCO_CONNECTED <==> audio is now routed via BT SCO.
-	 * Note that the org.appspot.apprtc.AppRTCAudioManager is also involved in driving this state
+	 * Note that the AppRTCAudioManager is also involved in driving this state
 	 * change.
 	 */
 	public void start() {

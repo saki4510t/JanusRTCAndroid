@@ -435,7 +435,7 @@ public class ConnectActivity extends BaseActivity {
 		boolean tracing = sharedPrefGetBoolean(R.string.pref_tracing_key, CallActivity.EXTRA_TRACING,
 			R.string.pref_tracing_default, useValuesFromIntent);
 		
-		// Check Enable org.appspot.apprtc.RtcEventLog.
+		// Check Enable RtcEventLog.
 		boolean rtcEventLogEnabled = sharedPrefGetBoolean(R.string.pref_enable_rtceventlog_key,
 			CallActivity.EXTRA_ENABLE_RTCEVENTLOG, R.string.pref_enable_rtceventlog_default,
 			useValuesFromIntent);

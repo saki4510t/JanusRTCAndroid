@@ -22,7 +22,7 @@ import org.webrtc.ThreadUtils;
 import javax.annotation.Nullable;
 
 /**
- * org.appspot.apprtc.AppRTCProximitySensor manages functions related to the proximity sensor in
+ * AppRTCProximitySensor manages functions related to the proximity sensor in
  * the AppRTC demo.
  * On most device, the proximity sensor is implemented as a boolean-sensor.
  * It returns just two values "NEAR" or "FAR". Thresholding is done on the LUX
@@ -31,7 +31,7 @@ import javax.annotation.Nullable;
  * Anything less than the threshold value and the sensor  returns "NEAR".
  */
 public class AppRTCProximitySensor implements SensorEventListener {
-	private static final String TAG = "org.appspot.apprtc.AppRTCProximitySensor";
+	private static final String TAG = "AppRTCProximitySensor";
 	
 	// This class should be created, started and stopped on one thread
 	// (e.g. the main thread). We use |nonThreadSafe| to ensure that this is
@@ -52,7 +52,7 @@ public class AppRTCProximitySensor implements SensorEventListener {
 	}
 	
 	private AppRTCProximitySensor(Context context, Runnable sensorStateListener) {
-		Log.d(TAG, "org.appspot.apprtc.AppRTCProximitySensor" + AppRTCUtils.getThreadInfo());
+		Log.d(TAG, "AppRTCProximitySensor" + AppRTCUtils.getThreadInfo());
 		onSensorStateListener = sensorStateListener;
 		sensorManager = ((SensorManager) context.getSystemService(Context.SENSOR_SERVICE));
 	}

@@ -39,6 +39,7 @@ import com.serenegiant.janus.response.Plugin;
 import com.serenegiant.janus.response.PublisherInfo;
 import com.serenegiant.janus.response.Session;
 
+import org.appspot.apprtc.AppRTCConst;
 import org.appspot.apprtc.PeerConnectionParameters;
 import org.appspot.apprtc.RtcEventLog;
 import org.appspot.apprtc.util.SdpUtils;
@@ -229,7 +230,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		
 		// Check if ISAC is used by default.
 		preferIsac = peerConnectionParameters.audioCodec != null
-			&& peerConnectionParameters.audioCodec.equals(AUDIO_CODEC_ISAC);
+			&& peerConnectionParameters.audioCodec.equals(AppRTCConst.AUDIO_CODEC_ISAC);
 	}
 	
 	@Override
@@ -328,7 +329,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 			}
 			String sdpDescription = sdp.description;
 			if (preferIsac) {
-				sdpDescription = SdpUtils.preferCodec(sdpDescription, AUDIO_CODEC_ISAC, true);
+				sdpDescription = SdpUtils.preferCodec(sdpDescription, AppRTCConst.AUDIO_CODEC_ISAC, true);
 			}
 			if (isVideoCallEnabled) {
 				sdpDescription =
@@ -337,7 +338,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 			}
 			if (peerConnectionParameters.audioStartBitrate > 0) {
 				sdpDescription = SdpUtils.setStartBitrate(
-					AUDIO_CODEC_OPUS, false, sdpDescription, peerConnectionParameters.audioStartBitrate);
+					AppRTCConst.AUDIO_CODEC_OPUS, false, sdpDescription, peerConnectionParameters.audioStartBitrate);
 			}
 			if (DEBUG) Log.d(TAG, "Set remote SDP.");
 			final SessionDescription sdpRemote = new SessionDescription(sdp.type, sdpDescription);
@@ -1015,7 +1016,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 			}
 			String sdpDescription = origSdp.description;
 			if (preferIsac) {
-				sdpDescription = SdpUtils.preferCodec(sdpDescription, AUDIO_CODEC_ISAC, true);
+				sdpDescription = SdpUtils.preferCodec(sdpDescription, AppRTCConst.AUDIO_CODEC_ISAC, true);
 			}
 			if (isVideoCallEnabled) {
 				sdpDescription =

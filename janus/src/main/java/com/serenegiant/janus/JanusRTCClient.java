@@ -36,6 +36,7 @@ import com.serenegiant.janus.response.EventRoom;
 import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
 
+import org.appspot.apprtc.AppRTCConst;
 import org.appspot.apprtc.PeerConnectionParameters;
 import org.appspot.apprtc.RecordedAudioToFileController;
 import org.appspot.apprtc.RoomConnectionParameters;
@@ -108,7 +109,6 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 import static com.serenegiant.janus.Const.*;
-import static org.appspot.apprtc.AppRTCConst.*;
 
 public class JanusRTCClient implements JanusClient {
 	private static final boolean DEBUG = true;	// set false on production
@@ -437,7 +437,7 @@ public class JanusRTCClient implements JanusClient {
 			if (DEBUG) Log.d(TAG, "Factory networkIgnoreMask option: " + options.networkIgnoreMask);
 		}
 		final boolean enableH264HighProfile =
-			VIDEO_CODEC_H264_HIGH.equals(peerConnectionParameters.videoCodec);
+			AppRTCConst.VIDEO_CODEC_H264_HIGH.equals(peerConnectionParameters.videoCodec);
 		final VideoEncoderFactory encoderFactory;
 		final VideoDecoderFactory decoderFactory;
 		
@@ -622,8 +622,8 @@ public class JanusRTCClient implements JanusClient {
 			
 			// If video resolution is not specified, default to HD.
 			if (videoWidth == 0 || videoHeight == 0) {
-				videoWidth = HD_VIDEO_WIDTH;
-				videoHeight = HD_VIDEO_HEIGHT;
+				videoWidth = AppRTCConst.HD_VIDEO_WIDTH;
+				videoHeight = AppRTCConst.HD_VIDEO_HEIGHT;
 			}
 			
 			// If fps is not specified, default to 30.
@@ -654,13 +654,13 @@ public class JanusRTCClient implements JanusClient {
 		if (peerConnectionParameters.noAudioProcessing) {
 			if (DEBUG) Log.d(TAG, "Disabling audio processing");
 			audioConstraints.mandatory.add(
-				new MediaConstraints.KeyValuePair(AUDIO_ECHO_CANCELLATION_CONSTRAINT, "false"));
+				new MediaConstraints.KeyValuePair(AppRTCConst.AUDIO_ECHO_CANCELLATION_CONSTRAINT, "false"));
 			audioConstraints.mandatory.add(
-				new MediaConstraints.KeyValuePair(AUDIO_AUTO_GAIN_CONTROL_CONSTRAINT, "false"));
+				new MediaConstraints.KeyValuePair(AppRTCConst.AUDIO_AUTO_GAIN_CONTROL_CONSTRAINT, "false"));
 			audioConstraints.mandatory.add(
-				new MediaConstraints.KeyValuePair(AUDIO_HIGH_PASS_FILTER_CONSTRAINT, "false"));
+				new MediaConstraints.KeyValuePair(AppRTCConst.AUDIO_HIGH_PASS_FILTER_CONSTRAINT, "false"));
 			audioConstraints.mandatory.add(
-				new MediaConstraints.KeyValuePair(AUDIO_NOISE_SUPPRESSION_CONSTRAINT, "false"));
+				new MediaConstraints.KeyValuePair(AppRTCConst.AUDIO_NOISE_SUPPRESSION_CONSTRAINT, "false"));
 		}
 		// Create SDP constraints.
 		final MediaConstraints sdpMediaConstraints = new MediaConstraints();
@@ -904,14 +904,14 @@ public class JanusRTCClient implements JanusClient {
 		Date date = new Date();
 		final String outputFileName = "event_log_" + dateFormat.format(date) + ".log";
 		return new File(
-			getContext().getDir(RTCEVENTLOG_OUTPUT_DIR_NAME, Context.MODE_PRIVATE), outputFileName);
+			getContext().getDir(AppRTCConst.RTCEVENTLOG_OUTPUT_DIR_NAME, Context.MODE_PRIVATE), outputFileName);
 	}
 
 	@Nullable
 	private AudioTrack createAudioTrack(final MediaConstraints audioConstraints) {
 		if (DEBUG) Log.v(TAG, "createAudioTrack:");
 		audioSource = factory.createAudioSource(audioConstraints);
-		localAudioTrack = factory.createAudioTrack(AUDIO_TRACK_ID, audioSource);
+		localAudioTrack = factory.createAudioTrack(AppRTCConst.AUDIO_TRACK_ID, audioSource);
 		localAudioTrack.setEnabled(enableAudio);
 		return localAudioTrack;
 	}
@@ -922,7 +922,7 @@ public class JanusRTCClient implements JanusClient {
 		videoSource = factory.createVideoSource(capturer);
 		capturer.startCapture(videoWidth, videoHeight, videoFps);
 		
-		localVideoTrack = factory.createVideoTrack(VIDEO_TRACK_ID, videoSource);
+		localVideoTrack = factory.createVideoTrack(AppRTCConst.VIDEO_TRACK_ID, videoSource);
 		localVideoTrack.setEnabled(renderVideo);
 		localVideoTrack.addSink(localRender);
 		return localVideoTrack;
@@ -933,7 +933,7 @@ public class JanusRTCClient implements JanusClient {
 		for (final RtpSender sender : peerConnection.getSenders()) {
 			if (sender.track() != null) {
 				String trackType = sender.track().kind();
-				if (trackType.equals(VIDEO_TRACK_TYPE)) {
+				if (trackType.equals(AppRTCConst.VIDEO_TRACK_TYPE)) {
 					if (DEBUG) Log.d(TAG, "Found video sender.");
 					localVideoSender = sender;
 				}
@@ -1354,7 +1354,7 @@ public class JanusRTCClient implements JanusClient {
 			
 			for (RtpParameters.Encoding encoding : parameters.encodings) {
 				// Null value means no limit.
-				encoding.maxBitrateBps = maxBitrateKbps == 0 ? null : maxBitrateKbps * BPS_IN_KBPS;
+				encoding.maxBitrateBps = maxBitrateKbps == 0 ? null : maxBitrateKbps * AppRTCConst.BPS_IN_KBPS;
 			}
 			if (!localVideoSender.setParameters(parameters)) {
 				Log.e(TAG, "RtpSender.setParameters failed.");

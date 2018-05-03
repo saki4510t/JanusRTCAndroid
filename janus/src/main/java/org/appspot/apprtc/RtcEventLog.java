@@ -17,7 +17,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class RtcEventLog {
-	private static final String TAG = "org.appspot.apprtc.RtcEventLog";
+	private static final String TAG = "RtcEventLog";
 	private static final int OUTPUT_FILE_MAX_BYTES = 10_000_000;
 	private final PeerConnection peerConnection;
 	private RtcEventLogState state = RtcEventLogState.INACTIVE;
@@ -37,7 +37,7 @@ public class RtcEventLog {
 	
 	public void start(final File outputFile) {
 		if (state == RtcEventLogState.STARTED) {
-			Log.e(TAG, "org.appspot.apprtc.RtcEventLog has already started.");
+			Log.e(TAG, "RtcEventLog has already started.");
 			return;
 		}
 		final ParcelFileDescriptor fileDescriptor;
@@ -58,16 +58,16 @@ public class RtcEventLog {
 			return;
 		}
 		state = RtcEventLogState.STARTED;
-		Log.d(TAG, "org.appspot.apprtc.RtcEventLog started.");
+		Log.d(TAG, "RtcEventLog started.");
 	}
 	
 	public void stop() {
 		if (state != RtcEventLogState.STARTED) {
-			Log.e(TAG, "org.appspot.apprtc.RtcEventLog was not started.");
+			Log.e(TAG, "RtcEventLog was not started.");
 			return;
 		}
 		peerConnection.stopRtcEventLog();
 		state = RtcEventLogState.STOPPED;
-		Log.d(TAG, "org.appspot.apprtc.RtcEventLog stopped.");
+		Log.d(TAG, "RtcEventLog stopped.");
 	}
 }
