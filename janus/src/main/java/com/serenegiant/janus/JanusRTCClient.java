@@ -1015,7 +1015,9 @@ public class JanusRTCClient implements JanusClient {
 
 	private void onAddRemoteStream(final MediaStream remoteStream) {
 		if (DEBUG) Log.v(TAG, "onAddRemoteStream:remoteVideoTrack=" + remoteVideoTrack);
-		if (isVideoCallEnabled()) {
+		if (isVideoCallEnabled()
+			&& (remoteStream != null) && !remoteStream.videoTracks.isEmpty()) {
+
 			if (remoteVideoTrack == null) {
 				mRemoteStream = remoteStream;
 				final VideoTrack videoTrack = remoteStream.videoTracks.get(0);
