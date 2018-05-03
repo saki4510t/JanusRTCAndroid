@@ -21,10 +21,13 @@ package com.serenegiant.janus;
 
 import android.support.annotation.NonNull;
 
+import com.serenegiant.janus.response.PublisherInfo;
+
 import org.webrtc.IceCandidate;
 import org.webrtc.PeerConnection;
 import org.webrtc.SessionDescription;
 
+import java.math.BigInteger;
 import java.util.List;
 
 public interface JanusCallback {
@@ -74,6 +77,19 @@ public interface JanusCallback {
 	 */
 	public void onIceDisconnected();
 	
+	/**
+	 * Callback fired when someone enter to the same room
+ 	 * @param info
+	 */
+	public void onEnter(final PublisherInfo info);
+	
+	/**
+	 * Callback fired when someone leaved from the same room
+	 * @param info
+	 * @param numUsers
+	 */
+	public void onLeave(final PublisherInfo info, final int numUsers);
+
 	/**
 	 * Callback fired once channel is closed.
 	 */

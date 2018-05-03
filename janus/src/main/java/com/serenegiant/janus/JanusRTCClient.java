@@ -33,6 +33,7 @@ import com.google.gson.internal.bind.DateTypeAdapter;
 import com.serenegiant.janus.request.Creator;
 import com.serenegiant.janus.request.Destroy;
 import com.serenegiant.janus.response.EventRoom;
+import com.serenegiant.janus.response.PublisherInfo;
 import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
 
@@ -319,26 +320,32 @@ public class JanusRTCClient implements JanusClient {
 		});
 	}
 	
+	private TimerTask mTimerTask;
 	@Override
 	public void enableStatsEvents(boolean enable, int periodMs) {
 		if (DEBUG) Log.v(TAG, "enableStatsEvents:");
 		if (enable) {
-			// 多重で呼び出されるのを防ぐため1つだけに限定する
-			// これ以外でタイマーを使いまわすのであれば
-			// TimerTask#cancelを呼んだほうがいい
-			statsTimer.cancel();
+			cancelTimerTask();
+			mTimerTask = new TimerTask() {
+				@Override
+				public void run() {
+					executor.execute(() -> getStats());
+				}
+			};
 			try {
-				statsTimer.schedule(new TimerTask() {
-					@Override
-					public void run() {
-						executor.execute(() -> getStats());
-					}
-				}, 0, periodMs);
+				statsTimer.schedule(mTimerTask, 0, periodMs);
 			} catch (Exception e) {
 				Log.e(TAG, "Can not schedule statistics timer", e);
 			}
 		} else {
-			statsTimer.cancel();
+			cancelTimerTask();
+		}
+	}
+
+	private void cancelTimerTask() {
+		if (mTimerTask != null) {
+			mTimerTask.cancel();
+			mTimerTask = null;
 		}
 	}
 
@@ -389,6 +396,7 @@ public class JanusRTCClient implements JanusClient {
 	
 	@Override
 	public void disconnectFromRoom() {
+		cancelTimerTask();
 		statsTimer.cancel();
 		if (mConnectionState != ConnectionState.CLOSED) {
 			if (DEBUG) Log.v(TAG, "disconnectFromRoom:");
@@ -790,10 +798,10 @@ public class JanusRTCClient implements JanusClient {
 	
 	/**
 	 * Subscriberを生成
-	 * @param feederId
+	 * @param info
 	 */
 	private void createSubscriber(
-		@NonNull final BigInteger feederId) {
+		@NonNull final PublisherInfo info) {
 		
 		if (DEBUG) Log.v(TAG, "createSubscriber:");
 
@@ -835,7 +843,7 @@ public class JanusRTCClient implements JanusClient {
 		final JanusPlugin.Subscriber subscriber = new JanusPlugin.Subscriber(mJanus,
 			mSession, mJanusPluginCallback,
 			peerConnectionParameters, sdpMediaConstraints,
-			feederId, isVideoCallEnabled());
+			info, isVideoCallEnabled());
 
 		final PeerConnection peerConnection;
 		DataChannel dataChannel = null;
@@ -1100,7 +1108,7 @@ public class JanusRTCClient implements JanusClient {
 		return null;
 	}
 	
-	private void leavePlugin(@NonNull BigInteger leavePlugin) {
+	private void leavePlugin(@NonNull BigInteger leavePlugin, final int numUsers) {
 		if (DEBUG) Log.v(TAG, "leavePlugin:" + leavePlugin);
 		JanusPlugin found = null;
 	
@@ -1109,7 +1117,7 @@ public class JanusRTCClient implements JanusClient {
 			for (Map.Entry<BigInteger, JanusPlugin> entry: mAttachedPlugins.entrySet()) {
 				final JanusPlugin plugin = entry.getValue();
 				if (plugin instanceof JanusPlugin.Subscriber) {
-					if (leavePlugin.equals(((JanusPlugin.Subscriber) plugin).feederId)) {
+					if (leavePlugin.equals(plugin.getFeedId())) {
 						found = plugin;
 						break;
 					}
@@ -1120,7 +1128,11 @@ public class JanusRTCClient implements JanusClient {
 		if (found != null) {
 			// feederIdが一致するSubscriberが見つかった時はdetachする
 			final JanusPlugin subscriber = found;
-			executor.execute(() -> subscriber.detach());
+			executor.execute(() -> {
+				subscriber.detach();
+				mCallback.onLeave(
+					((JanusPlugin.Subscriber)subscriber).info, numUsers);
+			});
 		}
 	}
 
@@ -1291,6 +1303,7 @@ public class JanusRTCClient implements JanusClient {
 		mJanus = null;
 		mLocalStream = null;
 		mRemoteStream = null;
+		cancelTimerTask();
 		statsTimer.cancel();
 		if (DEBUG) Log.d(TAG, "Closing audio source.");
 		if (audioSource != null) {
@@ -1403,13 +1416,21 @@ public class JanusRTCClient implements JanusClient {
 		}
 		
 		@Override
+		public void onEnter(@NonNull final JanusPlugin plugin) {
+			if (DEBUG) Log.v(TAG, "onEnter:" + plugin);
+			if (plugin instanceof JanusPlugin.Subscriber) {
+				mCallback.onEnter(((JanusPlugin.Subscriber) plugin).info);
+			}
+		}
+		
+		@Override
 		public void onLeave(@NonNull final JanusPlugin plugin,
-			@NonNull final BigInteger pluginId) {
+			@NonNull final BigInteger pluginId, final int numUsers) {
 			
 			if (DEBUG) Log.v(TAG, "onLeave:" + plugin + ",leave=" + pluginId);
 
 			
-			executor.execute(() -> leavePlugin(pluginId));
+			executor.execute(() -> leavePlugin(pluginId, numUsers));
 		}
 		
 		@Override
@@ -1473,11 +1494,11 @@ public class JanusRTCClient implements JanusClient {
 
 		@Override
 		public void createSubscriber(@NonNull final JanusPlugin plugin,
-			@NonNull final BigInteger feederId) {
+			@NonNull final PublisherInfo info) {
 
 			if (DEBUG) Log.v(TAG, "createSubscriber:" + plugin);
 			executor.execute(() -> {
-				JanusRTCClient.this.createSubscriber(feederId);
+				JanusRTCClient.this.createSubscriber(info);
 			});
 		}
 		

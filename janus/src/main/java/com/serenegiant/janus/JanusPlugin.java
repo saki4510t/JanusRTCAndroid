@@ -98,12 +98,18 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		public void onDetach(@NonNull final JanusPlugin plugin);
 		
 		/**
+		 * callback when other publisher enter to the same room
+ 		 * @param plugin
+		 */
+		public void onEnter(@NonNull final JanusPlugin plugin);
+	
+		/**
 		 * callback when other publisher leaved from room
 		 * @param plugin
 		 * @param pluginId
 		 */
 		public void onLeave(@NonNull final JanusPlugin plugin,
-			@NonNull final BigInteger pluginId);
+			@NonNull final BigInteger pluginId, final int numUsers);
 		
 		/**
 		 * callback when MediaStream is added to PeerConnection
@@ -147,7 +153,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 			final SessionDescription sdp);
 		
 		public void createSubscriber(@NonNull final JanusPlugin plugin,
-			@NonNull final BigInteger feederId);
+			@NonNull final PublisherInfo info);
 
 		/**
 		 * リモート側のSessionDescriptionを受信した時
@@ -863,6 +869,9 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 				onRemoteDescription(sdp);
 			}
 		}
+		if (this instanceof Subscriber) {
+			mCallback.onEnter(this);
+		}
 		return true;	// true: 処理済み
 	}
 	
@@ -910,7 +919,9 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 			&& (room.plugindata.data.leaving != null)) {
 			
 			executor.execute( () -> {
-				mCallback.onLeave(JanusPlugin.this, room.plugindata.data.leaving);
+				mCallback.onLeave(JanusPlugin.this,
+					room.plugindata.data.leaving,
+					mRoom.getNumPublishers());
 			});
 		}
 		return true;	// true: 処理済み
@@ -1147,7 +1158,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 						executor.execute(() -> {
 							if (DEBUG) Log.v(TAG, "checkPublishers:attach new Subscriber");
 							mCallback.createSubscriber(
-								Publisher.this, info.id);
+								Publisher.this, info);
 						});
 					}
 				}
@@ -1156,7 +1167,8 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 	}
 	
 	public static class Subscriber extends JanusPlugin {
-		public final BigInteger feederId;
+		@NonNull
+		public final PublisherInfo info;
 
 		/**
 		 * コンストラクタ
@@ -1166,8 +1178,8 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 			@NonNull final Session session,
 			@NonNull final JanusPluginCallback callback,
 			@NonNull final PeerConnectionParameters peerConnectionParameters,
-						  @NonNull final MediaConstraints sdpMediaConstraints,
-			@NonNull final BigInteger feederId,
+			@NonNull final MediaConstraints sdpMediaConstraints,
+			@NonNull final PublisherInfo info,
 			final boolean isVideoCallEnabled) {
 
 			super(videoRoom, session, callback,
@@ -1176,7 +1188,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 				isVideoCallEnabled);
 
 			if (DEBUG) Log.v(TAG, "Subscriber:");
-			this.feederId = feederId;
+			this.info = info;
 		}
 		
 		@NonNull
@@ -1186,7 +1198,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		}
 
 		protected BigInteger getFeedId() {
-			return feederId;
+			return info.id;
 		}
 
 		@Override

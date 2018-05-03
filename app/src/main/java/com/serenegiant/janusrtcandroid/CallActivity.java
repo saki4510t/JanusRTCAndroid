@@ -41,6 +41,8 @@ import org.appspot.apprtc.AppRTCAudioManager;
 import org.appspot.apprtc.AppRTCAudioManager.AudioDevice;
 import org.appspot.apprtc.AppRTCAudioManager.AudioManagerEvents;
 import com.serenegiant.janus.JanusClient;
+import com.serenegiant.janus.response.PublisherInfo;
+
 import org.appspot.apprtc.RoomConnectionParameters;
 import org.appspot.apprtc.DataChannelParameters;
 import org.appspot.apprtc.PeerConnectionParameters;
@@ -65,6 +67,7 @@ import org.webrtc.VideoRenderer;
 import org.webrtc.VideoSink;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -873,7 +876,17 @@ public class CallActivity extends BaseActivity
 				}
 			});
 		}
-
+		
+		@Override
+		public void onEnter(final PublisherInfo info) {
+			if (DEBUG) Log.v(TAG, "onEnter:" + info);
+		}
+		
+		@Override
+		public void onLeave(final PublisherInfo info, final int numUsers) {
+			if (DEBUG) Log.v(TAG, "onLeave:" + info + ",numUsers=" + numUsers);
+		}
+		
 		@Override
 		public void onRemoteDescription(final SessionDescription sdp) {
 			if (DEBUG) Log.v(TAG, "onRemoteDescription:");
