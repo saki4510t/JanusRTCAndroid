@@ -1564,7 +1564,7 @@ public class JanusRTCClient implements JanusClient {
 	private void longPoll() {
 		if (DEBUG) Log.v(TAG, "longPoll:");
 		if (mSession == null) return;
-		final Call<ResponseBody> call = mLongPoll.getEvent(mSession.id());
+		final Call<ResponseBody> call = mLongPoll.getEvent(apiName, mSession.id());
 		addCall(call);
 		call.enqueue(new Callback<ResponseBody>() {
 			@Override
