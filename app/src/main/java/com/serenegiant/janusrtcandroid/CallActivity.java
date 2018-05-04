@@ -67,12 +67,14 @@ import org.webrtc.VideoRenderer;
 import org.webrtc.VideoSink;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
+
+import okhttp3.OkHttpClient;
+import retrofit2.Retrofit;
 
 /**
  * Activity for peer connection call setup, call waiting
@@ -810,6 +812,21 @@ public class CallActivity extends BaseActivity
 	private final JanusCallback mJanusCallback
 		= new JanusCallback() {
 
+		@NonNull
+		public OkHttpClient.Builder setupOkHttp(
+			@NonNull final OkHttpClient.Builder builder) {
+
+			if (DEBUG) Log.v(TAG, "setupOkHttp:");
+			return builder;
+		}
+	
+		@NonNull
+		public Retrofit.Builder setupRetrofit(@NonNull final Retrofit.Builder builder) {
+
+			if (DEBUG) Log.v(TAG, "setupRetrofit:");
+			return builder;
+		}
+	
 		@Override
 		public void onConnectServer(@NonNull final JanusRTCClient client) {
 			if (DEBUG) Log.v(TAG, "onConnectServer:");

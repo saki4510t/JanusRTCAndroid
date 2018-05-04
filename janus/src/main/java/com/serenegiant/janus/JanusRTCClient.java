@@ -1739,7 +1739,7 @@ public class JanusRTCClient implements JanusClient {
 			logging.setLevel(HttpLoggingInterceptor.Level.BODY);
 			builder.addInterceptor(logging);
 		}
-		final OkHttpClient result = builder.build();
+		final OkHttpClient result = mCallback.setupOkHttp(builder).build();
 		if (sOkHttpClient == null) {
 			sOkHttpClient = result;
 		}
@@ -1761,11 +1761,12 @@ public class JanusRTCClient implements JanusClient {
 //			.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)	// IDENTITY
 			.registerTypeAdapter(Date.class, new DateTypeAdapter())
 			.create();
-		return new Retrofit.Builder()
-			.baseUrl(baseUrl)
-			.addConverterFactory(GsonConverterFactory.create(gson))
-			.client(client)
-			.build();
+		return mCallback.setupRetrofit(
+			new Retrofit.Builder()
+				.baseUrl(baseUrl)
+				.addConverterFactory(GsonConverterFactory.create(gson))
+				.client(client)
+			).build();
 	}
 
 }

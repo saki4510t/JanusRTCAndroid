@@ -30,7 +30,16 @@ import org.webrtc.SessionDescription;
 import java.math.BigInteger;
 import java.util.List;
 
+import okhttp3.OkHttpClient;
+import retrofit2.Retrofit;
+
 public interface JanusCallback {
+	@NonNull
+	public OkHttpClient.Builder setupOkHttp(@NonNull final OkHttpClient.Builder builder);
+
+	@NonNull
+	public Retrofit.Builder setupRetrofit(@NonNull final Retrofit.Builder builder);
+
 	/**
 	 * callback when JanusRTCClient connects janus-gateway server
 	 * @param client
