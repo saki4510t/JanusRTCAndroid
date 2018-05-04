@@ -45,60 +45,60 @@ import retrofit2.http.Path;
  * API interface of videoroom plugin on janus-gateway over http://https
  */
 public interface VideoRoom {
-	@POST("/janus")
+	@POST("janus")
 	public Call<Session> create(@Body final Creator create);
 
-	@GET("/janus/info")
+	@GET("janus/info")
 	public Call<ServerInfo> getInfo();
 
-	@POST("/janus/{session_id}")
+	@POST("janus/{session_id}")
 	public Call<Plugin> attach(
 		@Path("session_id") final BigInteger sessionId,
 		@Body final Attach attach);
 	
-	@POST("/janus/{session_id}/{plugin_id}")
+	@POST("janus/{session_id}/{plugin_id}")
 	public Call<EventRoom> join(
 		@Path("session_id") final BigInteger sessionId,
 		@Path("plugin_id") final BigInteger pluginId,
 		@Body final Message message);
 
-	@POST("/janus/{session_id}/{plugin_id}")
+	@POST("janus/{session_id}/{plugin_id}")
 	public Call<EventRoom> offer(
 		@Path("session_id") final BigInteger sessionId,
 		@Path("plugin_id") final BigInteger pluginId,
 		@Body final Message message);
 
-	@POST("/janus/{session_id}/{plugin_id}")
+	@POST("janus/{session_id}/{plugin_id}")
 	public Call<EventRoom> trickle(
 		@Path("session_id") final BigInteger sessionId,
 		@Path("plugin_id") final BigInteger pluginId,
 		@Body final Trickle trickle);
 	
-	@POST("/janus/{session_id}/{plugin_id}")
+	@POST("janus/{session_id}/{plugin_id}")
 	public Call<EventRoom> trickleCompleted(
 		@Path("session_id") final BigInteger sessionId,
 		@Path("plugin_id") final BigInteger pluginId,
 		@Body final TrickleCompleted trickle);
 
-	@POST("/janus/{session_id}/{plugin_id}")
+	@POST("janus/{session_id}/{plugin_id}")
 	public Call<ResponseBody> send(
 		@Path("session_id") final BigInteger sessionId,
 		@Path("plugin_id") final BigInteger pluginId,
 		@Body final Message message);
 	
-	@POST("/janus/{session_id}/{plugin_id}")
+	@POST("janus/{session_id}/{plugin_id}")
 	public Call<Void> detach(
 		@Path("session_id") final BigInteger sessionId,
 		@Path("plugin_id") final BigInteger pluginId,
 		@Body final Detach detach);
 	
-	@POST("/janus/{session_id}/{plugin_id}")
+	@POST("janus/{session_id}/{plugin_id}")
 	public Call<Void> hangup(
 		@Path("session_id") final BigInteger sessionId,
 		@Path("plugin_id") final BigInteger pluginId,
 		@Body final Hangup hangup);
 	
-	@POST("/janus/{session_id}")
+	@POST("janus/{session_id}")
 	public Call<Void> destroy(
 		@Path("session_id") final BigInteger sessionId,
 		@Body final Destroy destroy);

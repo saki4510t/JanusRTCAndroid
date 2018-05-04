@@ -38,18 +38,18 @@ import retrofit2.http.Path;
  * API interface of janus-gateway over http://https
  */
 public interface Janus {
-	@POST("/janus")
+	@POST("janus")
 	public Call<Session> create(@Body final Creator create);
 
-	@GET("/janus/info")
+	@GET("janus/info")
 	public Call<ServerInfo> getInfo();
 
-	@POST("/janus/{session_id}")
+	@POST("janus/{session_id}")
 	public Call<Plugin> attach(
 		@Path("session_id") final BigInteger sessionId,
 		@Body final Attach attach);
 	
-	@POST("/janus/{session_id}")
+	@POST("janus/{session_id}")
 	public Call<Void> destroy(
 		@Path("session_id") final BigInteger sessionId,
 		@Body final Destroy destroy);
