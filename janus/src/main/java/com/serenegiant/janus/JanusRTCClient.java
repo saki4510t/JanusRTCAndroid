@@ -486,6 +486,10 @@ public class JanusRTCClient implements JanusClient {
 			.setVideoEncoderFactory(encoderFactory)
 			.setVideoDecoderFactory(decoderFactory)
 			.createPeerConnectionFactory();
+		// Set INFO libjingle logging.
+		// NOTE: this _must_ happen while |factory| is alive!
+		Logging.enableLogToDebugOutput(Logging.Severity.LS_ERROR);
+		
 		if (DEBUG) Log.d(TAG, "Peer connection factory created.");
 	}
 
@@ -741,10 +745,6 @@ public class JanusRTCClient implements JanusClient {
 				dataChannel = peerConnection.createDataChannel("ApprtcDemo data", init);
 			}
 	
-			// Set INFO libjingle logging.
-			// NOTE: this _must_ happen while |factory| is alive!
-			Logging.enableLogToDebugOutput(Logging.Severity.LS_INFO);
-			
 			if (isVideoCallEnabled()) {
 				peerConnection.addTrack(createVideoTrack(videoCapturer), mediaStreamLabels);
 				// Publisherは送信のみなのでリモートビデオトラックは不要
