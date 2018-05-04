@@ -50,5 +50,5 @@ ext {
 
 	versionCodeNum = 31
 	versionNameString = '1.7.2'
-	janusVersionNameString = '1.2.0'
+	janusVersionNameString = '1.2.1'
 }
