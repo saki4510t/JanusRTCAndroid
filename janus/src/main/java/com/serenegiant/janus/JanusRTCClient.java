@@ -134,6 +134,8 @@ public class JanusRTCClient implements JanusClient {
 	private final Object mSync = new Object();
 	private final WeakReference<Context> mWeakContext;
 	@NonNull
+	private final String apiName;
+	@NonNull
 	private final EglBase rootEglBase;
 	@NonNull
 	private final PeerConnectionParameters peerConnectionParameters;
@@ -211,7 +213,27 @@ public class JanusRTCClient implements JanusClient {
 		@NonNull final JanusCallback callback,
 		@NonNull final String baseUrl) {
 
+		this(appContext, "janus", eglBase,
+			peerConnectionParameters, callback, baseUrl);
+	}
+	
+	/**
+	 * コンストラクタ
+	 * @param appContext
+	 * @param eglBase
+	 * @param peerConnectionParameters
+	 * @param callback
+	 * @param baseUrl
+	 */
+	public JanusRTCClient(@NonNull final Context appContext,
+		@NonNull final String apiName,
+		@NonNull final EglBase eglBase,
+		@NonNull final PeerConnectionParameters peerConnectionParameters,
+		@NonNull final JanusCallback callback,
+		@NonNull final String baseUrl) {
+
 		this.mWeakContext = new WeakReference<>(appContext);
+		this.apiName = apiName;
 		this.rootEglBase = eglBase;
 		this.peerConnectionParameters = peerConnectionParameters;
 		this.mCallback = callback;
@@ -697,7 +719,8 @@ public class JanusRTCClient implements JanusClient {
 		final List<String> mediaStreamLabels = Collections.singletonList("ARDAMS");
 		
 		final JanusPlugin.Publisher publisher
-			= new JanusPlugin.Publisher(mJanus, mSession,
+			= new JanusPlugin.Publisher(apiName,
+				mJanus, mSession,
 				mJanusPluginCallback,
 				peerConnectionParameters, sdpMediaConstraints,
 				isVideoCallEnabled());
@@ -840,8 +863,8 @@ public class JanusRTCClient implements JanusClient {
 		rtcConfig.enableDtlsSrtp = !peerConnectionParameters.loopback;
 		rtcConfig.sdpSemantics = SDP_SEMANTICS;
 		
-		final JanusPlugin.Subscriber subscriber = new JanusPlugin.Subscriber(mJanus,
-			mSession, mJanusPluginCallback,
+		final JanusPlugin.Subscriber subscriber = new JanusPlugin.Subscriber(apiName,
+			mJanus, mSession, mJanusPluginCallback,
 			peerConnectionParameters, sdpMediaConstraints,
 			info, isVideoCallEnabled());
 
@@ -1193,7 +1216,7 @@ public class JanusRTCClient implements JanusClient {
 	private void requestServerInfo() {
 		if (DEBUG) Log.v(TAG, "requestServerInfo:");
 		// Janus-gatewayサーバー情報を取得
-		final Call<ServerInfo> call = mJanus.getInfo();
+		final Call<ServerInfo> call = mJanus.getInfo(apiName);
 		addCall(call);
 		call.enqueue(new Callback<ServerInfo>() {
 			@Override
@@ -1224,7 +1247,7 @@ public class JanusRTCClient implements JanusClient {
 	private void createSession() {
 		if (DEBUG) Log.v(TAG, "createSession:");
 		// サーバー情報を取得できたらセッションを生成
-		final Call<Session> call = mJanus.create(new Creator());
+		final Call<Session> call = mJanus.create(apiName, new Creator());
 		addCall(call);
 		call.enqueue(new Callback<Session>() {
 			@Override
@@ -1287,7 +1310,7 @@ public class JanusRTCClient implements JanusClient {
 		detachAll();
 		if (mSession != null) {
 			final Destroy destroy = new Destroy(mSession, null);
-			final Call<Void> call = mJanus.destroy(mSession.id(), destroy);
+			final Call<Void> call = mJanus.destroy(apiName, mSession.id(), destroy);
 			addCall(call);
 			try {
 				call.execute();

@@ -196,6 +196,8 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 	private final List<IceCandidate> queuedRemoteCandidates = new ArrayList<>();
 
 	@NonNull
+	protected final String apiName;
+	@NonNull
 	protected final VideoRoom mVideoRoom;
 	@NonNull
 	protected final Session mSession;
@@ -219,13 +221,15 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 	 * @param session
 	 * @param callback
 	 */
-	public JanusPlugin(@NonNull VideoRoom videoRoom,
+	public JanusPlugin(@NonNull final String apiName,
+		@NonNull VideoRoom videoRoom,
 		@NonNull final Session session,
 		@NonNull final JanusPluginCallback callback,
 		@NonNull final PeerConnectionParameters peerConnectionParameters,
 		@NonNull final MediaConstraints sdpMediaConstraints,
 		final boolean isVideoCallEnabled) {
 		
+		this.apiName = apiName;
 		this.mVideoRoom = videoRoom;
 		this.mSession = session;
 		this.mCallback = callback;
@@ -365,7 +369,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		final Attach attach = new Attach(mSession,
 			"janus.plugin.videoroom",
 			null);
-		final Call<Plugin> call = mVideoRoom.attach(mSession.id(), attach);
+		final Call<Plugin> call = mVideoRoom.attach(apiName, mSession.id(), attach);
 		addCall(call);
 		call.enqueue(new Callback<Plugin>() {
 			@Override
@@ -413,7 +417,8 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 			new Join(1234/*FIXME*/, getPType(), Build.MODEL, getFeedId()),
 			mTransactionCallback);
 		if (DEBUG) Log.v(TAG, "join:" + message);
-		final Call<EventRoom> call = mVideoRoom.join(mSession.id(), mPlugin.id(), message);
+		final Call<EventRoom> call = mVideoRoom.join(apiName,
+			mSession.id(), mPlugin.id(), message);
 		addCall(call);
 		try {
 			final Response<EventRoom> response = call.execute();
@@ -452,7 +457,8 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 			mRoomState = RoomState.CLOSED;
 			if (DEBUG) Log.v(TAG, "detach:");
 			cancelCall();
-			final Call<Void> call = mVideoRoom.detach(mSession.id(), mPlugin.id(),
+			final Call<Void> call = mVideoRoom.detach(apiName,
+				mSession.id(), mPlugin.id(),
 				new Detach(mSession, mTransactionCallback));
 			addCall(call);
 			try {
@@ -486,7 +492,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 			reportError(new RuntimeException("Sending offer SDP in non connected state."));
 			return;
 		}
-		final Call<EventRoom> call = mVideoRoom.offer(
+		final Call<EventRoom> call = mVideoRoom.offer(apiName,
 			mSession.id(),
 			mPlugin.id(),
 			new Message(mRoom,
@@ -535,7 +541,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 			Log.e(TAG, "Sending answer in loopback mode.");
 			return;
 		}
-		final Call<ResponseBody> call = mVideoRoom.send(
+		final Call<ResponseBody> call = mVideoRoom.send(apiName,
 			mSession.id(),
 			mPlugin.id(),
 			new Message(mRoom,
@@ -561,13 +567,13 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 
 		final Call<EventRoom> call;
 		if (candidate != null) {
-			call = mVideoRoom.trickle(
+			call = mVideoRoom.trickle(apiName,
 				mSession.id(),
 				mPlugin.id(),
 				new Trickle(mRoom, candidate, mTransactionCallback)
 			);
 		} else {
-			call = mVideoRoom.trickleCompleted(
+			call = mVideoRoom.trickleCompleted(apiName,
 				mSession.id(),
 				mPlugin.id(),
 				new TrickleCompleted(mRoom, mTransactionCallback)
@@ -1099,14 +1105,15 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		 * コンストラクタ
 		 * @param session
 		 */
-		public Publisher(@NonNull VideoRoom videoRoom,
+		public Publisher(@NonNull final String apiName,
+			@NonNull VideoRoom videoRoom,
 			@NonNull final Session session,
 			@NonNull final JanusPluginCallback callback,
 			@NonNull final PeerConnectionParameters peerConnectionParameters,
 			@NonNull final MediaConstraints sdpMediaConstraints,
 			final boolean isVideoCallEnabled) {
 
-			super(videoRoom, session, callback,
+			super(apiName, videoRoom, session, callback,
 				peerConnectionParameters,
 				sdpMediaConstraints,
 				isVideoCallEnabled);
@@ -1174,7 +1181,8 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		 * コンストラクタ
 		 * @param session
 		 */
-		public Subscriber(@NonNull VideoRoom videoRoom,
+		public Subscriber(@NonNull final String apiName,
+			@NonNull VideoRoom videoRoom,
 			@NonNull final Session session,
 			@NonNull final JanusPluginCallback callback,
 			@NonNull final PeerConnectionParameters peerConnectionParameters,
@@ -1182,7 +1190,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 			@NonNull final PublisherInfo info,
 			final boolean isVideoCallEnabled) {
 
-			super(videoRoom, session, callback,
+			super(apiName, videoRoom, session, callback,
 				peerConnectionParameters,
 				sdpMediaConstraints,
 				isVideoCallEnabled);
