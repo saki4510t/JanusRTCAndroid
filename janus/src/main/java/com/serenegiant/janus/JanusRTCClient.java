@@ -1730,12 +1730,14 @@ public class JanusRTCClient implements JanusClient {
 	
 		if (DEBUG) Log.v(TAG, "setupHttpClient:");
 
-		final OkHttpClient.Builder builder;
+		OkHttpClient.Builder builder;
 		if (sOkHttpClient == null) {
 		 	builder = new OkHttpClient.Builder();
 		} else {
 			builder = sOkHttpClient.newBuilder();
 		}
+		builder = mCallback.setupOkHttp(builder);
+		final List<Interceptor> interceptors = builder.interceptors();
 		builder
 			.addInterceptor(new Interceptor() {
 				@Override
@@ -1751,18 +1753,27 @@ public class JanusRTCClient implements JanusClient {
 					okhttp3.Response response = chain.proceed(request);
 					return response;
 				}
-			})
+			});
+		// ログ出力設定
+		if (DEBUG) {
+			boolean hasLogging = false;
+			for (final Interceptor interceptor: interceptors) {
+				if (interceptor instanceof HttpLoggingInterceptor) {
+					hasLogging = true;
+				}
+			}
+			if (!hasLogging) {
+				final HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+				logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+				builder.addInterceptor(logging);
+			}
+		}
+		
+		builder
 			.connectTimeout(HTTP_CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)	// 接続タイムアウト
 			.readTimeout(readTimeoutMs, TimeUnit.MILLISECONDS)		// 読み込みタイムアウト
 			.writeTimeout(writeTimeoutMs, TimeUnit.MILLISECONDS);	// 書き込みタイムアウト
-		
-		// ログ出力設定
-		if (DEBUG) {
-			final HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-			logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-			builder.addInterceptor(logging);
-		}
-		final OkHttpClient result = mCallback.setupOkHttp(builder).build();
+		final OkHttpClient result = builder.build();
 		if (sOkHttpClient == null) {
 			sOkHttpClient = result;
 		}
