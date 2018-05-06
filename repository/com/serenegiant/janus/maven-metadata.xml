@@ -3,7 +3,7 @@
   <groupId>com.serenegiant</groupId>
   <artifactId>janus</artifactId>
   <versioning>
-    <release>1.2.4</release>
+    <release>1.2.5</release>
     <versions>
       <version>1.0.0</version>
       <version>1.0.1</version>
@@ -13,7 +13,8 @@
       <version>1.2.2</version>
       <version>1.2.3</version>
       <version>1.2.4</version>
+      <version>1.2.5</version>
     </versions>
-    <lastUpdated>20180504201240</lastUpdated>
+    <lastUpdated>20180506075319</lastUpdated>
   </versioning>
 </metadata>
