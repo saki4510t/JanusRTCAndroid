@@ -31,7 +31,8 @@ import javax.annotation.Nullable;
  * Anything less than the threshold value and the sensor  returns "NEAR".
  */
 public class AppRTCProximitySensor implements SensorEventListener {
-	private static final String TAG = "AppRTCProximitySensor";
+	private static final boolean DEBUG = false; // set false on production
+	private static final String TAG = AppRTCProximitySensor.class.getSimpleName();
 	
 	// This class should be created, started and stopped on one thread
 	// (e.g. the main thread). We use |nonThreadSafe| to ensure that this is
@@ -52,7 +53,7 @@ public class AppRTCProximitySensor implements SensorEventListener {
 	}
 	
 	private AppRTCProximitySensor(Context context, Runnable sensorStateListener) {
-		Log.d(TAG, "AppRTCProximitySensor" + AppRTCUtils.getThreadInfo());
+		if (DEBUG) Log.d(TAG, "AppRTCProximitySensor" + AppRTCUtils.getThreadInfo());
 		onSensorStateListener = sensorStateListener;
 		sensorManager = ((SensorManager) context.getSystemService(Context.SENSOR_SERVICE));
 	}
@@ -63,7 +64,7 @@ public class AppRTCProximitySensor implements SensorEventListener {
 	 */
 	public boolean start() {
 		threadChecker.checkIsOnValidThread();
-		Log.d(TAG, "start" + AppRTCUtils.getThreadInfo());
+		if (DEBUG) Log.d(TAG, "start" + AppRTCUtils.getThreadInfo());
 		if (!initDefaultSensor()) {
 			// Proximity sensor is not supported on this device.
 			return false;
@@ -77,7 +78,7 @@ public class AppRTCProximitySensor implements SensorEventListener {
 	 */
 	public void stop() {
 		threadChecker.checkIsOnValidThread();
-		Log.d(TAG, "stop" + AppRTCUtils.getThreadInfo());
+		if (DEBUG) Log.d(TAG, "stop" + AppRTCUtils.getThreadInfo());
 		if (proximitySensor == null) {
 			return;
 		}
@@ -109,10 +110,10 @@ public class AppRTCProximitySensor implements SensorEventListener {
 		// avoid blocking.
 		float distanceInCentimeters = event.values[0];
 		if (distanceInCentimeters < proximitySensor.getMaximumRange()) {
-			Log.d(TAG, "Proximity sensor => NEAR state");
+			if (DEBUG) Log.d(TAG, "Proximity sensor => NEAR state");
 			lastStateReportIsNear = true;
 		} else {
-			Log.d(TAG, "Proximity sensor => FAR state");
+			if (DEBUG) Log.d(TAG, "Proximity sensor => FAR state");
 			lastStateReportIsNear = false;
 		}
 		
@@ -122,7 +123,7 @@ public class AppRTCProximitySensor implements SensorEventListener {
 			onSensorStateListener.run();
 		}
 		
-		Log.d(TAG, "onSensorChanged" + AppRTCUtils.getThreadInfo() + ": "
+		if (DEBUG) Log.d(TAG, "onSensorChanged" + AppRTCUtils.getThreadInfo() + ": "
 			+ "accuracy=" + event.accuracy + ", timestamp=" + event.timestamp + ", distance="
 			+ event.values[0]);
 	}
@@ -168,6 +169,6 @@ public class AppRTCProximitySensor implements SensorEventListener {
 			info.append(", reporting mode: ").append(proximitySensor.getReportingMode());
 			info.append(", isWakeUpSensor: ").append(proximitySensor.isWakeUpSensor());
 		}
-		Log.d(TAG, info.toString());
+		if (DEBUG) Log.d(TAG, info.toString());
 	}
 }

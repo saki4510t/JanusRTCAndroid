@@ -37,7 +37,8 @@ import javax.annotation.Nullable;
  * AppRTC demo.
  */
 public class AppRTCBluetoothManager {
-	private static final String TAG = "AppRTCBluetoothManager";
+	private static final boolean DEBUG = false; // set false on production
+	private static final String TAG = AppRTCBluetoothManager.class.getSimpleName();
 
 	// Timeout interval for starting or stopping audio to a Bluetooth SCO device.
 	private static final int BLUETOOTH_SCO_TIMEOUT_MS = 4000;
@@ -104,11 +105,11 @@ public class AppRTCBluetoothManager {
 			if (profile != BluetoothProfile.HEADSET || bluetoothState == State.UNINITIALIZED) {
 				return;
 			}
-			Log.d(TAG, "BluetoothServiceListener.onServiceConnected: BT state=" + bluetoothState);
+			if (DEBUG) Log.d(TAG, "BluetoothServiceListener.onServiceConnected: BT state=" + bluetoothState);
 			// Android only supports one connected Bluetooth Headset at a time.
 			bluetoothHeadset = (BluetoothHeadset) proxy;
 			updateAudioDeviceState();
-			Log.d(TAG, "onServiceConnected done: BT state=" + bluetoothState);
+			if (DEBUG) Log.d(TAG, "onServiceConnected done: BT state=" + bluetoothState);
 		}
 
 		@Override
@@ -117,13 +118,13 @@ public class AppRTCBluetoothManager {
 			if (profile != BluetoothProfile.HEADSET || bluetoothState == State.UNINITIALIZED) {
 				return;
 			}
-			Log.d(TAG, "BluetoothServiceListener.onServiceDisconnected: BT state=" + bluetoothState);
+			if (DEBUG) Log.d(TAG, "BluetoothServiceListener.onServiceDisconnected: BT state=" + bluetoothState);
 			stopScoAudio();
 			bluetoothHeadset = null;
 			bluetoothDevice = null;
 			bluetoothState = State.HEADSET_UNAVAILABLE;
 			updateAudioDeviceState();
-			Log.d(TAG, "onServiceDisconnected done: BT state=" + bluetoothState);
+			if (DEBUG) Log.d(TAG, "onServiceDisconnected done: BT state=" + bluetoothState);
 		}
 	}
 
@@ -143,7 +144,7 @@ public class AppRTCBluetoothManager {
 			if (action.equals(BluetoothHeadset.ACTION_CONNECTION_STATE_CHANGED)) {
 				final int state =
 					intent.getIntExtra(BluetoothHeadset.EXTRA_STATE, BluetoothHeadset.STATE_DISCONNECTED);
-				Log.d(TAG, "BluetoothHeadsetBroadcastReceiver.onReceive: "
+				if (DEBUG) Log.d(TAG, "BluetoothHeadsetBroadcastReceiver.onReceive: "
 					+ "a=ACTION_CONNECTION_STATE_CHANGED, "
 					+ "s=" + stateToString(state) + ", "
 					+ "sb=" + isInitialStickyBroadcast() + ", "
@@ -165,7 +166,7 @@ public class AppRTCBluetoothManager {
 			} else if (action.equals(BluetoothHeadset.ACTION_AUDIO_STATE_CHANGED)) {
 				final int state = intent.getIntExtra(
 					BluetoothHeadset.EXTRA_STATE, BluetoothHeadset.STATE_AUDIO_DISCONNECTED);
-				Log.d(TAG, "BluetoothHeadsetBroadcastReceiver.onReceive: "
+				if (DEBUG) Log.d(TAG, "BluetoothHeadsetBroadcastReceiver.onReceive: "
 					+ "a=ACTION_AUDIO_STATE_CHANGED, "
 					+ "s=" + stateToString(state) + ", "
 					+ "sb=" + isInitialStickyBroadcast() + ", "
@@ -173,7 +174,7 @@ public class AppRTCBluetoothManager {
 				if (state == BluetoothHeadset.STATE_AUDIO_CONNECTED) {
 					cancelTimer();
 					if (bluetoothState == State.SCO_CONNECTING) {
-						Log.d(TAG, "+++ Bluetooth audio SCO is now connected");
+						if (DEBUG) Log.d(TAG, "+++ Bluetooth audio SCO is now connected");
 						bluetoothState = State.SCO_CONNECTED;
 						scoConnectionAttempts = 0;
 						updateAudioDeviceState();
@@ -181,17 +182,17 @@ public class AppRTCBluetoothManager {
 						Log.w(TAG, "Unexpected state BluetoothHeadset.STATE_AUDIO_CONNECTED");
 					}
 				} else if (state == BluetoothHeadset.STATE_AUDIO_CONNECTING) {
-					Log.d(TAG, "+++ Bluetooth audio SCO is now connecting...");
+					if (DEBUG) Log.d(TAG, "+++ Bluetooth audio SCO is now connecting...");
 				} else if (state == BluetoothHeadset.STATE_AUDIO_DISCONNECTED) {
-					Log.d(TAG, "+++ Bluetooth audio SCO is now disconnected");
+					if (DEBUG) Log.d(TAG, "+++ Bluetooth audio SCO is now disconnected");
 					if (isInitialStickyBroadcast()) {
-						Log.d(TAG, "Ignore STATE_AUDIO_DISCONNECTED initial sticky broadcast.");
+						if (DEBUG) Log.d(TAG, "Ignore STATE_AUDIO_DISCONNECTED initial sticky broadcast.");
 						return;
 					}
 					updateAudioDeviceState();
 				}
 			}
-			Log.d(TAG, "onReceive done: BT state=" + bluetoothState);
+			if (DEBUG) Log.d(TAG, "onReceive done: BT state=" + bluetoothState);
 		}
 	}
 
@@ -199,12 +200,12 @@ public class AppRTCBluetoothManager {
 	 * Construction.
 	 */
 	static AppRTCBluetoothManager create(Context context, AppRTCAudioManager audioManager) {
-		Log.d(TAG, "create" + AppRTCUtils.getThreadInfo());
+		if (DEBUG) Log.d(TAG, "create" + AppRTCUtils.getThreadInfo());
 		return new AppRTCBluetoothManager(context, audioManager);
 	}
 
 	protected AppRTCBluetoothManager(Context context, AppRTCAudioManager audioManager) {
-		Log.d(TAG, "ctor");
+		if (DEBUG) Log.d(TAG, "ctor");
 		ThreadUtils.checkIsOnMainThread();
 		apprtcContext = context;
 		apprtcAudioManager = audioManager;
@@ -238,7 +239,7 @@ public class AppRTCBluetoothManager {
 	 */
 	public void start() {
 		ThreadUtils.checkIsOnMainThread();
-		Log.d(TAG, "start");
+		if (DEBUG) Log.d(TAG, "start");
 		if (!hasPermission(apprtcContext, android.Manifest.permission.BLUETOOTH)) {
 			Log.w(TAG, "Process (pid=" + Process.myPid() + ") lacks BLUETOOTH permission");
 			return;
@@ -276,11 +277,11 @@ public class AppRTCBluetoothManager {
 		// Register receiver for change in audio connection state of the Headset profile.
 		bluetoothHeadsetFilter.addAction(BluetoothHeadset.ACTION_AUDIO_STATE_CHANGED);
 		registerReceiver(bluetoothHeadsetReceiver, bluetoothHeadsetFilter);
-		Log.d(TAG, "HEADSET profile state: "
+		if (DEBUG) Log.d(TAG, "HEADSET profile state: "
 			+ stateToString(bluetoothAdapter.getProfileConnectionState(BluetoothProfile.HEADSET)));
-		Log.d(TAG, "Bluetooth proxy for headset profile has started");
+		if (DEBUG) Log.d(TAG, "Bluetooth proxy for headset profile has started");
 		bluetoothState = State.HEADSET_UNAVAILABLE;
-		Log.d(TAG, "start done: BT state=" + bluetoothState);
+		if (DEBUG) Log.d(TAG, "start done: BT state=" + bluetoothState);
 	}
 
 	/**
@@ -288,7 +289,7 @@ public class AppRTCBluetoothManager {
 	 */
 	public void stop() {
 		ThreadUtils.checkIsOnMainThread();
-		Log.d(TAG, "stop: BT state=" + bluetoothState);
+		if (DEBUG) Log.d(TAG, "stop: BT state=" + bluetoothState);
 		if (bluetoothAdapter == null) {
 			return;
 		}
@@ -307,7 +308,7 @@ public class AppRTCBluetoothManager {
 		bluetoothAdapter = null;
 		bluetoothDevice = null;
 		bluetoothState = State.UNINITIALIZED;
-		Log.d(TAG, "stop done: BT state=" + bluetoothState);
+		if (DEBUG) Log.d(TAG, "stop done: BT state=" + bluetoothState);
 	}
 
 	/**
@@ -325,7 +326,7 @@ public class AppRTCBluetoothManager {
 	 */
 	public boolean startScoAudio() {
 		ThreadUtils.checkIsOnMainThread();
-		Log.d(TAG, "startSco: BT state=" + bluetoothState + ", "
+		if (DEBUG) Log.d(TAG, "startSco: BT state=" + bluetoothState + ", "
 			+ "attempts: " + scoConnectionAttempts + ", "
 			+ "SCO is on: " + isScoOn());
 		if (scoConnectionAttempts >= MAX_SCO_CONNECTION_ATTEMPTS) {
@@ -337,7 +338,7 @@ public class AppRTCBluetoothManager {
 			return false;
 		}
 		// Start BT SCO channel and wait for ACTION_AUDIO_STATE_CHANGED.
-		Log.d(TAG, "Starting Bluetooth SCO and waits for ACTION_AUDIO_STATE_CHANGED...");
+		if (DEBUG) Log.d(TAG, "Starting Bluetooth SCO and waits for ACTION_AUDIO_STATE_CHANGED...");
 		// The SCO connection establishment can take several seconds, hence we cannot rely on the
 		// connection to be available when the method returns but instead register to receive the
 		// intent ACTION_SCO_AUDIO_STATE_UPDATED and wait for the state to be SCO_AUDIO_STATE_CONNECTED.
@@ -346,7 +347,7 @@ public class AppRTCBluetoothManager {
 		audioManager.setBluetoothScoOn(true);
 		scoConnectionAttempts++;
 		startTimer();
-		Log.d(TAG, "startScoAudio done: BT state=" + bluetoothState + ", "
+		if (DEBUG) Log.d(TAG, "startScoAudio done: BT state=" + bluetoothState + ", "
 			+ "SCO is on: " + isScoOn());
 		return true;
 	}
@@ -356,7 +357,7 @@ public class AppRTCBluetoothManager {
 	 */
 	public void stopScoAudio() {
 		ThreadUtils.checkIsOnMainThread();
-		Log.d(TAG, "stopScoAudio: BT state=" + bluetoothState + ", "
+		if (DEBUG) Log.d(TAG, "stopScoAudio: BT state=" + bluetoothState + ", "
 			+ "SCO is on: " + isScoOn());
 		if (bluetoothState != State.SCO_CONNECTING && bluetoothState != State.SCO_CONNECTED) {
 			return;
@@ -365,7 +366,7 @@ public class AppRTCBluetoothManager {
 		audioManager.stopBluetoothSco();
 		audioManager.setBluetoothScoOn(false);
 		bluetoothState = State.SCO_DISCONNECTING;
-		Log.d(TAG, "stopScoAudio done: BT state=" + bluetoothState + ", "
+		if (DEBUG) Log.d(TAG, "stopScoAudio done: BT state=" + bluetoothState + ", "
 			+ "SCO is on: " + isScoOn());
 	}
 
@@ -380,7 +381,7 @@ public class AppRTCBluetoothManager {
 		if (bluetoothState == State.UNINITIALIZED || bluetoothHeadset == null) {
 			return;
 		}
-		Log.d(TAG, "updateDevice");
+		if (DEBUG) Log.d(TAG, "updateDevice");
 		// Get connected devices for the headset profile. Returns the set of
 		// devices which are in state STATE_CONNECTED. The BluetoothDevice class
 		// is just a thin wrapper for a Bluetooth hardware address.
@@ -388,17 +389,17 @@ public class AppRTCBluetoothManager {
 		if (devices.isEmpty()) {
 			bluetoothDevice = null;
 			bluetoothState = State.HEADSET_UNAVAILABLE;
-			Log.d(TAG, "No connected bluetooth headset");
+			if (DEBUG) Log.d(TAG, "No connected bluetooth headset");
 		} else {
 			// Always use first device in list. Android only supports one device.
 			bluetoothDevice = devices.get(0);
 			bluetoothState = State.HEADSET_AVAILABLE;
-			Log.d(TAG, "Connected bluetooth headset: "
+			if (DEBUG) Log.d(TAG, "Connected bluetooth headset: "
 				+ "name=" + bluetoothDevice.getName() + ", "
 				+ "state=" + stateToString(bluetoothHeadset.getConnectionState(bluetoothDevice))
 				+ ", SCO audio=" + bluetoothHeadset.isAudioConnected(bluetoothDevice));
 		}
-		Log.d(TAG, "updateDevice done: BT state=" + bluetoothState);
+		if (DEBUG) Log.d(TAG, "updateDevice done: BT state=" + bluetoothState);
 	}
 
 	/**
@@ -432,7 +433,7 @@ public class AppRTCBluetoothManager {
 	 */
 	@SuppressLint("HardwareIds")
 	protected void logBluetoothAdapterInfo(BluetoothAdapter localAdapter) {
-		Log.d(TAG, "BluetoothAdapter: "
+		if (DEBUG) Log.d(TAG, "BluetoothAdapter: "
 			+ "enabled=" + localAdapter.isEnabled() + ", "
 			+ "state=" + stateToString(localAdapter.getState()) + ", "
 			+ "name=" + localAdapter.getName() + ", "
@@ -440,9 +441,9 @@ public class AppRTCBluetoothManager {
 		// Log the set of BluetoothDevice objects that are bonded (paired) to the local adapter.
 		Set<BluetoothDevice> pairedDevices = localAdapter.getBondedDevices();
 		if (!pairedDevices.isEmpty()) {
-			Log.d(TAG, "paired devices:");
+			if (DEBUG) Log.d(TAG, "paired devices:");
 			for (BluetoothDevice device : pairedDevices) {
-				Log.d(TAG, " name=" + device.getName() + ", address=" + device.getAddress());
+				if (DEBUG) Log.d(TAG, " name=" + device.getName() + ", address=" + device.getAddress());
 			}
 		}
 	}
@@ -452,7 +453,7 @@ public class AppRTCBluetoothManager {
 	 */
 	private void updateAudioDeviceState() {
 		ThreadUtils.checkIsOnMainThread();
-		Log.d(TAG, "updateAudioDeviceState");
+		if (DEBUG) Log.d(TAG, "updateAudioDeviceState");
 		apprtcAudioManager.updateAudioDeviceState();
 	}
 
@@ -461,7 +462,7 @@ public class AppRTCBluetoothManager {
 	 */
 	private void startTimer() {
 		ThreadUtils.checkIsOnMainThread();
-		Log.d(TAG, "startTimer");
+		if (DEBUG) Log.d(TAG, "startTimer");
 		handler.postDelayed(bluetoothTimeoutRunnable, BLUETOOTH_SCO_TIMEOUT_MS);
 	}
 
@@ -470,7 +471,7 @@ public class AppRTCBluetoothManager {
 	 */
 	private void cancelTimer() {
 		ThreadUtils.checkIsOnMainThread();
-		Log.d(TAG, "cancelTimer");
+		if (DEBUG) Log.d(TAG, "cancelTimer");
 		handler.removeCallbacks(bluetoothTimeoutRunnable);
 	}
 
@@ -483,7 +484,7 @@ public class AppRTCBluetoothManager {
 		if (bluetoothState == State.UNINITIALIZED || bluetoothHeadset == null) {
 			return;
 		}
-		Log.d(TAG, "bluetoothTimeout: BT state=" + bluetoothState + ", "
+		if (DEBUG) Log.d(TAG, "bluetoothTimeout: BT state=" + bluetoothState + ", "
 			+ "attempts: " + scoConnectionAttempts + ", "
 			+ "SCO is on: " + isScoOn());
 		if (bluetoothState != State.SCO_CONNECTING) {
@@ -495,10 +496,10 @@ public class AppRTCBluetoothManager {
 		if (devices.size() > 0) {
 			bluetoothDevice = devices.get(0);
 			if (bluetoothHeadset.isAudioConnected(bluetoothDevice)) {
-				Log.d(TAG, "SCO connected with " + bluetoothDevice.getName());
+				if (DEBUG) Log.d(TAG, "SCO connected with " + bluetoothDevice.getName());
 				scoConnected = true;
 			} else {
-				Log.d(TAG, "SCO is not connected with " + bluetoothDevice.getName());
+				if (DEBUG) Log.d(TAG, "SCO is not connected with " + bluetoothDevice.getName());
 			}
 		}
 		if (scoConnected) {
@@ -511,7 +512,7 @@ public class AppRTCBluetoothManager {
 			stopScoAudio();
 		}
 		updateAudioDeviceState();
-		Log.d(TAG, "bluetoothTimeout done: BT state=" + bluetoothState);
+		if (DEBUG) Log.d(TAG, "bluetoothTimeout done: BT state=" + bluetoothState);
 	}
 
 	/**

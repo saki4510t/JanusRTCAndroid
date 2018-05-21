@@ -38,8 +38,10 @@ public class SdpUtils {
 
 	@SuppressWarnings("StringSplitter")
 	public static String setStartBitrate(
-		String codec, boolean isVideoCodec, String sdpDescription, int bitrateKbps) {
-		String[] lines = sdpDescription.split("\r\n");
+		final String codec, final boolean isVideoCodec,
+		final String sdpDescription, final int bitrateKbps) {
+
+		final String[] lines = sdpDescription.split("\r\n");
 		int rtpmapLineIndex = -1;
 		boolean sdpFormatUpdated = false;
 		String codecRtpMap = null;
@@ -81,7 +83,7 @@ public class SdpUtils {
 			}
 		}
 		
-		StringBuilder newSdpDescription = new StringBuilder();
+		final StringBuilder newSdpDescription = new StringBuilder();
 		for (int i = 0; i < lines.length; i++) {
 			newSdpDescription.append(lines[i]).append("\r\n");
 			// Append new a=fmtp line if no such line exist for a codec.
@@ -104,7 +106,9 @@ public class SdpUtils {
 	/**
 	 * Returns the line number containing "m=audio|video", or -1 if no such line exists.
 	 */
-	private static int findMediaDescriptionLine(boolean isAudio, String[] sdpLines) {
+	private static int findMediaDescriptionLine(
+		final boolean isAudio, final String[] sdpLines) {
+
 		final String mediaDescription = isAudio ? "m=audio " : "m=video ";
 		for (int i = 0; i < sdpLines.length; ++i) {
 			if (sdpLines[i].startsWith(mediaDescription)) {
@@ -115,7 +119,9 @@ public class SdpUtils {
 	}
 	
 	private static String joinString(
-		Iterable<? extends CharSequence> s, String delimiter, boolean delimiterAtEnd) {
+		final Iterable<? extends CharSequence> s,
+		final String delimiter, final boolean delimiterAtEnd) {
+
 		Iterator<? extends CharSequence> iter = s.iterator();
 		if (!iter.hasNext()) {
 			return "";
@@ -132,7 +138,8 @@ public class SdpUtils {
 	
 	private static @Nullable
 	String movePayloadTypesToFront(
-		List<String> preferredPayloadTypes, String mLine) {
+		final List<String> preferredPayloadTypes, final String mLine) {
+
 		// The format of the media description line should be: m=<media> <port> <proto> <fmt> ...
 		final List<String> origLineParts = Arrays.asList(mLine.split(" "));
 		if (origLineParts.size() <= 3) {
@@ -152,7 +159,9 @@ public class SdpUtils {
 		return joinString(newLineParts, " ", false /* delimiterAtEnd */);
 	}
 	
-	public static String preferCodec(String sdpDescription, String codec, boolean isAudio) {
+	public static String preferCodec(
+		final String sdpDescription, final String codec, final boolean isAudio) {
+
 		final String[] lines = sdpDescription.split("\r\n");
 		final int mLineIndex = findMediaDescriptionLine(isAudio, lines);
 		if (mLineIndex == -1) {

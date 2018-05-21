@@ -34,7 +34,8 @@ import java.util.Set;
  * AppRTCAudioManager manages all audio related parts of the AppRTC demo.
  */
 public class AppRTCAudioManager {
-	private static final String TAG = "AppRTCAudioManager";
+	private static final boolean DEBUG = false; // set false on production
+	private static final String TAG = AppRTCAudioManager.class.getSimpleName();
 	private static final String SPEAKERPHONE_AUTO = "auto";
 	private static final String SPEAKERPHONE_TRUE = "true";
 	private static final String SPEAKERPHONE_FALSE = "false";
@@ -155,7 +156,7 @@ public class AppRTCAudioManager {
 			int state = intent.getIntExtra("state", STATE_UNPLUGGED);
 			int microphone = intent.getIntExtra("microphone", HAS_NO_MIC);
 			String name = intent.getStringExtra("name");
-			Log.d(TAG, "WiredHeadsetReceiver.onReceive" + AppRTCUtils.getThreadInfo() + ": "
+			if (DEBUG) Log.d(TAG, "WiredHeadsetReceiver.onReceive" + AppRTCUtils.getThreadInfo() + ": "
 				+ "a=" + intent.getAction() + ", s="
 				+ (state == STATE_UNPLUGGED ? "unplugged" : "plugged") + ", m="
 				+ (microphone == HAS_MIC ? "mic" : "no mic") + ", n=" + name + ", sb="
@@ -173,7 +174,7 @@ public class AppRTCAudioManager {
 	}
 	
 	private AppRTCAudioManager(Context context) {
-		Log.d(TAG, "ctor");
+		if (DEBUG) Log.d(TAG, "ctor");
 		ThreadUtils.checkIsOnMainThread();
 		apprtcContext = context;
 		audioManager = ((AudioManager) context.getSystemService(Context.AUDIO_SERVICE));
@@ -184,7 +185,7 @@ public class AppRTCAudioManager {
 		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 		useSpeakerphone = sharedPreferences.getString(context.getString(R.string.pref_speakerphone_key),
 			context.getString(R.string.pref_speakerphone_default));
-		Log.d(TAG, "useSpeakerphone: " + useSpeakerphone);
+		if (DEBUG) Log.d(TAG, "useSpeakerphone: " + useSpeakerphone);
 		if (useSpeakerphone.equals(SPEAKERPHONE_FALSE)) {
 			defaultAudioDevice = AudioDevice.EARPIECE;
 		} else {
@@ -200,14 +201,14 @@ public class AppRTCAudioManager {
 			// or removes his hand from the device.
 			this::onProximitySensorChangedState);
 		
-		Log.d(TAG, "defaultAudioDevice: " + defaultAudioDevice);
+		if (DEBUG) Log.d(TAG, "defaultAudioDevice: " + defaultAudioDevice);
 		AppRTCUtils.logDeviceInfo(TAG);
 	}
 	
 	@SuppressWarnings("deprecation")
 	// TODO(henrika): audioManager.requestAudioFocus() is deprecated.
 	public void start(AudioManagerEvents audioManagerEvents) {
-		Log.d(TAG, "start");
+		if (DEBUG) Log.d(TAG, "start");
 		ThreadUtils.checkIsOnMainThread();
 		if (amState == AudioManagerState.RUNNING) {
 			Log.e(TAG, "AudioManager is already active");
@@ -215,7 +216,7 @@ public class AppRTCAudioManager {
 		}
 		// TODO(henrika): perhaps call new method called preInitAudio() here if UNINITIALIZED.
 		
-		Log.d(TAG, "AudioManager starts...");
+		if (DEBUG) Log.d(TAG, "AudioManager starts...");
 		this.audioManagerEvents = audioManagerEvents;
 		amState = AudioManagerState.RUNNING;
 		
@@ -235,6 +236,7 @@ public class AppRTCAudioManager {
 			// logging for now.
 			@Override
 			public void onAudioFocusChange(int focusChange) {
+				if (!DEBUG) return;
 				final String typeOfChange;
 				switch (focusChange) {
 				case AudioManager.AUDIOFOCUS_GAIN:
@@ -270,7 +272,7 @@ public class AppRTCAudioManager {
 		int result = audioManager.requestAudioFocus(audioFocusChangeListener,
 			AudioManager.STREAM_VOICE_CALL, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
 		if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-			Log.d(TAG, "Audio focus request granted for VOICE_CALL streams");
+			if (DEBUG) Log.d(TAG, "Audio focus request granted for VOICE_CALL streams");
 		} else {
 			Log.e(TAG, "Audio focus request failed");
 		}
@@ -300,13 +302,13 @@ public class AppRTCAudioManager {
 		// Register receiver for broadcast intents related to adding/removing a
 		// wired headset.
 		registerReceiver(wiredHeadsetReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
-		Log.d(TAG, "AudioManager started");
+		if (DEBUG) Log.d(TAG, "AudioManager started");
 	}
 	
 	@SuppressWarnings("deprecation")
 	// TODO(henrika): audioManager.abandonAudioFocus() is deprecated.
 	public void stop() {
-		Log.d(TAG, "stop");
+		if (DEBUG) Log.d(TAG, "stop");
 		ThreadUtils.checkIsOnMainThread();
 		if (amState != AudioManagerState.RUNNING) {
 			Log.e(TAG, "Trying to stop AudioManager in incorrect state: " + amState);
@@ -326,7 +328,7 @@ public class AppRTCAudioManager {
 		// Abandon audio focus. Gives the previous focus owner, if any, focus.
 		audioManager.abandonAudioFocus(audioFocusChangeListener);
 		audioFocusChangeListener = null;
-		Log.d(TAG, "Abandoned audio focus for VOICE_CALL streams");
+		if (DEBUG) Log.d(TAG, "Abandoned audio focus for VOICE_CALL streams");
 		
 		if (proximitySensor != null) {
 			proximitySensor.stop();
@@ -334,14 +336,14 @@ public class AppRTCAudioManager {
 		}
 		
 		audioManagerEvents = null;
-		Log.d(TAG, "AudioManager stopped");
+		if (DEBUG) Log.d(TAG, "AudioManager stopped");
 	}
 	
 	/**
 	 * Changes selection of the currently active audio device.
 	 */
 	private void setAudioDeviceInternal(AudioDevice device) {
-		Log.d(TAG, "setAudioDeviceInternal(device=" + device + ")");
+		if (DEBUG) Log.d(TAG, "setAudioDeviceInternal(device=" + device + ")");
 		AppRTCUtils.assertIsTrue(audioDevices.contains(device));
 		
 		switch (device) {
@@ -385,7 +387,7 @@ public class AppRTCAudioManager {
 			Log.e(TAG, "Invalid default audio device selection");
 			break;
 		}
-		Log.d(TAG, "setDefaultAudioDevice(device=" + defaultAudioDevice + ")");
+		if (DEBUG) Log.d(TAG, "setDefaultAudioDevice(device=" + defaultAudioDevice + ")");
 		updateAudioDeviceState();
 	}
 	
@@ -476,10 +478,10 @@ public class AppRTCAudioManager {
 			for (AudioDeviceInfo device : devices) {
 				final int type = device.getType();
 				if (type == AudioDeviceInfo.TYPE_WIRED_HEADSET) {
-					Log.d(TAG, "hasWiredHeadset: found wired headset");
+					if (DEBUG) Log.d(TAG, "hasWiredHeadset: found wired headset");
 					return true;
 				} else if (type == AudioDeviceInfo.TYPE_USB_DEVICE) {
-					Log.d(TAG, "hasWiredHeadset: found USB audio device");
+					if (DEBUG) Log.d(TAG, "hasWiredHeadset: found USB audio device");
 					return true;
 				}
 			}
@@ -493,10 +495,10 @@ public class AppRTCAudioManager {
 	 */
 	public void updateAudioDeviceState() {
 		ThreadUtils.checkIsOnMainThread();
-		Log.d(TAG, "--- updateAudioDeviceState: "
+		if (DEBUG) Log.d(TAG, "--- updateAudioDeviceState: "
 			+ "wired headset=" + hasWiredHeadset + ", "
 			+ "BT state=" + bluetoothManager.getState());
-		Log.d(TAG, "Device status: "
+		if (DEBUG) Log.d(TAG, "Device status: "
 			+ "available=" + audioDevices + ", "
 			+ "selected=" + selectedAudioDevice + ", "
 			+ "user selected=" + userSelectedAudioDevice);
@@ -569,7 +571,7 @@ public class AppRTCAudioManager {
 		if (bluetoothManager.getState() == AppRTCBluetoothManager.State.HEADSET_AVAILABLE
 			|| bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_CONNECTING
 			|| bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_CONNECTED) {
-			Log.d(TAG, "Need BT audio: start=" + needBluetoothAudioStart + ", "
+			if (DEBUG) Log.d(TAG, "Need BT audio: start=" + needBluetoothAudioStart + ", "
 				+ "stop=" + needBluetoothAudioStop + ", "
 				+ "BT state=" + bluetoothManager.getState());
 		}
@@ -612,7 +614,7 @@ public class AppRTCAudioManager {
 		if (newAudioDevice != selectedAudioDevice || audioDeviceSetUpdated) {
 			// Do the required device switch.
 			setAudioDeviceInternal(newAudioDevice);
-			Log.d(TAG, "New device status: "
+			if (DEBUG) Log.d(TAG, "New device status: "
 				+ "available=" + audioDevices + ", "
 				+ "selected=" + newAudioDevice);
 			if (audioManagerEvents != null) {
@@ -620,6 +622,6 @@ public class AppRTCAudioManager {
 				audioManagerEvents.onAudioDeviceChanged(selectedAudioDevice, audioDevices);
 			}
 		}
-		Log.d(TAG, "--- updateAudioDeviceState done");
+		if (DEBUG) Log.d(TAG, "--- updateAudioDeviceState done");
 	}
 }
