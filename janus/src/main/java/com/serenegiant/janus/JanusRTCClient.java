@@ -67,7 +67,6 @@ import org.webrtc.SoftwareVideoEncoderFactory;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoDecoderFactory;
 import org.webrtc.VideoEncoderFactory;
-import org.webrtc.VideoRenderer;
 import org.webrtc.VideoSink;
 import org.webrtc.VideoSource;
 import org.webrtc.VideoTrack;
@@ -168,7 +167,7 @@ public class JanusRTCClient implements JanusClient {
 	@Nullable
 	private VideoSource videoSource;
 	@Nullable
-	private List<VideoRenderer.Callbacks> remoteRenders;
+	private List<VideoSink> remoteSinks;
 	@Nullable
 	private VideoTrack remoteVideoTrack;
 	@Nullable
@@ -297,12 +296,12 @@ public class JanusRTCClient implements JanusClient {
 	 */
 	@Override
 	public void createPeerConnection(final VideoSink localRender,
-		final List<VideoRenderer.Callbacks> remoteRenders,
+		final List<VideoSink> remoteRenders,
 		final VideoCapturer videoCapturer) {
 
 		if (DEBUG) Log.v(TAG, "createPeerConnection:");
 		this.localRender = localRender;
-		this.remoteRenders = remoteRenders;
+		this.remoteSinks = remoteRenders;
 		this.videoCapturer = videoCapturer;
 		executor.execute(() -> {
 			try {
@@ -643,7 +642,7 @@ public class JanusRTCClient implements JanusClient {
 
 	private boolean isVideoCallEnabled() {
 		return peerConnectionParameters.videoCallEnabled
-			&& (remoteRenders != null)
+			&& (remoteSinks != null)
 			&& (videoCapturer != null);
 	}
 
@@ -890,8 +889,8 @@ public class JanusRTCClient implements JanusClient {
 				remoteVideoTrack = getRemoteVideoTrack(peerConnection);
 				if (remoteVideoTrack != null) {
 					remoteVideoTrack.setEnabled(renderVideo);
-					for (VideoRenderer.Callbacks remoteRender : remoteRenders) {
-						remoteVideoTrack.addRenderer(new VideoRenderer(remoteRender));
+					for (final VideoSink remoteSink : remoteSinks) {
+						remoteVideoTrack.addSink(remoteSink);
 					}
 				} else {
 					Log.w(TAG, "createSubscriber: remoteVideoTrack is null");
@@ -1053,9 +1052,9 @@ public class JanusRTCClient implements JanusClient {
 				mRemoteStream = remoteStream;
 				final VideoTrack videoTrack = remoteStream.videoTracks.get(0);
 				if (videoTrack != null) {
-					for (VideoRenderer.Callbacks remoteRender : remoteRenders) {
-						if (DEBUG) Log.v(TAG, "onAddRemoteStream:add " + remoteRender);
-						videoTrack.addRenderer(new VideoRenderer(remoteRender));
+					for (VideoSink remoteSink : remoteSinks) {
+						if (DEBUG) Log.v(TAG, "onAddRemoteStream:add " + remoteSink);
+						videoTrack.addSink(remoteSink);
 					}
 					videoTrack.setEnabled(renderVideo);
 					remoteVideoTrack = videoTrack;
@@ -1355,7 +1354,7 @@ public class JanusRTCClient implements JanusClient {
 			saveRecordedAudioToFile = null;
 		}
 		localRender = null;
-		remoteRenders = null;
+		remoteSinks = null;
 		if (factory != null && peerConnectionParameters.aecDump) {
 			factory.stopAecDump();
 		}

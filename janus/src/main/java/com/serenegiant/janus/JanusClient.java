@@ -15,7 +15,6 @@ import android.support.annotation.Nullable;
 import org.appspot.apprtc.RoomConnectionParameters;
 import org.webrtc.PeerConnectionFactory;
 import org.webrtc.VideoCapturer;
-import org.webrtc.VideoRenderer;
 import org.webrtc.VideoSink;
 
 import java.util.List;
@@ -39,7 +38,7 @@ public interface JanusClient {
 	 * @param videoCapturer
 	 */
 	public void createPeerConnection(final VideoSink localRender,
-		final List<VideoRenderer.Callbacks> remoteRenders,
+		final List<VideoSink> remoteRenders,
 		final VideoCapturer videoCapturer);
 	
 	/**

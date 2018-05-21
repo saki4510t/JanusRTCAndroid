@@ -63,7 +63,6 @@ import org.webrtc.SurfaceViewRenderer;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoFileRenderer;
 import org.webrtc.VideoFrame;
-import org.webrtc.VideoRenderer;
 import org.webrtc.VideoSink;
 
 import java.io.IOException;
@@ -150,26 +149,6 @@ public class CallActivity extends BaseActivity
 	// Peer connection statistics callback period in ms.
 	private static final int STAT_CALLBACK_PERIOD = 1000;
 
-	private static class ProxyRenderer implements VideoRenderer.Callbacks {
-		private VideoRenderer.Callbacks target;
-
-		@Override
-		synchronized public void renderFrame(final VideoRenderer.I420Frame frame) {
-			if (target == null) {
-				if (DEBUG) Logging.d(TAG, "ProxyRenderer:Dropping frame in proxy because target is null.");
-				VideoRenderer.renderFrameDone(frame);
-				return;
-			}
-
-			target.renderFrame(frame);
-		}
-
-		synchronized public void setTarget(VideoRenderer.Callbacks target) {
-			if (DEBUG) Logging.d(TAG, "ProxyRenderer#setTarget:" + target);
-			this.target = target;
-		}
-	}
-
 	private static class ProxyVideoSink implements VideoSink {
 		private VideoSink target;
 
@@ -189,7 +168,7 @@ public class CallActivity extends BaseActivity
 		}
 	}
 
-	private final ProxyRenderer remoteProxyRenderer = new ProxyRenderer();
+	private final ProxyVideoSink remoteProxyRenderer = new ProxyVideoSink();
 	private final ProxyVideoSink localProxyVideoSink = new ProxyVideoSink();
 	@Nullable
 	private JanusClient janusClient;
@@ -201,7 +180,7 @@ public class CallActivity extends BaseActivity
 	private SurfaceViewRenderer fullscreenRenderer;
 	@Nullable
 	private VideoFileRenderer videoFileRenderer;
-	private final List<VideoRenderer.Callbacks> remoteRenderers = new ArrayList<>();
+	private final List<VideoSink> remoteRenderers = new ArrayList<>();
 	private Toast logToast;
 	private boolean commandLineRun;
 	private boolean activityRunning;
