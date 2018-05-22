@@ -68,9 +68,6 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_ISAC;
-import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
-
 /*package*/ abstract class JanusPlugin implements PeerConnection.Observer {
 	private static final boolean DEBUG = false;	// set false on production
 	
@@ -209,6 +206,7 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 	private final boolean isVideoCallEnabled;
 	protected RoomState mRoomState = RoomState.UNINITIALIZED;
 	protected Plugin mPlugin;
+	@Nullable
 	protected Room mRoom;
 	protected SessionDescription mLocalSdp;
 	protected SessionDescription mRemoteSdp;
@@ -1143,9 +1141,10 @@ import static org.appspot.apprtc.AppRTCConst.AUDIO_CODEC_OPUS;
 		 * リモート側のPublisherをチェックして増減があれば接続/切断する
 		 * @param room
 		 */
-		private void checkPublishers(final EventRoom room) {
+		private void checkPublishers(@NonNull final EventRoom room) {
 			if (DEBUG) Log.v(TAG, "checkPublishers:");
-			if ((room.plugindata != null)
+			if ((mRoom != null)
+				&& (room.plugindata != null)
 				&& (room.plugindata.data != null)) {
 	
 				@NonNull
