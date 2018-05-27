@@ -354,7 +354,8 @@ public class CallActivity extends BaseActivity
 		}
 
 		janusClient = new JanusRTCClient(getApplicationContext(),
-			eglBase, peerConnectionParameters, mJanusCallback, roomUri.toString());
+			roomUri.toString(),
+			eglBase, peerConnectionParameters, mJanusCallback);
 		janusClient.createPeerConnectionFactory(options);
 		
 		// Create connection parameters.

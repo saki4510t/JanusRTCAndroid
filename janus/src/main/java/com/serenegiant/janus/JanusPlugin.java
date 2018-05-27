@@ -194,6 +194,7 @@ import retrofit2.Response;
 
 	@NonNull
 	protected final String apiName;
+	protected final int roomId;
 	@NonNull
 	protected final VideoRoom mVideoRoom;
 	@NonNull
@@ -219,7 +220,7 @@ import retrofit2.Response;
 	 * @param session
 	 * @param callback
 	 */
-	public JanusPlugin(@NonNull final String apiName,
+	public JanusPlugin(@NonNull final String apiName, final int roomId,
 		@NonNull VideoRoom videoRoom,
 		@NonNull final Session session,
 		@NonNull final JanusPluginCallback callback,
@@ -228,6 +229,7 @@ import retrofit2.Response;
 		final boolean isVideoCallEnabled) {
 		
 		this.apiName = apiName;
+		this.roomId = roomId;
 		this.mVideoRoom = videoRoom;
 		this.mSession = session;
 		this.mCallback = callback;
@@ -412,7 +414,7 @@ import retrofit2.Response;
 	public void join() {
 		if (DEBUG) Log.v(TAG, "join:");
 		final Message message = new Message(mRoom,
-			new Join(1234/*FIXME*/, getPType(), Build.MODEL, getFeedId()),
+			new Join(roomId, getPType(), Build.MODEL, getFeedId()),
 			mTransactionCallback);
 		if (DEBUG) Log.v(TAG, "join:" + message);
 		final Call<EventRoom> call = mVideoRoom.join(apiName,
@@ -1103,7 +1105,7 @@ import retrofit2.Response;
 		 * コンストラクタ
 		 * @param session
 		 */
-		public Publisher(@NonNull final String apiName,
+		public Publisher(@NonNull final String apiName, final int roomId,
 			@NonNull VideoRoom videoRoom,
 			@NonNull final Session session,
 			@NonNull final JanusPluginCallback callback,
@@ -1111,7 +1113,7 @@ import retrofit2.Response;
 			@NonNull final MediaConstraints sdpMediaConstraints,
 			final boolean isVideoCallEnabled) {
 
-			super(apiName, videoRoom, session, callback,
+			super(apiName, roomId, videoRoom, session, callback,
 				peerConnectionParameters,
 				sdpMediaConstraints,
 				isVideoCallEnabled);
@@ -1180,7 +1182,7 @@ import retrofit2.Response;
 		 * コンストラクタ
 		 * @param session
 		 */
-		public Subscriber(@NonNull final String apiName,
+		public Subscriber(@NonNull final String apiName, final int roomId,
 			@NonNull VideoRoom videoRoom,
 			@NonNull final Session session,
 			@NonNull final JanusPluginCallback callback,
@@ -1189,7 +1191,7 @@ import retrofit2.Response;
 			@NonNull final PublisherInfo info,
 			final boolean isVideoCallEnabled) {
 
-			super(apiName, videoRoom, session, callback,
+			super(apiName, roomId, videoRoom, session, callback,
 				peerConnectionParameters,
 				sdpMediaConstraints,
 				isVideoCallEnabled);

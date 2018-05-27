@@ -134,6 +134,7 @@ public class JanusRTCClient implements JanusClient {
 	private final WeakReference<Context> mWeakContext;
 	@NonNull
 	private final String apiName;
+	private final int roomId;
 	@NonNull
 	private final EglBase rootEglBase;
 	@NonNull
@@ -200,39 +201,42 @@ public class JanusRTCClient implements JanusClient {
 
 	/**
 	 * コンストラクタ
+	 * apiName = "janus", roomId = 1234
 	 * @param appContext
+	 * @param baseUrl
 	 * @param eglBase
 	 * @param peerConnectionParameters
 	 * @param callback
-	 * @param baseUrl
 	 */
 	public JanusRTCClient(@NonNull final Context appContext,
+		@NonNull final String baseUrl,
 		@NonNull final EglBase eglBase,
 		@NonNull final PeerConnectionParameters peerConnectionParameters,
-		@NonNull final JanusCallback callback,
-		@NonNull final String baseUrl) {
+		@NonNull final JanusCallback callback) {
 
-		this(appContext, "janus", eglBase,
-			peerConnectionParameters, callback, baseUrl);
+		this(appContext, baseUrl, "janus", 1234,
+			eglBase, peerConnectionParameters, callback);
 	}
 	
 	/**
 	 * コンストラクタ
 	 * @param appContext
+	 * @param baseUrl
+	 * @param apiName
+	 * @param roomId
 	 * @param eglBase
 	 * @param peerConnectionParameters
 	 * @param callback
-	 * @param baseUrl
 	 */
 	public JanusRTCClient(@NonNull final Context appContext,
-		@NonNull final String apiName,
+		@NonNull final String baseUrl, @NonNull final String apiName, final int roomId,
 		@NonNull final EglBase eglBase,
 		@NonNull final PeerConnectionParameters peerConnectionParameters,
-		@NonNull final JanusCallback callback,
-		@NonNull final String baseUrl) {
+		@NonNull final JanusCallback callback) {
 
 		this.mWeakContext = new WeakReference<>(appContext);
 		this.apiName = apiName;
+		this.roomId = roomId;
 		this.rootEglBase = eglBase;
 		this.peerConnectionParameters = peerConnectionParameters;
 		this.mCallback = callback;
@@ -722,7 +726,7 @@ public class JanusRTCClient implements JanusClient {
 		final List<String> mediaStreamLabels = Collections.singletonList("ARDAMS");
 		
 		final JanusPlugin.Publisher publisher
-			= new JanusPlugin.Publisher(apiName,
+			= new JanusPlugin.Publisher(apiName, roomId,
 				mJanus, mSession,
 				mJanusPluginCallback,
 				peerConnectionParameters, sdpMediaConstraints,
@@ -862,7 +866,8 @@ public class JanusRTCClient implements JanusClient {
 		rtcConfig.enableDtlsSrtp = !peerConnectionParameters.loopback;
 		rtcConfig.sdpSemantics = SDP_SEMANTICS;
 		
-		final JanusPlugin.Subscriber subscriber = new JanusPlugin.Subscriber(apiName,
+		final JanusPlugin.Subscriber subscriber = new JanusPlugin.Subscriber(
+			apiName, roomId,
 			mJanus, mSession, mJanusPluginCallback,
 			peerConnectionParameters, sdpMediaConstraints,
 			info, isVideoCallEnabled());
