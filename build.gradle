@@ -41,8 +41,6 @@ ext {
 	gsonVersion = '2.8.4'
 	okHttpVersion = '3.10.0'
 	retrofit2Version = '2.4.0'
-//	rxandroidVersion = '2.0.2'
-//	rxjavaVersion = '2.1.12'
 	socketIOClientJavaVersion = '1.0.0'
 	webRTCVersion = '1.0.23171'
 
