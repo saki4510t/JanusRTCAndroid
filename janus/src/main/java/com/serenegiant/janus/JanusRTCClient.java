@@ -1740,6 +1740,10 @@ public class JanusRTCClient implements JanusClient {
 		} else {
 			builder = sOkHttpClient.newBuilder();
 		}
+		builder
+			.connectTimeout(HTTP_CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)	// 接続タイムアウト
+			.readTimeout(readTimeoutMs, TimeUnit.MILLISECONDS)		// 読み込みタイムアウト
+			.writeTimeout(writeTimeoutMs, TimeUnit.MILLISECONDS);	// 書き込みタイムアウト
 		builder = mCallback.setupOkHttp(builder);
 		final List<Interceptor> interceptors = builder.interceptors();
 		builder
@@ -1773,10 +1777,6 @@ public class JanusRTCClient implements JanusClient {
 			}
 		}
 		
-		builder
-			.connectTimeout(HTTP_CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)	// 接続タイムアウト
-			.readTimeout(readTimeoutMs, TimeUnit.MILLISECONDS)		// 読み込みタイムアウト
-			.writeTimeout(writeTimeoutMs, TimeUnit.MILLISECONDS);	// 書き込みタイムアウト
 		final OkHttpClient result = builder.build();
 		if (sOkHttpClient == null) {
 			sOkHttpClient = result;
