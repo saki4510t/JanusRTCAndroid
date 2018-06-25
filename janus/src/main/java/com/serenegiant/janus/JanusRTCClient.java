@@ -1191,11 +1191,11 @@ public class JanusRTCClient implements JanusClient {
 		if (DEBUG) Log.v(TAG, "connectToRoomInternal:");
 		// 通常のRESTアクセス用APIインターフェースを生成
 		mJanus = setupRetrofit(
-			setupHttpClient(HTTP_READ_TIMEOUT_MS, HTTP_WRITE_TIMEOUT_MS),
+			setupHttpClient(false, HTTP_READ_TIMEOUT_MS, HTTP_WRITE_TIMEOUT_MS),
 			baseUrl).create(VideoRoom.class);
 		// long poll用APIインターフェースを生成
 		mLongPoll = setupRetrofit(
-			setupHttpClient(HTTP_READ_TIMEOUT_MS_LONG_POLL, HTTP_WRITE_TIMEOUT_MS),
+			setupHttpClient(true, HTTP_READ_TIMEOUT_MS_LONG_POLL, HTTP_WRITE_TIMEOUT_MS),
 			baseUrl).create(LongPoll.class);
 		executor.execute(() -> {
 			requestServerInfo();
@@ -1730,6 +1730,7 @@ public class JanusRTCClient implements JanusClient {
 	 * @return
 	 */
 	private synchronized OkHttpClient setupHttpClient(
+		final boolean isLongPoll,
 		final long readTimeoutMs, final long writeTimeoutMs) {
 	
 		if (DEBUG) Log.v(TAG, "setupHttpClient:");
@@ -1744,7 +1745,8 @@ public class JanusRTCClient implements JanusClient {
 			.connectTimeout(HTTP_CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)	// 接続タイムアウト
 			.readTimeout(readTimeoutMs, TimeUnit.MILLISECONDS)		// 読み込みタイムアウト
 			.writeTimeout(writeTimeoutMs, TimeUnit.MILLISECONDS);	// 書き込みタイムアウト
-		builder = mCallback.setupOkHttp(builder);
+		builder = mCallback.setupOkHttp(builder, isLongPoll,
+			HTTP_CONNECT_TIMEOUT_MS, readTimeoutMs, writeTimeoutMs);
 		final List<Interceptor> interceptors = builder.interceptors();
 		builder
 			.addInterceptor(new Interceptor() {

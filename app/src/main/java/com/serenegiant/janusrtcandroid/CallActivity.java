@@ -794,7 +794,10 @@ public class CallActivity extends BaseActivity
 
 		@NonNull
 		public OkHttpClient.Builder setupOkHttp(
-			@NonNull final OkHttpClient.Builder builder) {
+			@NonNull final OkHttpClient.Builder builder,
+			final boolean isLongPoll,
+			final long connectionTimeout,
+			final long readTimeoutMs, final long writeTimeoutMs) {
 
 			if (DEBUG) Log.v(TAG, "setupOkHttp:");
 			return builder;

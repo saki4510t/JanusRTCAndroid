@@ -35,7 +35,9 @@ import retrofit2.Retrofit;
 
 public interface JanusCallback {
 	@NonNull
-	public OkHttpClient.Builder setupOkHttp(@NonNull final OkHttpClient.Builder builder);
+	public OkHttpClient.Builder setupOkHttp(@NonNull final OkHttpClient.Builder builder,
+		final boolean isLongPoll,
+		final long connectionTimeout, final long readTimeoutMs, final long writeTimeoutMs);
 
 	@NonNull
 	public Retrofit.Builder setupRetrofit(@NonNull final Retrofit.Builder builder);
