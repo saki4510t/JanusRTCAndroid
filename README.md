@@ -26,3 +26,5 @@ This repository is based on [AppRTCMobile](https://github.com/saki4510t/AppRTCMo
      https://github.com/saki4510t/AppRTCMobile
 
 ***Note: Files came from `AppRTCMobile` and original demo app from WebRTC libraries will have different license. Please see `LICENSE_WEBRTC` and `LICENSE_WEBRTC_THIRD_PARTY`.***
+
+`janus` library module can handle multiple client but sample app can handle 1:1 connection only.
