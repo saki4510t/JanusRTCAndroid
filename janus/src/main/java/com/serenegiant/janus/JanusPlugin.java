@@ -388,7 +388,11 @@ import retrofit2.Response;
 						mCallback.onAttach(JanusPlugin.this);
 						// ルームへjoin
 						executor.execute(() -> {
-							join();
+							try {
+								join();
+							} catch (final Exception e) {
+								reportError(e);
+							}
 						});
 					} else {
 						reportError(new RuntimeException("unexpected response:" + response));
@@ -922,14 +926,19 @@ import retrofit2.Response;
 			}
 		}
 		if ((room.plugindata != null)
-			&& (room.plugindata.data != null)
-			&& (room.plugindata.data.leaving != null)) {
-			
-			executor.execute( () -> {
-				mCallback.onLeave(JanusPlugin.this,
-					room.plugindata.data.leaving,
-					mRoom.getNumPublishers());
-			});
+			&& (room.plugindata.data != null)) {
+
+//			if (room.plugindata.data.unpublished != null) {
+//				// XXX なにか処理必要？
+//			}
+			if (room.plugindata.data.leaving != null) {
+				// FIXME ここは即プラグインマップから削除してその上でonLeaveを呼ぶほうがよい？
+				executor.execute( () -> {
+					mCallback.onLeave(JanusPlugin.this,
+						room.plugindata.data.leaving,
+						mRoom.getNumPublishers());
+				});
+			}
 		}
 		return true;	// true: 処理済み
 	}
@@ -1149,18 +1158,17 @@ import retrofit2.Response;
 			if ((mRoom != null)
 				&& (room.plugindata != null)
 				&& (room.plugindata.data != null)) {
-	
-				@NonNull
-				final List<PublisherInfo> changed = mRoom.updatePublisher(room.plugindata.data.publishers);
-				if (room.plugindata.data.leaving != null) {
-					for (final PublisherInfo info: changed) {
-						if (room.plugindata.data.leaving.equals(info.id)) {
-							// XXX ここで削除できたっけ?
-							changed.remove(info);
-						}
-					}
-					// FIXME 存在しなくなったPublisherの処理, leaveメッセージで処理すべき?
+
+				// ローカルキャッシュ
+				final EventRoom.Data data = room.plugindata.data;
+				if (data.unpublished != null) {
+					mRoom.updatePublisher(data.unpublished, false);
 				}
+				if (data.leaving != null) {
+					mRoom.removePublisher(data.leaving);
+				}
+				@NonNull
+				final List<PublisherInfo> changed = mRoom.updatePublishers(data.publishers);
 				if (!changed.isEmpty()) {
 					if (DEBUG) Log.v(TAG, "checkPublishers:number of publishers changed");
 					for (final PublisherInfo info: changed) {
