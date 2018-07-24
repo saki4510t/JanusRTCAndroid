@@ -104,8 +104,11 @@ public class EventRoom {
 				", room=" + room +
 				", description='" + description + '\'' +
 				", configured=" + configured +
+				", started=" + started +
 				", audio_codec='" + audio_codec + '\'' +
 				", video_codec='" + video_codec + '\'' +
+				", unpublished='" + unpublished + '\'' +
+				", leaving=" + leaving +
 				", id=" + id +
 				", private_id=" + private_id +
 				", publishers=" + Arrays.toString(publishers) +
