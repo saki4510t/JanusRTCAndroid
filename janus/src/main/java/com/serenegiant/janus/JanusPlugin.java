@@ -832,6 +832,7 @@ import retrofit2.Response;
 		final BigInteger sender = room.sender;
 		final String eventType = (room.plugindata != null) && (room.plugindata.data != null)
 			? room.plugindata.data.videoroom : null;
+		// FIXME plugindata.pluginが"janus.plugin.videoroom"かどうかのチェックをしたほうが良いかも
 		if (DEBUG) Log.v(TAG, "handlePluginEvent:" + room);
 		if (!TextUtils.isEmpty(eventType)) {
 			switch (eventType) {
