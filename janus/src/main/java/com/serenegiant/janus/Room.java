@@ -84,36 +84,74 @@ public class Room {
 
 	/**
 	 * janus-gateway serverに接続されているリモートPublisherの一覧を更新
-	 * @param newPublishers
-	 * @return 追加または削除されたPublisherのリスト
+	 * @param newPublishers 自分が未接続のpublisherだけが入っているみたい
+	 * @return 追加されたPublisherのリスト
 	 */
 	@NonNull
-	public List<PublisherInfo> updatePublisher(
+	public List<PublisherInfo> updatePublishers(
 		@Nullable final PublisherInfo[] newPublishers) {
 
-		final List<PublisherInfo> result;
+		final List<PublisherInfo> result = new ArrayList<>();
 		if (newPublishers != null) {
-			final List<PublisherInfo> src = Arrays.asList(newPublishers);
-			result = new ArrayList<>(src);
+			final List<PublisherInfo> newList = Arrays.asList(newPublishers);
+			result.addAll(newList);
 			
 			synchronized (this.publishers) {
 				// 既にRoomに登録されているPublisherを除く=未登録分
 				result.removeAll(this.publishers);
-				// 既にRoomに登録されているものから新しいPublisherを除く=削除分
-				this.publishers.removeAll(src);
-				result.addAll(this.publishers);
-				this.publishers.clear();
-				this.publishers.addAll(src);
-			}
-		} else {
-			synchronized (this.publishers) {
-				result = new ArrayList<>(this.publishers);
-				this.publishers.clear();
 			}
 		}
 		return result;
 	}
 	
+	/**
+	 * 指定したidのPublisherを一覧から取り除く
+	 * @param id
+	 * @return
+	 */
+	@NonNull
+	public List<PublisherInfo> removePublisher(
+		@NonNull final BigInteger id) {
+		
+		synchronized (this.publishers) {
+			PublisherInfo found = null;
+			for (PublisherInfo info: publishers) {
+				if (id.equals(info.id)) {
+					found = info;
+					break;
+				}
+			}
+			if (found != null) {
+				publishers.remove(found);
+			}
+			return new ArrayList<>(this.publishers);
+		}
+	}
+	
+	/**
+	 * 指定したidのPublisherが存在すればそのtalkingフラグを更新する
+	 * @param id
+	 * @param talking
+	 */
+	public void updatePublisher(@NonNull final BigInteger id, final boolean talking) {
+		synchronized (this.publishers) {
+			PublisherInfo found = null;
+			for (PublisherInfo info: publishers) {
+				if (id.equals(info.id)) {
+					found = info;
+					break;
+				}
+			}
+			if (found != null) {
+				found.talking = talking;
+			}
+		}
+	}
+	
+	/**
+	 * このRoomインスタンスが保持しているPublisherの数を返す
+	 * @return
+	 */
 	public int getNumPublishers() {
 		synchronized (this.publishers) {
 			return this.publishers.size();
