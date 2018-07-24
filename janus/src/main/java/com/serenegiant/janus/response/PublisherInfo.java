@@ -26,7 +26,7 @@ public class PublisherInfo {
 	public final String display;
 	public final String audio_codec;
 	public final String video_codec;
-	public final boolean talking;
+	public boolean talking;
 	
 	public PublisherInfo(final BigInteger id,
 		final String display,
