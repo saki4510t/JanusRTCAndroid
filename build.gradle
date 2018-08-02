@@ -36,7 +36,7 @@ ext {
 	versionTarget = 27
 
 	supportLibVersion = '27.1.1'  // variable that can be referenced to keep support libs consistent
-	constraintLayoutVersion = '1.1.0'
+	constraintLayoutVersion = '1.1.2'
 
 	gsonVersion = '2.8.4'
 	okHttpVersion = '3.10.0'
