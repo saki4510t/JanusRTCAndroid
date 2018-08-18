@@ -64,6 +64,7 @@ import org.webrtc.RtpTransceiver;
 import org.webrtc.SessionDescription;
 import org.webrtc.SoftwareVideoDecoderFactory;
 import org.webrtc.SoftwareVideoEncoderFactory;
+import org.webrtc.SurfaceTextureHelper;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoDecoderFactory;
 import org.webrtc.VideoEncoderFactory;
@@ -151,6 +152,8 @@ public class JanusRTCClient implements JanusClient {
 	private PeerConnectionFactory factory;
 	private boolean videoCapturerStopped;
 	private boolean isError;
+	@Nullable
+	private SurfaceTextureHelper surfaceTextureHelper;
 	/**
 	 * Implements the WebRtcAudioRecordSamplesReadyCallback interface and writes
 	 * recorded audio samples to an output file.
@@ -955,7 +958,10 @@ public class JanusRTCClient implements JanusClient {
 	@Nullable
 	private VideoTrack createVideoTrack(final VideoCapturer capturer) {
 		if (DEBUG) Log.v(TAG, "createVideoTrack:");
-		videoSource = factory.createVideoSource(capturer);
+		surfaceTextureHelper =
+			SurfaceTextureHelper.create("CaptureThread", rootEglBase.getEglBaseContext());
+		videoSource = factory.createVideoSource(capturer.isScreencast());
+		capturer.initialize(surfaceTextureHelper, getContext(), videoSource.getCapturerObserver());
 		capturer.startCapture(videoWidth, videoHeight, videoFps);
 		
 		localVideoTrack = factory.createVideoTrack(AppRTCConst.VIDEO_TRACK_ID, videoSource);
@@ -1367,6 +1373,10 @@ public class JanusRTCClient implements JanusClient {
 			videoSource.dispose();
 			videoSource = null;
 		}
+		if (surfaceTextureHelper != null) {
+			surfaceTextureHelper.dispose();
+			surfaceTextureHelper = null;
+	    }
 		if (DEBUG) Log.d(TAG, "Closing peer connection factory.");
 		if (factory != null) {
 			factory.dispose();
