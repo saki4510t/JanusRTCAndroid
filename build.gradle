@@ -44,7 +44,7 @@ ext {
 	socketIOClientJavaVersion = '1.0.0'
 	webRTCVersion = '1.0.24277'	// 1.0.24139以降はそのままじゃ動かない
 
-	commonLibVersion= '2.9.2'
+	commonLibVersion= '2.9.4'
 
 	versionCodeNum = 39
 	versionNameString = '1.7.3'
