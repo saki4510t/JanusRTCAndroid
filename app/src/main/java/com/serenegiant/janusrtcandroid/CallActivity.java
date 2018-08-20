@@ -25,7 +25,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentTransaction;
-import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -87,6 +86,8 @@ public class CallActivity extends BaseActivity
 
 	public static final String EXTRA_ROOMID = "org.appspot.apprtc.ROOMID";
 	public static final String EXTRA_URLPARAMETERS = "org.appspot.apprtc.URLPARAMETERS";
+	public static final String EXTRA_USER_NAME = "org.appspot.apprtc.EXTRA_USER_NAME";
+	public static final String EXTRA_DISPLAY_NAME = "org.appspot.apprtc.EXTRA_DISPLAY_NAME";
 	public static final String EXTRA_LOOPBACK = "org.appspot.apprtc.LOOPBACK";
 	public static final String EXTRA_VIDEO_CALL = "org.appspot.apprtc.VIDEO_CALL";
 	public static final String EXTRA_SCREENCAPTURE = "org.appspot.apprtc.SCREENCAPTURE";
@@ -296,9 +297,9 @@ public class CallActivity extends BaseActivity
 		}
 
 		// Get Intent parameters.
-		final String roomId = intent.getStringExtra(EXTRA_ROOMID);
+		final int roomId = intent.getIntExtra(EXTRA_ROOMID, 0);
 		if (DEBUG) Log.d(TAG, "Room ID: " + roomId);
-		if (TextUtils.isEmpty(roomId)) {
+		if (roomId == 0) {
 			logAndToast(getString(R.string.missing_url));
 			Log.e(TAG, "Incorrect room ID in intent!");
 			setResult(RESULT_CANCELED);
@@ -342,7 +343,8 @@ public class CallActivity extends BaseActivity
 				intent.getBooleanExtra(EXTRA_DISABLE_BUILT_IN_NS, false),
 				intent.getBooleanExtra(EXTRA_DISABLE_WEBRTC_AGC_AND_HPF, false),
 				intent.getBooleanExtra(EXTRA_ENABLE_RTCEVENTLOG, false),
-				intent.getBooleanExtra(EXTRA_USE_LEGACY_AUDIO_DEVICE, false), dataChannelParameters);
+				intent.getBooleanExtra(EXTRA_USE_LEGACY_AUDIO_DEVICE, false),
+				dataChannelParameters);
 		commandLineRun = intent.getBooleanExtra(EXTRA_CMDLINE, false);
 		int runTimeMs = intent.getIntExtra(EXTRA_RUNTIME, 0);
 
@@ -353,16 +355,21 @@ public class CallActivity extends BaseActivity
 			options.networkIgnoreMask = 0;
 		}
 
-		janusClient = new JanusRTCClient(getApplicationContext(),
-			roomUri.toString(),
-			eglBase, peerConnectionParameters, mJanusCallback);
-		janusClient.createPeerConnectionFactory(options);
-		
 		// Create connection parameters.
 		final String urlParameters = intent.getStringExtra(EXTRA_URLPARAMETERS);
+		final String userName = intent.getStringExtra(EXTRA_USER_NAME);
+		final String displayName = intent.getStringExtra(EXTRA_DISPLAY_NAME);
 		roomConnectionParameters =
-			new RoomConnectionParameters(roomUri.toString(), roomId, loopback, urlParameters);
+			new RoomConnectionParameters(roomUri.toString(),
+				"janus", roomId,
+				loopback, urlParameters,
+				userName, displayName);
 
+		janusClient = new JanusRTCClient(getApplicationContext(),
+			eglBase, peerConnectionParameters, roomConnectionParameters,
+			mJanusCallback);
+		janusClient.createPeerConnectionFactory(options);
+		
 		// Create CPU monitor
 		if (CpuMonitor.isSupported()) {
 			cpuMonitor = new CpuMonitor(this);
@@ -387,11 +394,6 @@ public class CallActivity extends BaseActivity
 				}
 			}, runTimeMs);
 		}
-
-//		// Create peer connection client.
-//		peerConnectionClient = new PeerConnectionClient(
-//			getApplicationContext(), eglBase, peerConnectionParameters, mPeerConnectionEvents);
-//		peerConnectionClient.createPeerConnectionFactory(options);
 
 		if (screenCaptureEnabled) {
 			startScreenCapture();

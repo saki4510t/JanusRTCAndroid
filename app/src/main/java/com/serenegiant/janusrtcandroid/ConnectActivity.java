@@ -30,6 +30,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -112,7 +113,7 @@ public class ConnectActivity extends BaseActivity {
 			int runTimeMs = intent.getIntExtra(CallActivity.EXTRA_RUNTIME, 0);
 			boolean useValuesFromIntent =
 				intent.getBooleanExtra(CallActivity.EXTRA_USE_VALUES_FROM_INTENT, false);
-			String room = sharedPref.getString(keyprefRoom, "");
+			final int room = sharedPref.getInt(keyprefRoom, 0);
 			connectToRoom(room, true, loopback, useValuesFromIntent, runTimeMs);
 		}
 	}
@@ -158,7 +159,7 @@ public class ConnectActivity extends BaseActivity {
 			startActivity(intent);
 			return true;
 		} else if (item.getItemId() == R.id.action_loopback) {
-			connectToRoom(null, false, true, false, 0);
+			connectToRoom(0, false, true, false, 0);
 			return true;
 		} else {
 			return super.onOptionsItemSelected(item);
@@ -268,7 +269,7 @@ public class ConnectActivity extends BaseActivity {
 	}
 	
 	@SuppressWarnings("StringSplitter")
-	private void connectToRoom(String roomId, boolean commandLineRun, boolean loopback,
+	private void connectToRoom(int roomId, boolean commandLineRun, boolean loopback,
 							   boolean useValuesFromIntent, int runTimeMs) {
 		
 		if (!checkPermissionNetwork()) return;
@@ -279,7 +280,7 @@ public class ConnectActivity extends BaseActivity {
 		
 		// roomId is random for loopback.
 		if (loopback) {
-			roomId = Integer.toString((new Random()).nextInt(100000000));
+			roomId = (new Random()).nextInt(100000000);
 		}
 		
 		String roomUrl = sharedPref.getString(
@@ -566,8 +567,13 @@ public class ConnectActivity extends BaseActivity {
 		new AdapterView.OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-				String roomId = ((TextView) view).getText().toString();
-				connectToRoom(roomId, false, false, false, 0);
+				try {
+					final int roomId = Integer.parseInt(((TextView) view).getText().toString());
+					connectToRoom(roomId, false, false, false, 0);
+				} catch (final Exception e) {
+					Toast.makeText(ConnectActivity.this,
+						"roomId should be number", Toast.LENGTH_SHORT).show();
+				}
 			}
 		};
 	
@@ -585,7 +591,13 @@ public class ConnectActivity extends BaseActivity {
 	private final OnClickListener connectListener = new OnClickListener() {
 		@Override
 		public void onClick(View view) {
-			connectToRoom(roomEditText.getText().toString(), false, false, false, 0);
+			try {
+				final int roomId = Integer.parseInt(roomEditText.getText().toString());
+				connectToRoom(roomId, false, false, false, 0);
+			} catch (final Exception e) {
+				Toast.makeText(ConnectActivity.this,
+					"roomId should be number", Toast.LENGTH_SHORT).show();
+			}
 		}
 	};
 }

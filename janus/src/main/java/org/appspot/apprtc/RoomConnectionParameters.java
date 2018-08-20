@@ -10,24 +10,43 @@ package org.appspot.apprtc;
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 /**
  * Struct holding the connection parameters of an AppRTC room.
  */
 public class RoomConnectionParameters {
+	@NonNull
 	public final String roomUrl;
-	public final String roomId;
+	@NonNull
+	public final String apiName;
+	public final int roomId;
 	public final boolean loopback;
 	public final String urlParameters;
+	@Nullable
+	public final String userName;
+	@Nullable
+	public final String displayName;
 	
 	public RoomConnectionParameters(
-		String roomUrl, String roomId, boolean loopback, String urlParameters) {
+		@Nullable final String roomUrl, @NonNull final String apiName,
+		final int roomId, final boolean loopback, final String urlParameters,
+		@Nullable final String userName, @Nullable final String displayName) {
 		this.roomUrl = roomUrl;
+		this.apiName = apiName;
 		this.roomId = roomId;
 		this.loopback = loopback;
 		this.urlParameters = urlParameters;
+		this.userName = userName;
+		this.displayName = displayName;
 	}
 	
-	public RoomConnectionParameters(String roomUrl, String roomId, boolean loopback) {
-		this(roomUrl, roomId, loopback, null /* urlParameters */);
+	public RoomConnectionParameters(
+		@Nullable final String roomUrl, @NonNull final String apiName,
+		final int roomId, boolean loopback) {
+		this(roomUrl, apiName, roomId,
+			loopback, null,
+			null, null);
 	}
 }

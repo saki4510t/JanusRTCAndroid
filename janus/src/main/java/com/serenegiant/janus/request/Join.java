@@ -31,16 +31,19 @@ public class Join {
 	public final String request;
 	public final int room;
 	public final String ptype;
+	public final String username;
 	public final String display;
 	public final BigInteger feed;
 	
 	public Join(final int room, @NonNull final String pType,
+		@Nullable final String username,
 		@Nullable final String display,
 		@Nullable final BigInteger feed) {
 
 		this.request = "join";
 		this.room = room;
 		this.ptype = pType;
+		this.username = username;
 		this.display = display;
 		this.feed = feed;
 	}
@@ -51,6 +54,7 @@ public class Join {
 			"request='" + request + '\'' +
 			", room=" + room +
 			", ptype='" + ptype + '\'' +
+			", username='" + username + '\'' +
 			", display='" + display + '\'' +
 			", feed='" + feed + '\'' +
 			'}';

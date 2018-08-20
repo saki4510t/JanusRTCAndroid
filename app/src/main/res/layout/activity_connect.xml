@@ -29,7 +29,7 @@
             android:layout_weight="1"
             android:maxLines="1"
             android:imeOptions="actionDone"
-            android:inputType="text"/>
+            android:inputType="number"/>
 
         <ImageButton
             android:id="@+id/connect_button"

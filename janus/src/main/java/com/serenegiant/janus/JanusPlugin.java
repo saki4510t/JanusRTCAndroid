@@ -41,6 +41,7 @@ import com.serenegiant.janus.response.Session;
 
 import org.appspot.apprtc.AppRTCConst;
 import org.appspot.apprtc.PeerConnectionParameters;
+import org.appspot.apprtc.RoomConnectionParameters;
 import org.appspot.apprtc.RtcEventLog;
 import org.appspot.apprtc.util.SdpUtils;
 import org.json.JSONObject;
@@ -178,6 +179,8 @@ import retrofit2.Response;
 	private final MediaConstraints sdpMediaConstraints;
 	@NonNull
 	private final PeerConnectionParameters peerConnectionParameters;
+	@NonNull
+	private final RoomConnectionParameters roomConnectionParameters;
 	private PeerConnection peerConnection;
 	/** Enable org.appspot.apprtc.RtcEventLog. */
 	@Nullable
@@ -192,9 +195,6 @@ import retrofit2.Response;
 	@NonNull
 	private final List<IceCandidate> queuedRemoteCandidates = new ArrayList<>();
 
-	@NonNull
-	protected final String apiName;
-	protected final int roomId;
 	@NonNull
 	protected final VideoRoom mVideoRoom;
 	@NonNull
@@ -220,20 +220,19 @@ import retrofit2.Response;
 	 * @param session
 	 * @param callback
 	 */
-	public JanusPlugin(@NonNull final String apiName, final int roomId,
-		@NonNull VideoRoom videoRoom,
+	public JanusPlugin(@NonNull VideoRoom videoRoom,
 		@NonNull final Session session,
 		@NonNull final JanusPluginCallback callback,
 		@NonNull final PeerConnectionParameters peerConnectionParameters,
+		@NonNull final RoomConnectionParameters roomConnectionParameters,
 		@NonNull final MediaConstraints sdpMediaConstraints,
 		final boolean isVideoCallEnabled) {
 		
-		this.apiName = apiName;
-		this.roomId = roomId;
 		this.mVideoRoom = videoRoom;
 		this.mSession = session;
 		this.mCallback = callback;
 		this.peerConnectionParameters = peerConnectionParameters;
+		this.roomConnectionParameters = roomConnectionParameters;
 		this.sdpMediaConstraints = sdpMediaConstraints;
 		this.isVideoCallEnabled = isVideoCallEnabled;
 		this.isLoopback = peerConnectionParameters.loopback;
@@ -369,7 +368,8 @@ import retrofit2.Response;
 		final Attach attach = new Attach(mSession,
 			"janus.plugin.videoroom",
 			null);
-		final Call<Plugin> call = mVideoRoom.attach(apiName, mSession.id(), attach);
+		final Call<Plugin> call = mVideoRoom.attach(
+			roomConnectionParameters.apiName, mSession.id(), attach);
 		addCall(call);
 		call.enqueue(new Callback<Plugin>() {
 			@Override
@@ -417,11 +417,15 @@ import retrofit2.Response;
 	 */
 	public void join() {
 		if (DEBUG) Log.v(TAG, "join:");
+		final String userName = TextUtils.isEmpty(roomConnectionParameters.userName)
+			? Build.MODEL : roomConnectionParameters.userName;
+		final String displayName = TextUtils.isEmpty(roomConnectionParameters.displayName)
+			? Build.MODEL : roomConnectionParameters.displayName;
 		final Message message = new Message(mRoom,
-			new Join(roomId, getPType(), Build.MODEL, getFeedId()),
+			new Join(roomConnectionParameters.roomId, getPType(), userName, displayName, getFeedId()),
 			mTransactionCallback);
 		if (DEBUG) Log.v(TAG, "join:" + message);
-		final Call<EventRoom> call = mVideoRoom.join(apiName,
+		final Call<EventRoom> call = mVideoRoom.join(roomConnectionParameters.apiName,
 			mSession.id(), mPlugin.id(), message);
 		addCall(call);
 		try {
@@ -461,7 +465,8 @@ import retrofit2.Response;
 			mRoomState = RoomState.CLOSED;
 			if (DEBUG) Log.v(TAG, "detach:");
 			cancelCall();
-			final Call<Void> call = mVideoRoom.detach(apiName,
+			final Call<Void> call = mVideoRoom.detach(
+				roomConnectionParameters.apiName,
 				mSession.id(), mPlugin.id(),
 				new Detach(mSession, mTransactionCallback));
 			addCall(call);
@@ -496,7 +501,8 @@ import retrofit2.Response;
 			reportError(new RuntimeException("Sending offer SDP in non connected state."));
 			return;
 		}
-		final Call<EventRoom> call = mVideoRoom.offer(apiName,
+		final Call<EventRoom> call = mVideoRoom.offer(
+			roomConnectionParameters.apiName,
 			mSession.id(),
 			mPlugin.id(),
 			new Message(mRoom,
@@ -545,7 +551,8 @@ import retrofit2.Response;
 			Log.e(TAG, "Sending answer in loopback mode.");
 			return;
 		}
-		final Call<ResponseBody> call = mVideoRoom.send(apiName,
+		final Call<ResponseBody> call = mVideoRoom.send(
+			roomConnectionParameters.apiName,
 			mSession.id(),
 			mPlugin.id(),
 			new Message(mRoom,
@@ -571,13 +578,15 @@ import retrofit2.Response;
 
 		final Call<EventRoom> call;
 		if (candidate != null) {
-			call = mVideoRoom.trickle(apiName,
+			call = mVideoRoom.trickle(
+				roomConnectionParameters.apiName,
 				mSession.id(),
 				mPlugin.id(),
 				new Trickle(mRoom, candidate, mTransactionCallback)
 			);
 		} else {
-			call = mVideoRoom.trickleCompleted(apiName,
+			call = mVideoRoom.trickleCompleted(
+				roomConnectionParameters.apiName,
 				mSession.id(),
 				mPlugin.id(),
 				new TrickleCompleted(mRoom, mTransactionCallback)
@@ -1115,16 +1124,17 @@ import retrofit2.Response;
 		 * コンストラクタ
 		 * @param session
 		 */
-		public Publisher(@NonNull final String apiName, final int roomId,
-			@NonNull VideoRoom videoRoom,
+		public Publisher(@NonNull VideoRoom videoRoom,
 			@NonNull final Session session,
 			@NonNull final JanusPluginCallback callback,
 			@NonNull final PeerConnectionParameters peerConnectionParameters,
+			@NonNull final RoomConnectionParameters roomConnectionParameters,
 			@NonNull final MediaConstraints sdpMediaConstraints,
 			final boolean isVideoCallEnabled) {
 
-			super(apiName, roomId, videoRoom, session, callback,
+			super(videoRoom, session, callback,
 				peerConnectionParameters,
+				roomConnectionParameters,
 				sdpMediaConstraints,
 				isVideoCallEnabled);
 			if (DEBUG) Log.v(TAG, "Publisher:");
@@ -1191,17 +1201,18 @@ import retrofit2.Response;
 		 * コンストラクタ
 		 * @param session
 		 */
-		public Subscriber(@NonNull final String apiName, final int roomId,
-			@NonNull VideoRoom videoRoom,
+		public Subscriber(@NonNull VideoRoom videoRoom,
 			@NonNull final Session session,
 			@NonNull final JanusPluginCallback callback,
 			@NonNull final PeerConnectionParameters peerConnectionParameters,
+			@NonNull final RoomConnectionParameters roomConnectionParameters,
 			@NonNull final MediaConstraints sdpMediaConstraints,
 			@NonNull final PublisherInfo info,
 			final boolean isVideoCallEnabled) {
 
-			super(apiName, roomId, videoRoom, session, callback,
+			super(videoRoom, session, callback,
 				peerConnectionParameters,
+				roomConnectionParameters,
 				sdpMediaConstraints,
 				isVideoCallEnabled);
 

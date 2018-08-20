@@ -22,6 +22,8 @@ import android.widget.TextView;
 
 import org.webrtc.RendererCommon.ScalingType;
 
+import java.util.Locale;
+
 /**
  * Fragment for call control.
  */
@@ -117,8 +119,8 @@ public class CallFragment extends Fragment {
 		boolean captureSliderEnabled = false;
 		final Bundle args = getArguments();
 		if (args != null) {
-			final String contactName = args.getString(CallActivity.EXTRA_ROOMID);
-			contactView.setText(contactName);
+			final int roomId = args.getInt(CallActivity.EXTRA_ROOMID);
+			contactView.setText(String.format(Locale.US, "%d", roomId));
 			videoCallEnabled = args.getBoolean(CallActivity.EXTRA_VIDEO_CALL, true);
 			captureSliderEnabled = videoCallEnabled
 				&& args.getBoolean(CallActivity.EXTRA_VIDEO_CAPTUREQUALITYSLIDER_ENABLED, false);

@@ -134,14 +134,11 @@ public class JanusRTCClient implements JanusClient {
 	private final Object mSync = new Object();
 	private final WeakReference<Context> mWeakContext;
 	@NonNull
-	private final String apiName;
-	private final int roomId;
-	@NonNull
 	private final EglBase rootEglBase;
 	@NonNull
 	private final PeerConnectionParameters peerConnectionParameters;
 	@NonNull
-	private final String baseUrl;
+	private final RoomConnectionParameters roomConnectionParameters;
 	@NonNull
 	private final JanusCallback mCallback;
 	private final boolean dataChannelEnabled;
@@ -215,35 +212,32 @@ public class JanusRTCClient implements JanusClient {
 		@NonNull final String baseUrl,
 		@NonNull final EglBase eglBase,
 		@NonNull final PeerConnectionParameters peerConnectionParameters,
+		@NonNull final RoomConnectionParameters roomConnectionParameters,
 		@NonNull final JanusCallback callback) {
 
-		this(appContext, baseUrl, "janus", 1234,
-			eglBase, peerConnectionParameters, callback);
+		this(appContext, eglBase,
+			peerConnectionParameters, roomConnectionParameters, callback);
 	}
 	
 	/**
 	 * コンストラクタ
 	 * @param appContext
-	 * @param baseUrl
-	 * @param apiName
-	 * @param roomId
 	 * @param eglBase
 	 * @param peerConnectionParameters
+	 * @param roomConnectionParameters
 	 * @param callback
 	 */
 	public JanusRTCClient(@NonNull final Context appContext,
-		@NonNull final String baseUrl, @NonNull final String apiName, final int roomId,
 		@NonNull final EglBase eglBase,
 		@NonNull final PeerConnectionParameters peerConnectionParameters,
+		@NonNull final RoomConnectionParameters roomConnectionParameters,
 		@NonNull final JanusCallback callback) {
 
 		this.mWeakContext = new WeakReference<>(appContext);
-		this.apiName = apiName;
-		this.roomId = roomId;
 		this.rootEglBase = eglBase;
 		this.peerConnectionParameters = peerConnectionParameters;
+		this.roomConnectionParameters = roomConnectionParameters;
 		this.mCallback = callback;
-		this.baseUrl = baseUrl;
 
 		this.mConnectionState = ConnectionState.UNINITIALIZED;
 		this.dataChannelEnabled = peerConnectionParameters.dataChannelParameters != null;
@@ -729,10 +723,12 @@ public class JanusRTCClient implements JanusClient {
 		final List<String> mediaStreamLabels = Collections.singletonList("ARDAMS");
 		
 		final JanusPlugin.Publisher publisher
-			= new JanusPlugin.Publisher(apiName, roomId,
+			= new JanusPlugin.Publisher(
 				mJanus, mSession,
 				mJanusPluginCallback,
-				peerConnectionParameters, sdpMediaConstraints,
+				peerConnectionParameters,
+				roomConnectionParameters,
+				sdpMediaConstraints,
 				isVideoCallEnabled());
 
 		final PeerConnection peerConnection;
@@ -870,9 +866,10 @@ public class JanusRTCClient implements JanusClient {
 		rtcConfig.sdpSemantics = SDP_SEMANTICS;
 		
 		final JanusPlugin.Subscriber subscriber = new JanusPlugin.Subscriber(
-			apiName, roomId,
 			mJanus, mSession, mJanusPluginCallback,
-			peerConnectionParameters, sdpMediaConstraints,
+			peerConnectionParameters,
+			roomConnectionParameters,
+			sdpMediaConstraints,
 			info, isVideoCallEnabled());
 
 		final PeerConnection peerConnection;
@@ -1198,11 +1195,11 @@ public class JanusRTCClient implements JanusClient {
 		// 通常のRESTアクセス用APIインターフェースを生成
 		mJanus = setupRetrofit(
 			setupHttpClient(false, HTTP_READ_TIMEOUT_MS, HTTP_WRITE_TIMEOUT_MS),
-			baseUrl).create(VideoRoom.class);
+			roomConnectionParameters.roomUrl).create(VideoRoom.class);
 		// long poll用APIインターフェースを生成
 		mLongPoll = setupRetrofit(
 			setupHttpClient(true, HTTP_READ_TIMEOUT_MS_LONG_POLL, HTTP_WRITE_TIMEOUT_MS),
-			baseUrl).create(LongPoll.class);
+			roomConnectionParameters.roomUrl).create(LongPoll.class);
 		executor.execute(() -> {
 			requestServerInfo();
 		});
@@ -1226,7 +1223,7 @@ public class JanusRTCClient implements JanusClient {
 	private void requestServerInfo() {
 		if (DEBUG) Log.v(TAG, "requestServerInfo:");
 		// Janus-gatewayサーバー情報を取得
-		final Call<ServerInfo> call = mJanus.getInfo(apiName);
+		final Call<ServerInfo> call = mJanus.getInfo(roomConnectionParameters.apiName);
 		addCall(call);
 		call.enqueue(new Callback<ServerInfo>() {
 			@Override
@@ -1257,7 +1254,8 @@ public class JanusRTCClient implements JanusClient {
 	private void createSession() {
 		if (DEBUG) Log.v(TAG, "createSession:");
 		// サーバー情報を取得できたらセッションを生成
-		final Call<Session> call = mJanus.create(apiName, new Creator());
+		final Call<Session> call = mJanus.create(
+			roomConnectionParameters.apiName, new Creator());
 		addCall(call);
 		call.enqueue(new Callback<Session>() {
 			@Override
@@ -1320,7 +1318,8 @@ public class JanusRTCClient implements JanusClient {
 		detachAll();
 		if (mSession != null) {
 			final Destroy destroy = new Destroy(mSession, null);
-			final Call<Void> call = mJanus.destroy(apiName, mSession.id(), destroy);
+			final Call<Void> call = mJanus.destroy(
+				roomConnectionParameters.apiName, mSession.id(), destroy);
 			addCall(call);
 			try {
 				call.execute();
@@ -1578,7 +1577,8 @@ public class JanusRTCClient implements JanusClient {
 	private void longPoll() {
 		if (DEBUG) Log.v(TAG, "longPoll:");
 		if (mSession == null) return;
-		final Call<ResponseBody> call = mLongPoll.getEvent(apiName, mSession.id());
+		final Call<ResponseBody> call = mLongPoll.getEvent(
+			roomConnectionParameters.apiName, mSession.id());
 		addCall(call);
 		call.enqueue(new Callback<ResponseBody>() {
 			@Override
