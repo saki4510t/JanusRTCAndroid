@@ -102,7 +102,7 @@ public interface JanusCallback {
 	public void onLeave(final PublisherInfo info, final int numUsers);
 
 	/**
-	 * Callback fired once channel is closed.
+	 * Callback fired once channel is closed (hangup event occurred).
 	 */
 	public void onChannelClose();
 	
