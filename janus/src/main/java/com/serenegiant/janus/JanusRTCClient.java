@@ -335,7 +335,8 @@ public class JanusRTCClient implements JanusClient {
 				if (DEBUG) Log.d(TAG, "Stop video source.");
 				try {
 					videoCapturer.stopCapture();
-				} catch (InterruptedException e) {
+				} catch (final InterruptedException e) {
+					// ignore
 				}
 				videoCapturerStopped = true;
 			}
@@ -1694,7 +1695,7 @@ public class JanusRTCClient implements JanusClient {
 	 * プラグインイベントの処理
 	 * @param body
 	 */
-	private void handlePluginEvent(final JSONObject body) {
+	private void handlePluginEvent(@NonNull final JSONObject body) {
 		if (DEBUG) Log.v(TAG, "handlePluginEvent:" + body);
 		final Gson gson = new Gson();
 		final EventRoom event = gson.fromJson(body.toString(), EventRoom.class);
@@ -1715,12 +1716,13 @@ public class JanusRTCClient implements JanusClient {
 	 * WebRTC関係のメッセージの処理
 	 * @param body
 	 */
-	private void handleWebRTCEvent(final JSONObject body) {
+	private void handleWebRTCEvent(@NonNull final JSONObject body) {
 		if (DEBUG) Log.v(TAG, "handleWebRTCEvent:" + body);
 		switch (body.optString("janus")) {
 		case "media":
 		case "webrtcup":
 		case "slowlink":
+			mCallback.onEvent(body);
 			break;
 		case "hangup":
 			mCallback.onChannelClose();

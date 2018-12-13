@@ -23,6 +23,7 @@ import android.support.annotation.NonNull;
 
 import com.serenegiant.janus.response.PublisherInfo;
 
+import org.json.JSONObject;
 import org.webrtc.IceCandidate;
 import org.webrtc.PeerConnection;
 import org.webrtc.SessionDescription;
@@ -105,6 +106,12 @@ public interface JanusCallback {
 	 * Callback fired once channel is closed (hangup event occurred).
 	 */
 	public void onChannelClose();
+	
+	/**
+	 * Callback fired when something webrtc event  other than hangup event occurred.
+	 * @param event
+	 */
+	public void onEvent(@NonNull final JSONObject event);
 	
 	/**
 	 * Callback fired once peer connection is closed.

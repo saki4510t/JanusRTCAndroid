@@ -46,6 +46,7 @@ import org.appspot.apprtc.RoomConnectionParameters;
 import org.appspot.apprtc.DataChannelParameters;
 import org.appspot.apprtc.PeerConnectionParameters;
 import org.appspot.apprtc.UnhandledExceptionHandler;
+import org.json.JSONObject;
 import org.webrtc.Camera1Enumerator;
 import org.webrtc.Camera2Enumerator;
 import org.webrtc.CameraEnumerator;
@@ -942,7 +943,12 @@ public class CallActivity extends BaseActivity
 				}
 			});
 		}
-	
+		
+		@Override
+		public void onEvent(@NonNull final JSONObject event) {
+			if (DEBUG) Log.v(TAG, "onEvent:" + event);
+		}
+		
 		@Override
 		public void onChannelError(final String description) {
 			reportError(description);
