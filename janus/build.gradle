@@ -32,12 +32,12 @@ android {
 dependencies {
 	api fileTree(dir: 'libs', include: ['*.jar'])
 
-	implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-	implementation 'androidx.appcompat:appcompat:1.0.0'
-
 	testImplementation 'junit:junit:4.12'
 	androidTestImplementation 'androidx.test.ext:junit:1.1.1'
-	androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
+	androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+
+	implementation "androidx.appcompat:appcompat:${androidXVersion}"
+	implementation "androidx.legacy:legacy-support-v4:${androidXLegacyV4}"
 
 	api "com.google.code.gson:gson:${gsonVersion}"
 	api "com.squareup.okhttp3:okhttp:${okHttpVersion}"
@@ -54,9 +54,7 @@ dependencies {
 	api "org.webrtc:google-webrtc:${webRTCVersion}"
 	api project(':autobanh-jar')
 
-	implementation("com.serenegiant:common:${commonLibVersion}") {
-		exclude module: 'support-v4'
-	}
+	implementation "com.serenegiant:common:${commonLibVersion}"
 }
 
 def repo = new File(rootDir, "repository")
