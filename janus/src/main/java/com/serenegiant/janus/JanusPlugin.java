@@ -62,8 +62,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-import javax.annotation.Nullable;
-
+import androidx.annotation.Nullable;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;

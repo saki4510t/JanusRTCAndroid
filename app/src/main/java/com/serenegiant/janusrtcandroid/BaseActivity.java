@@ -25,12 +25,12 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import android.widget.Toast;
 
-import com.serenegiant.dialog.MessageDialogFragment;
-import com.serenegiant.utils.BuildCheck;
-import com.serenegiant.utils.PermissionCheck;
+import com.serenegiant.dialog.MessageDialogFragmentV4;
+import com.serenegiant.system.BuildCheck;
+import com.serenegiant.system.PermissionCheck;
 
 public abstract class BaseActivity extends AppCompatActivity
-	implements MessageDialogFragment.MessageDialogListener {
+	implements MessageDialogFragmentV4.MessageDialogListener {
 	
 	private static final boolean DEBUG = true;	// set false on production
 	private static final String TAG = BaseActivity.class.getSimpleName();
@@ -56,8 +56,8 @@ public abstract class BaseActivity extends AppCompatActivity
 	 */
 	@SuppressLint("NewApi")
 	@Override
-	public void onMessageDialogResult(final MessageDialogFragment dialog,
-		final int requestCode, final String[] permissions, final boolean result) {
+	public void onMessageDialogResult(@NonNull final MessageDialogFragmentV4 dialog,
+		final int requestCode, @NonNull final String[] permissions, final boolean result) {
 		
 		if (result) {
 			// メッセージダイアログでOKを押された時はパーミッション要求する
@@ -137,7 +137,7 @@ public abstract class BaseActivity extends AppCompatActivity
 	 */
 	protected boolean checkPermissionWriteExternalStorage() {
 		if (!PermissionCheck.hasWriteExternalStorage(this)) {
-			MessageDialogFragment.showDialog(this, REQUEST_PERMISSION_WRITE_EXTERNAL_STORAGE,
+			MessageDialogFragmentV4.showDialog(this, REQUEST_PERMISSION_WRITE_EXTERNAL_STORAGE,
 				R.string.permission_title, ID_PERMISSION_REQUEST_EXT_STORAGE,
 				new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE});
 			return false;
@@ -153,7 +153,7 @@ public abstract class BaseActivity extends AppCompatActivity
 	 */
 	protected boolean checkPermissionAudio() {
 		if (!PermissionCheck.hasAudio(this)) {
-			MessageDialogFragment.showDialog(this, REQUEST_PERMISSION_AUDIO_RECORDING,
+			MessageDialogFragmentV4.showDialog(this, REQUEST_PERMISSION_AUDIO_RECORDING,
 				R.string.permission_title, ID_PERMISSION_REQUEST_AUDIO,
 				new String[]{android.Manifest.permission.RECORD_AUDIO});
 			return false;
@@ -169,7 +169,7 @@ public abstract class BaseActivity extends AppCompatActivity
 	 */
 	protected boolean checkPermissionCamera() {
 		if (!PermissionCheck.hasCamera(this)) {
-			MessageDialogFragment.showDialog(this, REQUEST_PERMISSION_CAMERA,
+			MessageDialogFragmentV4.showDialog(this, REQUEST_PERMISSION_CAMERA,
 				R.string.permission_title, ID_PERMISSION_REQUEST_CAMERA,
 				new String[]{android.Manifest.permission.CAMERA});
 			return false;
@@ -185,7 +185,7 @@ public abstract class BaseActivity extends AppCompatActivity
 	 */
 	protected boolean checkPermissionNetwork() {
 		if (!PermissionCheck.hasNetwork(this)) {
-			MessageDialogFragment.showDialog(this, REQUEST_PERMISSION_NETWORK,
+			MessageDialogFragmentV4.showDialog(this, REQUEST_PERMISSION_NETWORK,
 				R.string.permission_title, ID_PERMISSION_REQUEST_NETWORK,
 				new String[]{android.Manifest.permission.INTERNET});
 			return false;

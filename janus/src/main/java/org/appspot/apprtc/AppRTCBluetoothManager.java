@@ -30,12 +30,13 @@ import org.webrtc.ThreadUtils;
 import java.util.List;
 import java.util.Set;
 
-import javax.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 /**
  * AppRTCProximitySensor manages functions related to Bluetoth devices in the
  * AppRTC demo.
  */
+@SuppressLint("MissingPermission")
 public class AppRTCBluetoothManager {
 	private static final boolean DEBUG = false; // set false on production
 	private static final String TAG = AppRTCBluetoothManager.class.getSimpleName();

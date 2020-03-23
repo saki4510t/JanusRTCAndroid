@@ -46,9 +46,9 @@ ext {
 	okHttpVersion = '3.10.0'
 	retrofit2Version = '2.4.0'
 	socketIOClientJavaVersion = '1.0.0'
-	webRTCVersion = '1.0.24277'	// 1.0.24139以降はそのままじゃ動かない
+	webRTCVersion = '1.0.28513'
 
-	commonLibVersion= '2.15.1'
+	commonLibVersion= '7.8.1'
 
 	versionCodeNum = 43
 	versionNameString = '1.7.3'

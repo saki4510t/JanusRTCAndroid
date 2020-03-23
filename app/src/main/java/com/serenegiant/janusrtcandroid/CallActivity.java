@@ -24,6 +24,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.FragmentTransaction;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -69,8 +70,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
-import javax.annotation.Nullable;
 
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
@@ -433,6 +432,7 @@ public class CallActivity extends BaseActivity
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
 		if (DEBUG) Log.v(TAG, "onActivityResult:");
 		if (requestCode != CAPTURE_PERMISSION_REQUEST_CODE)
 			return;
