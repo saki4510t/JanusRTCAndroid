@@ -19,8 +19,8 @@ package com.serenegiant.janus;
  *
 */
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.serenegiant.janus.response.Plugin;
 import com.serenegiant.janus.response.PublisherInfo;

@@ -10,7 +10,7 @@ package com.serenegiant.janus;/*
  *
 */
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import org.appspot.apprtc.RoomConnectionParameters;
 import org.webrtc.PeerConnectionFactory;

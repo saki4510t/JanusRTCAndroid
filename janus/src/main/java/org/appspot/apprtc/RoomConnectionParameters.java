@@ -10,8 +10,8 @@ package org.appspot.apprtc;
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Struct holding the connection parameters of an AppRTC room.

@@ -19,8 +19,8 @@ package com.serenegiant.janus.request;
  *
 */
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.serenegiant.janus.TransactionManager;
 import com.serenegiant.janus.response.Session;

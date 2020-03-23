@@ -19,7 +19,7 @@ package com.serenegiant.janus.request;
  *
 */
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * offer時のjsep用

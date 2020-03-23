@@ -19,7 +19,7 @@ package com.serenegiant.janus;
  *
 */
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.serenegiant.janus.response.PublisherInfo;
 
@@ -28,7 +28,6 @@ import org.webrtc.IceCandidate;
 import org.webrtc.PeerConnection;
 import org.webrtc.SessionDescription;
 
-import java.math.BigInteger;
 import java.util.List;
 
 import okhttp3.OkHttpClient;
