@@ -175,6 +175,8 @@ import retrofit2.Response;
 	protected final String TAG = "JanusPlugin:" + getClass().getSimpleName();
 
 	@NonNull
+	protected final Object mSync = new Object();
+	@NonNull
 	private final MediaConstraints sdpMediaConstraints;
 	@NonNull
 	private final PeerConnectionParameters peerConnectionParameters;
@@ -379,9 +381,11 @@ import retrofit2.Response;
 					removeCall(call);
 					final Plugin plugin = response.body();
 					if ("success".equals(plugin.janus)) {
-						mPlugin = plugin;
-						mRoom = new Room(mSession, mPlugin);
-						mRoomState = RoomState.ATTACHED;
+						synchronized (mSync) {
+							mPlugin = plugin;
+							mRoom = new Room(mSession, mPlugin);
+							mRoomState = RoomState.ATTACHED;
+						}
 						// プラグインにアタッチできた＼(^o^)／
 						if (DEBUG) Log.v(TAG, "attach:success");
 						mCallback.onAttach(JanusPlugin.this);
@@ -420,7 +424,15 @@ import retrofit2.Response;
 			? Build.MODEL : roomConnectionParameters.userName;
 		final String displayName = TextUtils.isEmpty(roomConnectionParameters.displayName)
 			? Build.MODEL : roomConnectionParameters.displayName;
-		final Message message = new Message(mRoom,
+		final Room roomCopy;
+		synchronized (mSync) {
+			roomCopy = mRoom;
+		}
+		if (roomCopy == null) {
+			reportError(new IllegalStateException("Unexpectedly room is null"));
+			return;
+		}
+		final Message message = new Message(roomCopy,
 			new Join(roomConnectionParameters.roomId, getPType(), userName, displayName, getFeedId()),
 			mTransactionCallback);
 		if (DEBUG) Log.v(TAG, "join:" + message);
@@ -476,8 +488,10 @@ import retrofit2.Response;
 			}
 			removeCall(call);
 			if (DEBUG) Log.d(TAG, "Closing peer connection.");
-			mRoom = null;
-			mPlugin = null;
+			synchronized (mSync) {
+				mRoom = null;
+				mPlugin = null;
+			}
 			if (dataChannel != null) {
 				dataChannel.dispose();
 				dataChannel = null;
@@ -500,11 +514,19 @@ import retrofit2.Response;
 			reportError(new RuntimeException("Sending offer SDP in non connected state."));
 			return;
 		}
+		final Room roomCopy;
+		synchronized (mSync) {
+			roomCopy = mRoom;
+		}
+		if (roomCopy == null) {
+			reportError(new IllegalStateException("Unexpectedly room is null"));
+			return;
+		}
 		final Call<EventRoom> call = mVideoRoom.offer(
 			roomConnectionParameters.apiName,
 			mSession.id(),
 			mPlugin.id(),
-			new Message(mRoom,
+			new Message(roomCopy,
 				new Configure(true, true),
 				new JsepSdp("offer", sdp.description),
 				mTransactionCallback)
@@ -550,11 +572,19 @@ import retrofit2.Response;
 			Log.e(TAG, "Sending answer in loopback mode.");
 			return;
 		}
+		final Room roomCopy;
+		synchronized (mSync) {
+			roomCopy = mRoom;
+		}
+		if (roomCopy == null) {
+			reportError(new IllegalStateException("Unexpectedly room is null"));
+			return;
+		}
 		final Call<ResponseBody> call = mVideoRoom.send(
 			roomConnectionParameters.apiName,
 			mSession.id(),
 			mPlugin.id(),
-			new Message(mRoom,
+			new Message(roomCopy,
 				new Start(1234),
 				new JsepSdp("answer", sdp.description),
 				mTransactionCallback)
@@ -575,20 +605,28 @@ import retrofit2.Response;
 		if (DEBUG) Log.v(TAG, "sendLocalIceCandidate:");
 		if ((mSession == null) || (mPlugin == null)) return;
 
+		final Room roomCopy;
+		synchronized (mSync) {
+			roomCopy = mRoom;
+		}
+		if (roomCopy == null) {
+			reportError(new IllegalStateException("Unexpectedly room is null"));
+			return;
+		}
 		final Call<EventRoom> call;
 		if (candidate != null) {
 			call = mVideoRoom.trickle(
 				roomConnectionParameters.apiName,
 				mSession.id(),
 				mPlugin.id(),
-				new Trickle(mRoom, candidate, mTransactionCallback)
+				new Trickle(roomCopy, candidate, mTransactionCallback)
 			);
 		} else {
 			call = mVideoRoom.trickleCompleted(
 				roomConnectionParameters.apiName,
 				mSession.id(),
 				mPlugin.id(),
-				new TrickleCompleted(mRoom, mTransactionCallback)
+				new TrickleCompleted(roomCopy, mTransactionCallback)
 			);
 		}
 		addCall(call);
@@ -903,8 +941,16 @@ import retrofit2.Response;
 		@NonNull final EventRoom room) {
 
 		if (DEBUG) Log.v(TAG, "handlePluginEventJoined:");
+		final Room roomCopy;
+		synchronized (mSync) {
+			roomCopy = mRoom;
+		}
+		if (roomCopy == null) {
+			reportError(new IllegalStateException("Unexpectedly room is null"));
+			return true;
+		}
 		mRoomState = RoomState.CONNECTED;
-		mRoom.publisherId = room.plugindata.data.id;
+		roomCopy.publisherId = room.plugindata.data.id;
 		mCallback.onJoin(this, room);
 		return true;	// true: 処理済み
 	}
@@ -942,9 +988,13 @@ import retrofit2.Response;
 			if (room.plugindata.data.leaving != null) {
 				// FIXME ここは即プラグインマップから削除してその上でonLeaveを呼ぶほうがよい？
 				executor.execute( () -> {
+					final Room roomCopy;
+					synchronized (mSync) {
+						roomCopy = mRoom;
+					}
 					mCallback.onLeave(JanusPlugin.this,
 						room.plugindata.data.leaving,
-						mRoom.getNumPublishers());
+						roomCopy != null ? roomCopy.getNumPublishers() : 0);
 				});
 			}
 		}
@@ -1164,20 +1214,24 @@ import retrofit2.Response;
 		 */
 		private void checkPublishers(@NonNull final EventRoom room) {
 			if (DEBUG) Log.v(TAG, "checkPublishers:");
-			if ((mRoom != null)
+			final Room roomCopy;
+			synchronized (mSync) {
+				roomCopy = mRoom;
+			}
+			if ((roomCopy != null)
 				&& (room.plugindata != null)
 				&& (room.plugindata.data != null)) {
 
 				// ローカルキャッシュ
 				final EventRoom.Data data = room.plugindata.data;
 				if (data.unpublished != null) {
-					mRoom.updatePublisher(data.unpublished, false);
+					roomCopy.updatePublisher(data.unpublished, false);
 				}
 				if (data.leaving != null) {
-					mRoom.removePublisher(data.leaving);
+					roomCopy.removePublisher(data.leaving);
 				}
 				@NonNull
-				final List<PublisherInfo> changed = mRoom.updatePublishers(data.publishers);
+				final List<PublisherInfo> changed = roomCopy.updatePublishers(data.publishers);
 				if (!changed.isEmpty()) {
 					if (DEBUG) Log.v(TAG, "checkPublishers:number of publishers changed");
 					for (final PublisherInfo info: changed) {
