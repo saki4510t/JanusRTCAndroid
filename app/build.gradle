@@ -10,11 +10,12 @@ android {
 	}
 
     defaultConfig {
-		minSdkVersion 16
+		minSdkVersion 21
 		targetSdkVersion versionTarget
 		versionCode versionCodeNum
 		versionName versionNameString
 		vectorDrawables.useSupportLibrary = true
+		multiDexEnabled true
 		applicationId "com.serenegiant.janusrtcandroid"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
