@@ -204,14 +204,22 @@ public class AppRTCAudioManager {
 		if (DEBUG) Log.d(TAG, "defaultAudioDevice: " + defaultAudioDevice);
 		AppRTCUtils.logDeviceInfo(TAG);
 	}
-	
+
+	/**
+	 * get whether audio manager is running or not
+	 * @return
+	 */
+	public boolean isStarted() {
+		return amState == AudioManagerState.RUNNING;
+	}
+
 	@SuppressWarnings("deprecation")
 	// TODO(henrika): audioManager.requestAudioFocus() is deprecated.
 	public void start(AudioManagerEvents audioManagerEvents) {
 		if (DEBUG) Log.d(TAG, "start");
 		ThreadUtils.checkIsOnMainThread();
 		if (amState == AudioManagerState.RUNNING) {
-			Log.e(TAG, "AudioManager is already active");
+			if (DEBUG) Log.e(TAG, "AudioManager is already active");
 			return;
 		}
 		// TODO(henrika): perhaps call new method called preInitAudio() here if UNINITIALIZED.
@@ -311,7 +319,7 @@ public class AppRTCAudioManager {
 		if (DEBUG) Log.d(TAG, "stop");
 		ThreadUtils.checkIsOnMainThread();
 		if (amState != AudioManagerState.RUNNING) {
-			Log.e(TAG, "Trying to stop AudioManager in incorrect state: " + amState);
+			if (DEBUG) Log.e(TAG, "Trying to stop AudioManager in incorrect state: " + amState);
 			return;
 		}
 		amState = AudioManagerState.UNINITIALIZED;
