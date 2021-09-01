@@ -10,26 +10,26 @@
     <string name="pref_videocall_key">videocall_preference</string>
     <string name="pref_videocall_title">Video call.</string>
     <string name="pref_videocall_dlg">Enable video in a call.</string>
-    <string name="pref_videocall_default">true</string>
+    <string name="pref_videocall_default" translatable="false">true</string>
 
     <string name="pref_screencapture_key">screencapture_preference</string>
     <string name="pref_screencapture_title">Use screencapture.</string>
-    <string name="pref_screencapture_default">false</string>
+    <string name="pref_screencapture_default" translatable="false">false</string>
 
     <string name="pref_camera2_key">camera2_preference</string>
     <string name="pref_camera2_title">Use Camera2.</string>
-    <string name="pref_camera2_default">true</string>
+    <string name="pref_camera2_default" translatable="false">true</string>
     <string name="pref_camera2_not_supported">Not supported on this device.</string>
 
     <string name="pref_resolution_key">resolution_preference</string>
     <string name="pref_resolution_title">Video resolution.</string>
     <string name="pref_resolution_dlg">Enter AppRTC local video resolution.</string>
-    <string name="pref_resolution_default">Default</string>
+    <string name="pref_resolution_default" translatable="false">Default</string>
 
     <string name="pref_fps_key">fps_preference</string>
     <string name="pref_fps_title">Camera fps.</string>
     <string name="pref_fps_dlg">Enter local camera fps.</string>
-    <string name="pref_fps_default">Default</string>
+    <string name="pref_fps_default" translatable="false">Default</string>
 
     <string name="pref_capturequalityslider_key">capturequalityslider_preference</string>
     <string name="pref_capturequalityslider_title">Capture quality slider.</string>
@@ -39,32 +39,32 @@
     <string name="pref_maxvideobitrate_key">maxvideobitrate_preference</string>
     <string name="pref_maxvideobitrate_title">Maximum video bitrate setting.</string>
     <string name="pref_maxvideobitrate_dlg">Maximum video bitrate setting.</string>
-    <string name="pref_maxvideobitrate_default">Default</string>
+    <string name="pref_maxvideobitrate_default" translatable="false">Default</string>
 
     <string name="pref_maxvideobitratevalue_key">maxvideobitratevalue_preference</string>
     <string name="pref_maxvideobitratevalue_title">Video encoder maximum bitrate.</string>
     <string name="pref_maxvideobitratevalue_dlg">Enter video encoder maximum bitrate in kbps.</string>
-    <string name="pref_maxvideobitratevalue_default">1700</string>
+    <string name="pref_maxvideobitratevalue_default" translatable="false">1700</string>
 
     <string name="pref_videocodec_key">videocodec_preference</string>
     <string name="pref_videocodec_title">Default video codec.</string>
     <string name="pref_videocodec_dlg">Select default video codec.</string>
-    <string name="pref_videocodec_default">VP8</string>
+    <string name="pref_videocodec_default" translatable="false">VP8</string>
 
     <string name="pref_hwcodec_key">hwcodec_preference</string>
     <string name="pref_hwcodec_title">Video codec hardware acceleration.</string>
     <string name="pref_hwcodec_dlg">Use hardware accelerated video codec (if available).</string>
-    <string name="pref_hwcodec_default">true</string>
+    <string name="pref_hwcodec_default" translatable="false">true</string>
 
     <string name="pref_capturetotexture_key">capturetotexture_preference</string>
     <string name="pref_capturetotexture_title">Video capture to surface texture.</string>
     <string name="pref_capturetotexture_dlg">Capture video to textures (if available).</string>
-    <string name="pref_capturetotexture_default">true</string>
+    <string name="pref_capturetotexture_default" translatable="false">true</string>
 
     <string name="pref_flexfec_key">flexfec_preference</string>
     <string name="pref_flexfec_title">Codec-agnostic Flexible FEC.</string>
     <string name="pref_flexfec_dlg">Enable FlexFEC.</string>
-    <string name="pref_flexfec_default">false</string>
+    <string name="pref_flexfec_default" translatable="false">false</string>
 
     <string name="pref_value_enabled">Enabled</string>
     <string name="pref_value_disabled">Disabled</string>
@@ -75,64 +75,64 @@
     <string name="pref_startaudiobitrate_key">startaudiobitrate_preference</string>
     <string name="pref_startaudiobitrate_title">Audio bitrate setting.</string>
     <string name="pref_startaudiobitrate_dlg">Audio bitrate setting.</string>
-    <string name="pref_startaudiobitrate_default">Default</string>
+    <string name="pref_startaudiobitrate_default" translatable="false">Default</string>
 
     <string name="pref_startaudiobitratevalue_key">startaudiobitratevalue_preference</string>
     <string name="pref_startaudiobitratevalue_title">Audio codec bitrate.</string>
     <string name="pref_startaudiobitratevalue_dlg">Enter audio codec bitrate in kbps.</string>
-    <string name="pref_startaudiobitratevalue_default">32</string>
+    <string name="pref_startaudiobitratevalue_default" translatable="false">32</string>
 
     <string name="pref_audiocodec_key">audiocodec_preference</string>
     <string name="pref_audiocodec_title">Default audio codec.</string>
     <string name="pref_audiocodec_dlg">Select default audio codec.</string>
-    <string name="pref_audiocodec_default">OPUS</string>
+    <string name="pref_audiocodec_default" translatable="false">OPUS</string>
 
     <string name="pref_noaudioprocessing_key">audioprocessing_preference</string>
     <string name="pref_noaudioprocessing_title">Disable audio processing.</string>
     <string name="pref_noaudioprocessing_dlg">Disable audio processing pipeline.</string>
-    <string name="pref_noaudioprocessing_default">false</string>
+    <string name="pref_noaudioprocessing_default" translatable="false">false</string>
 
     <string name="pref_aecdump_key">aecdump_preference</string>
     <string name="pref_aecdump_title">Create aecdump.</string>
     <string name="pref_aecdump_dlg">Enable diagnostic audio recordings.</string>
-    <string name="pref_aecdump_default">false</string>
+    <string name="pref_aecdump_default" translatable="false">false</string>
 
     <string name="pref_enable_save_input_audio_to_file_key">enable_key</string>
     <string name="pref_enable_save_input_audio_to_file_title">Save input audio to file.</string>
     <string name="pref_enable_save_input_audio_to_file_dlg">Save input audio to file.</string>
-    <string name="pref_enable_save_input_audio_to_file_default">false</string>
+    <string name="pref_enable_save_input_audio_to_file_default" translatable="false">false</string>
 
     <string name="pref_opensles_key">opensles_preference</string>
     <string name="pref_opensles_title">Use OpenSL ES for audio playback.</string>
     <string name="pref_opensles_dlg">Use OpenSL ES for audio playback.</string>
-    <string name="pref_opensles_default">false</string>
+    <string name="pref_opensles_default" translatable="false">false</string>
 
     <string name="pref_disable_built_in_aec_key">disable_built_in_aec_preference</string>
     <string name="pref_disable_built_in_aec_title">Disable hardware AEC.</string>
     <string name="pref_disable_built_in_aec_dlg">Disable hardware AEC.</string>
-    <string name="pref_disable_built_in_aec_default">false</string>
+    <string name="pref_disable_built_in_aec_default" translatable="false">false</string>
     <string name="pref_built_in_aec_not_available">Hardware AEC is not available</string>
 
     <string name="pref_disable_built_in_agc_key">disable_built_in_agc_preference</string>
     <string name="pref_disable_built_in_agc_title">Disable hardware AGC.</string>
     <string name="pref_disable_built_in_agc_dlg">Disable hardware AGC.</string>
-    <string name="pref_disable_built_in_agc_default">false</string>
+    <string name="pref_disable_built_in_agc_default" translatable="false">false</string>
     <string name="pref_built_in_agc_not_available">Hardware AGC is not available</string>
 
     <string name="pref_disable_built_in_ns_key">disable_built_in_ns_preference</string>
     <string name="pref_disable_built_in_ns_title">Disable hardware NS.</string>
     <string name="pref_disable_built_in_ns_dlg">Disable hardware NS.</string>
-    <string name="pref_disable_built_in_ns_default">false</string>
+    <string name="pref_disable_built_in_ns_default" translatable="false">false</string>
     <string name="pref_built_in_ns_not_available">Hardware NS is not available</string>
 
     <string name="pref_disable_webrtc_agc_and_hpf_key">disable_webrtc_agc_and_hpf_preference</string>
     <string name="pref_disable_webrtc_agc_and_hpf_title">Disable WebRTC AGC and HPF.</string>
-    <string name="pref_disable_webrtc_agc_default">false</string>
+    <string name="pref_disable_webrtc_agc_default" translatable="false">false</string>
 
     <string name="pref_speakerphone_key">speakerphone_preference</string>
     <string name="pref_speakerphone_title">Speakerphone.</string>
     <string name="pref_speakerphone_dlg">Speakerphone.</string>
-    <string name="pref_speakerphone_default">auto</string>
+    <string name="pref_speakerphone_default" translatable="false">auto</string>
 
     <string name="pref_datasettings_key">data_settings_key</string>
     <string name="pref_datasettings_title">WebRTC data channel settings.</string>
