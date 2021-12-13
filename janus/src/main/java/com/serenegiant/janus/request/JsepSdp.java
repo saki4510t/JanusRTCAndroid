@@ -34,6 +34,7 @@ public class JsepSdp {
 		this.sdp = sdp;
 	}
 	
+	@NonNull
 	@Override
 	public String toString() {
 		return "JsepSdp{" +

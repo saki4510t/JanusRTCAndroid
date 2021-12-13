@@ -38,6 +38,7 @@ import com.serenegiant.janus.response.EventRoom;
 import com.serenegiant.janus.response.Plugin;
 import com.serenegiant.janus.response.PublisherInfo;
 import com.serenegiant.janus.response.Session;
+import com.serenegiant.nio.CharsetsUtils;
 
 import org.appspot.apprtc.AppRTCConst;
 import org.appspot.apprtc.PeerConnectionParameters;
@@ -57,7 +58,6 @@ import org.webrtc.SessionDescription;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -706,13 +706,11 @@ import retrofit2.Response;
 	public void onIceGatheringChange(final PeerConnection.IceGatheringState newState) {
 		if (DEBUG) Log.v(TAG, "onIceGatheringChange:" + newState);
 		switch (newState) {
-		case NEW:
-			break;
-		case GATHERING:
-			break;
 		case COMPLETE:
 			executor.execute(() -> sendLocalIceCandidate(null, isLoopback));
 			break;
+		case NEW:
+		case GATHERING:
 		default:
 			break;
 		}
@@ -781,7 +779,7 @@ import retrofit2.Response;
 				final ByteBuffer data = buffer.data;
 				final byte[] bytes = new byte[data.capacity()];
 				data.get(bytes);
-				String strData = new String(bytes, Charset.forName("UTF-8"));
+				String strData = new String(bytes, CharsetsUtils.UTF8);
 				Log.d(TAG, "Got msg: " + strData + " over " + channel);
 			}
 		});

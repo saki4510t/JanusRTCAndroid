@@ -49,6 +49,7 @@ public class Hangup {
 		this(session.id(), callback);
 	}
 	
+	@NonNull
 	@Override
 	public String toString() {
 		return "Hangup{" +

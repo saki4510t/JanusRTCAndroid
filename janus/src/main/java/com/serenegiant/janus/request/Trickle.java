@@ -84,6 +84,7 @@ public class Trickle {
 			this.candidate = candidate;
 		}
 		
+		@NonNull
 		@Override
 		public String toString() {
 			return "Candidate{" +
@@ -94,6 +95,7 @@ public class Trickle {
 		}
 	}
 
+	@NonNull
 	@Override
 	public String toString() {
 		return "Trickle{" +

@@ -54,6 +54,7 @@ public class Attach {
 		this(session.id(), plugin, callback);
 	}
 	
+	@NonNull
 	@Override
 	public String toString() {
 		return "Attach{" +

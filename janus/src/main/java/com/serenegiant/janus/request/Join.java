@@ -48,6 +48,7 @@ public class Join {
 		this.feed = feed;
 	}
 	
+	@NonNull
 	@Override
 	public String toString() {
 		return "Join{" +

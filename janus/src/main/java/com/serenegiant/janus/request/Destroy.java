@@ -44,10 +44,11 @@ public class Destroy {
 	}
 	
 	public Destroy(@NonNull final Session session,
-		@NonNull final TransactionManager.TransactionCallback callback) {
+		@Nullable final TransactionManager.TransactionCallback callback) {
 		this(session.data.id, callback);
 	}
 	
+	@NonNull
 	@Override
 	public String toString() {
 		return "Destroy{" +

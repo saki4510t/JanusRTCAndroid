@@ -24,6 +24,8 @@ import com.serenegiant.janus.request.JsepSdp;
 import java.math.BigInteger;
 import java.util.Arrays;
 
+import androidx.annotation.NonNull;
+
 public class EventRoom {
 	public final String janus;
 	public final BigInteger sender;
@@ -50,7 +52,8 @@ public class EventRoom {
 			this.plugin = plugin;
 			this.data = data;
 		}
-		
+
+		@NonNull
 		@Override
 		public String toString() {
 			return "PluginData{" +
@@ -96,7 +99,8 @@ public class EventRoom {
 			this.private_id = private_id;
 			this.publishers = publishers;
 		}
-		
+
+		@NonNull
 		@Override
 		public String toString() {
 			return "Data{" +
@@ -115,7 +119,8 @@ public class EventRoom {
 				'}';
 		}
 	}
-	
+
+	@NonNull
 	@Override
 	public String toString() {
 		return "EventRoom{" +

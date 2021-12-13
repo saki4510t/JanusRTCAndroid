@@ -49,6 +49,7 @@ public class Detach {
 		this(session.id(), callback);
 	}
 	
+	@NonNull
 	@Override
 	public String toString() {
 		return "Detach{" +

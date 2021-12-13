@@ -1759,6 +1759,7 @@ public class JanusRTCClient implements JanusClient {
 		final List<Interceptor> interceptors = builder.interceptors();
 		builder
 			.addInterceptor(new Interceptor() {
+				@NonNull
 				@Override
 				public okhttp3.Response intercept(@NonNull Chain chain) throws IOException {
 	
@@ -1779,6 +1780,7 @@ public class JanusRTCClient implements JanusClient {
 			for (final Interceptor interceptor: interceptors) {
 				if (interceptor instanceof HttpLoggingInterceptor) {
 					hasLogging = true;
+					break;
 				}
 			}
 			if (!hasLogging) {

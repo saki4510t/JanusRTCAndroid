@@ -21,6 +21,8 @@ package com.serenegiant.janus.response;
 
 import java.math.BigInteger;
 
+import androidx.annotation.NonNull;
+
 public class Plugin {
 	public final String janus;
 	public final String transaction;
@@ -43,7 +45,8 @@ public class Plugin {
 	public BigInteger id() {
 		return data != null ? data.id : null;
 	}
-	
+
+	@NonNull
 	@Override
 	public String toString() {
 		return "Plugin{" +

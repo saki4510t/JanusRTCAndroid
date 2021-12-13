@@ -21,6 +21,8 @@ package com.serenegiant.janus.response;
 
 import org.json.JSONObject;
 
+import androidx.annotation.NonNull;
+
 public class Event {
 	public final String janus;
 	public final String sender;
@@ -47,7 +49,8 @@ public class Event {
 			this.plugin = plugin;
 			this.data = data;
 		}
-		
+
+		@NonNull
 		@Override
 		public String toString() {
 			return "PluginData{" +
@@ -56,7 +59,8 @@ public class Event {
 				'}';
 		}
 	}
-	
+
+	@NonNull
 	@Override
 	public String toString() {
 		return "Event{" +

@@ -69,7 +69,8 @@ public class ServerInfo {
 		public Transports(@NonNull final List<Transport> transports) {
 			this.transports = transports;
 		}
-		
+
+		@NonNull
 		@Override
 		public String toString() {
 			final StringBuilder sb = new StringBuilder();
@@ -92,6 +93,7 @@ public class ServerInfo {
 			this.plugins = plugins;
 		}
 
+		@NonNull
 		@Override
 		public String toString() {
 			final StringBuilder sb = new StringBuilder();
@@ -110,6 +112,7 @@ public class ServerInfo {
 		return plugins != null ? plugins.plugins : null;
 	}
 
+	@NonNull
 	@Override
 	public String toString() {
 		return "ServerInfo{" +

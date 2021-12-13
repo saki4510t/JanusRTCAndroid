@@ -21,6 +21,8 @@ package com.serenegiant.janus.response;
 
 import java.math.BigInteger;
 
+import androidx.annotation.NonNull;
+
 public class PublisherInfo {
 	public final BigInteger id;
 	public final String display;
@@ -63,7 +65,8 @@ public class PublisherInfo {
 	public int hashCode() {
 		return id != null ? id.hashCode() : super.hashCode();
 	}
-	
+
+	@NonNull
 	@Override
 	public String toString() {
 		return "PublisherInfo{" +

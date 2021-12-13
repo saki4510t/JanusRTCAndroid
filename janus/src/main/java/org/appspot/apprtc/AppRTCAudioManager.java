@@ -8,6 +8,7 @@ package org.appspot.apprtc;/*
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -213,6 +214,7 @@ public class AppRTCAudioManager {
 		return amState == AudioManagerState.RUNNING;
 	}
 
+	@SuppressLint("WrongConstant")
 	@SuppressWarnings("deprecation")
 	// TODO(henrika): audioManager.requestAudioFocus() is deprecated.
 	public void start(AudioManagerEvents audioManagerEvents) {

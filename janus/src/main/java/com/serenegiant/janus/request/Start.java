@@ -19,6 +19,8 @@ package com.serenegiant.janus.request;
  *
 */
 
+import androidx.annotation.NonNull;
+
 public class Start {
 	public final String request;
 	public final int room;
@@ -28,6 +30,7 @@ public class Start {
 		this.room = room;
 	}
 	
+	@NonNull
 	@Override
 	public String toString() {
 		return "Start{" +

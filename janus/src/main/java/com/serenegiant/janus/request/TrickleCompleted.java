@@ -62,7 +62,8 @@ public class TrickleCompleted {
 		public Candidate() {
 			this.completed = true;
 		}
-		
+
+		@NonNull
 		@Override
 		public String toString() {
 			return "Candidate{" +
@@ -71,6 +72,7 @@ public class TrickleCompleted {
 		}
 	}
 
+	@NonNull
 	@Override
 	public String toString() {
 		return "Trickle{" +

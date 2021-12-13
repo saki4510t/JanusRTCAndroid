@@ -74,6 +74,7 @@ public class Message {
 		this(room.sessionId, room.pluginId, body, jsep, callback);
 	}
 	
+	@NonNull
 	@Override
 	public String toString() {
 		return "Message{" +

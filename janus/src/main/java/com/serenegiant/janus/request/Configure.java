@@ -19,6 +19,8 @@ package com.serenegiant.janus.request;
  *
 */
 
+import androidx.annotation.NonNull;
+
 /**
  * message body
  */
@@ -33,6 +35,7 @@ public class Configure {
 		this.video = video;
 	}
 	
+	@NonNull
 	@Override
 	public String toString() {
 		return "Configure{" +

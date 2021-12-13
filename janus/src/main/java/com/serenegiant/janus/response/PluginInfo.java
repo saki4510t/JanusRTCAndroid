@@ -19,6 +19,8 @@ package com.serenegiant.janus.response;
  *
 */
 
+import androidx.annotation.NonNull;
+
 public class PluginInfo {
 	public final String name;
 	public final String author;
@@ -35,7 +37,8 @@ public class PluginInfo {
 		this.version_string = version_string;
 		this.version = version;
 	}
-	
+
+	@NonNull
 	@Override
 	public String toString() {
 		return "PluginInfo{" +
