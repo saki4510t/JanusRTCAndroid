@@ -292,11 +292,7 @@ public class SettingsActivity extends BaseActivity implements OnSharedPreference
 		final String bitrateTypeDefault = getString(R.string.pref_maxvideobitrate_default);
 		final String bitrateType =
 			sharedPreferences.getString(keyprefMaxVideoBitrateType, bitrateTypeDefault);
-		if (bitrateType.equals(bitrateTypeDefault)) {
-			bitratePreferenceValue.setEnabled(false);
-		} else {
-			bitratePreferenceValue.setEnabled(true);
-		}
+		bitratePreferenceValue.setEnabled(!bitrateType.equals(bitrateTypeDefault));
 	}
 	
 	private void setAudioBitrateEnable(final SharedPreferences sharedPreferences) {
@@ -305,11 +301,7 @@ public class SettingsActivity extends BaseActivity implements OnSharedPreference
 		final String bitrateTypeDefault = getString(R.string.pref_startaudiobitrate_default);
 		final String bitrateType =
 			sharedPreferences.getString(keyprefStartAudioBitrateType, bitrateTypeDefault);
-		if (bitrateType.equals(bitrateTypeDefault)) {
-			bitratePreferenceValue.setEnabled(false);
-		} else {
-			bitratePreferenceValue.setEnabled(true);
-		}
+		bitratePreferenceValue.setEnabled(!bitrateType.equals(bitrateTypeDefault));
 	}
 	
 	private void setDataChannelEnable(final SharedPreferences sharedPreferences) {

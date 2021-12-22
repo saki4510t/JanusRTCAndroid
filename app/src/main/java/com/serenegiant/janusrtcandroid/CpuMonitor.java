@@ -15,15 +15,16 @@ import android.content.IntentFilter;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.SystemClock;
-import androidx.annotation.Nullable;
 import android.util.Log;
+
+import com.serenegiant.nio.CharsetsUtils;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.Charset;
+import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.Scanner;
 import java.util.concurrent.Executors;
@@ -31,15 +32,17 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.Nullable;
+
 /**
- * Simple CPU monitor.  The caller creates a com.serenegiant.janusrtcandroid.CpuMonitor object which can then
+ * Simple CPU monitor.  The caller creates a org.appspot.apprtc.CpuMonitor object which can then
  * be used via sampleCpuUtilization() to collect the percentual use of the
  * cumulative CPU capacity for all CPUs running at their nominal frequency.  3
  * values are generated: (1) getCpuCurrent() returns the use since the last
  * sampleCpuUtilization(), (2) getCpuAvg3() returns the use since 3 prior
  * calls, and (3) getCpuAvgAll() returns the use over all SAMPLE_SAVE_NUMBER
  * calls.
- * <p>
+ *
  * <p>CPUs in Android are often "offline", and while this of course means 0 Hz
  * as current frequency, in this state we cannot even get their nominal
  * frequency.  We therefore tread carefully, and allow any CPU to be missing.
@@ -48,24 +51,24 @@ import java.util.concurrent.TimeUnit;
  * frequency and remember it.  (Since CPU 0 in practice always seem to be
  * online, this unidirectional frequency inheritance should be no problem in
  * practice.)
- * <p>
+ *
  * <p>Caveats:
  * o No provision made for zany "turbo" mode, common in the x86 world.
  * o No provision made for ARM big.LITTLE; if CPU n can switch behind our
  * back, we might get incorrect estimates.
  * o This is not thread-safe.  To call asynchronously, create different
- * com.serenegiant.janusrtcandroid.CpuMonitor objects.
- * <p>
+ * org.appspot.apprtc.CpuMonitor objects.
+ *
  * <p>If we can gather enough info to generate a sensible result,
  * sampleCpuUtilization returns true.  It is designed to never throw an
  * exception.
- * <p>
+ *
  * <p>sampleCpuUtilization should not be called too often in its present form,
  * since then deltas would be small and the percent values would fluctuate and
  * be unreadable. If it is desirable to call it more often than say once per
  * second, one would need to increase SAMPLE_SAVE_NUMBER and probably use
  * Queue<Integer> to avoid copying overhead.
- * <p>
+ *
  * <p>Known problems:
  * 1. Nexus 7 devices running Kitkat have a kernel which often output an
  * incorrect 'idle' field in /proc/stat.  The value is close to twice the
@@ -73,16 +76,18 @@ import java.util.concurrent.TimeUnit;
  * jumping up and back down we might create faulty CPU load readings.
  */
 @TargetApi(Build.VERSION_CODES.KITKAT)
-class CpuMonitor {
-	private static final boolean DEBUG = true;	// set false on production
+public class CpuMonitor {
+	private static final boolean DEBUG = false; // set false on production
 	private static final String TAG = CpuMonitor.class.getSimpleName();
-
 	private static final int MOVING_AVERAGE_SAMPLES = 5;
-	
+
 	private static final int CPU_STAT_SAMPLE_PERIOD_MS = 2000;
 	private static final int CPU_STAT_LOG_PERIOD_MS = 6000;
-	
-	private final Context appContext;
+
+	/**
+	 * Should not hold strong reference of (app) context!!
+	 */
+	private final WeakReference<Context> mWeakAppContext;
 	// User CPU usage at current frequency.
 	private final MovingAverage userCpuUsage;
 	// System CPU usage at current frequency.
@@ -91,7 +96,7 @@ class CpuMonitor {
 	private final MovingAverage totalCpuUsage;
 	// CPU frequency in percentage from maximum.
 	private final MovingAverage frequencyScale;
-	
+
 	@Nullable
 	private ScheduledExecutorService executor;
 	private long lastStatLogTimeMs;
@@ -105,95 +110,120 @@ class CpuMonitor {
 	private double[] curFreqScales;
 	@Nullable
 	private ProcStat lastProcStat;
-	
+	private Future<?> mActiveFuture;
+	private boolean mReleased;
+
 	private static class ProcStat {
 		final long userTime;
 		final long systemTime;
 		final long idleTime;
-		
+
 		ProcStat(long userTime, long systemTime, long idleTime) {
 			this.userTime = userTime;
 			this.systemTime = systemTime;
 			this.idleTime = idleTime;
 		}
 	}
-	
+
+	/**
+	 * 移動平均を計算するためのヘルパークラス
+	 */
 	private static class MovingAverage {
 		private final int size;
 		private double sum;
 		private double currentValue;
-		private double[] circBuffer;
-		private int circBufferIndex;
-		
-		public MovingAverage(final int size) {
+		private final double[] circularBuffer;
+		private int circularBufferIndex;
+
+		public MovingAverage(int size) {
 			if (size <= 0) {
 				throw new AssertionError("Size value in MovingAverage ctor should be positive.");
 			}
 			this.size = size;
-			circBuffer = new double[size];
+			circularBuffer = new double[size];
 		}
-		
+
 		public void reset() {
-			Arrays.fill(circBuffer, 0);
-			circBufferIndex = 0;
+			Arrays.fill(circularBuffer, 0);
+			circularBufferIndex = 0;
 			sum = 0;
 			currentValue = 0;
 		}
-		
-		public void addValue(final double value) {
-			sum -= circBuffer[circBufferIndex];
-			circBuffer[circBufferIndex++] = value;
+
+		public void addValue(double value) {
+			sum -= circularBuffer[circularBufferIndex];
+			circularBuffer[circularBufferIndex++] = value;
 			currentValue = value;
 			sum += value;
-			if (circBufferIndex >= size) {
-				circBufferIndex = 0;
+			if (circularBufferIndex >= size) {
+				circularBufferIndex = 0;
 			}
 		}
-		
+
 		public double getCurrent() {
 			return currentValue;
 		}
-		
+
 		public double getAverage() {
 			return sum / (double) size;
 		}
 	}
-	
+
 	public static boolean isSupported() {
-		return Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
-			&& Build.VERSION.SDK_INT < Build.VERSION_CODES.N;
+		return Build.VERSION.SDK_INT < Build.VERSION_CODES.N;
 	}
-	
+
+	/**
+	 * コンストラクタ
+	 * @param context
+	 */
 	public CpuMonitor(final Context context) {
 		if (!isSupported()) {
-			throw new RuntimeException("CpuMonitor is not supported on this Android version.");
+			throw new RuntimeException("org.appspot.apprtc.CpuMonitor is not supported on this Android version.");
 		}
-		
-		if (DEBUG) Log.d(TAG, "CpuMonitor ctor.");
-		appContext = context.getApplicationContext();
+
+		if (DEBUG) Log.d(TAG, "org.appspot.apprtc.CpuMonitor ctor.");
+		mWeakAppContext = new WeakReference<>(context.getApplicationContext());
 		userCpuUsage = new MovingAverage(MOVING_AVERAGE_SAMPLES);
 		systemCpuUsage = new MovingAverage(MOVING_AVERAGE_SAMPLES);
 		totalCpuUsage = new MovingAverage(MOVING_AVERAGE_SAMPLES);
 		frequencyScale = new MovingAverage(MOVING_AVERAGE_SAMPLES);
 		lastStatLogTimeMs = SystemClock.elapsedRealtime();
-		
+
 		scheduleCpuUtilizationTask();
 	}
-	
-	public void pause() {
-		if (executor != null) {
-			if (DEBUG) Log.d(TAG, "pause");
-			executor.shutdownNow();
-			executor = null;
+
+	@Override
+	protected void finalize() throws Throwable {
+		try {
+			release();
+		} finally {
+			super.finalize();
 		}
 	}
-	
+
+	/**
+	 * 関連するリソースを破棄する
+	 */
+	public synchronized void release() {
+		if (!mReleased) {
+			mReleased = true;
+			if (DEBUG) Log.d(TAG, "release:");
+			releaseExecutor();
+		}
+	}
+
+	public synchronized void pause() {
+		if (DEBUG) Log.d(TAG, "pause:");
+		releaseExecutor();
+	}
+
 	public void resume() {
-		if (DEBUG) Log.d(TAG, "resume");
+		if (DEBUG) Log.d(TAG, "resume:");
 		resetStat();
 		scheduleCpuUtilizationTask();
 	}
-	
+
 	// TODO(bugs.webrtc.org/8491): Remove NoSynchronizedMethodCheck suppression.
 	@SuppressWarnings("NoSynchronizedMethodCheck")
 	public synchronized void reset() {
@@ -203,67 +233,82 @@ class CpuMonitor {
 			cpuOveruse = false;
 		}
 	}
-	
+
 	// TODO(bugs.webrtc.org/8491): Remove NoSynchronizedMethodCheck suppression.
 	@SuppressWarnings("NoSynchronizedMethodCheck")
 	public synchronized int getCpuUsageCurrent() {
 		return doubleToPercent(userCpuUsage.getCurrent() + systemCpuUsage.getCurrent());
 	}
-	
+
 	// TODO(bugs.webrtc.org/8491): Remove NoSynchronizedMethodCheck suppression.
 	@SuppressWarnings("NoSynchronizedMethodCheck")
 	public synchronized int getCpuUsageAverage() {
 		return doubleToPercent(userCpuUsage.getAverage() + systemCpuUsage.getAverage());
 	}
-	
+
 	// TODO(bugs.webrtc.org/8491): Remove NoSynchronizedMethodCheck suppression.
 	@SuppressWarnings("NoSynchronizedMethodCheck")
 	public synchronized int getFrequencyScaleAverage() {
 		return doubleToPercent(frequencyScale.getAverage());
 	}
-	
-	private void scheduleCpuUtilizationTask() {
-		if (executor != null) {
-			executor.shutdownNow();
-			executor = null;
-		}
-		
-		executor = Executors.newSingleThreadScheduledExecutor();
-		@SuppressWarnings("unused") // Prevent downstream linter warnings.
-			Future<?> possiblyIgnoredError = executor.scheduleAtFixedRate(new Runnable() {
-			@Override
-			public void run() {
-				cpuUtilizationTask();
-			}
-		}, 0, CPU_STAT_SAMPLE_PERIOD_MS, TimeUnit.MILLISECONDS);
-	}
-	
-	private void cpuUtilizationTask() {
-		final boolean cpuMonitorAvailable = sampleCpuUtilization();
-		if (cpuMonitorAvailable
-			&& SystemClock.elapsedRealtime() - lastStatLogTimeMs >= CPU_STAT_LOG_PERIOD_MS) {
-			lastStatLogTimeMs = SystemClock.elapsedRealtime();
-			if (DEBUG) Log.d(TAG, getStatString());
-		}
-	}
-	
-	private void init() {
-		try (final FileInputStream fin = new FileInputStream("/sys/devices/system/cpu/present");
-			 final InputStreamReader streamReader = new InputStreamReader(fin, Charset.forName("UTF-8"));
-			 final BufferedReader reader = new BufferedReader(streamReader);
-			 final Scanner scanner = new Scanner(reader).useDelimiter("[-\n]") ) {
 
+//--------------------------------------------------------------------------------
+
+	/**
+	 * 実行中のタスクがあれば終了させる
+	 * Executorがあればシャットダウンして破棄する
+	 */
+	private synchronized void releaseExecutor() {
+		if (mActiveFuture != null) {
+			mActiveFuture.cancel(true);
+			mActiveFuture = null;
+		}
+		if ((executor != null) && !executor.isShutdown()) {
+			executor.shutdownNow();
+		}
+		executor = null;
+	}
+
+	private synchronized void scheduleCpuUtilizationTask() {
+		releaseExecutor();
+		if (!mReleased) {
+			executor = Executors.newSingleThreadScheduledExecutor();
+			mActiveFuture = executor.scheduleAtFixedRate(new Runnable() {
+				@Override
+				public void run() {
+					cpuUtilizationTask();
+				}
+			}, 0, CPU_STAT_SAMPLE_PERIOD_MS, TimeUnit.MILLISECONDS);
+		}
+	}
+
+	private void cpuUtilizationTask() {
+		if (!mReleased) {
+			final boolean cpuMonitorAvailable = sampleCpuUtilization();
+			if (cpuMonitorAvailable
+				&& SystemClock.elapsedRealtime() - lastStatLogTimeMs >= CPU_STAT_LOG_PERIOD_MS) {
+				lastStatLogTimeMs = SystemClock.elapsedRealtime();
+				String statString = getStatString();
+				if (BuildConfig.DEBUG) Log.d(TAG, statString);
+			}
+		}
+	}
+
+	private void init() {
+		try (FileInputStream fin = new FileInputStream("/sys/devices/system/cpu/present");
+			final InputStreamReader streamReader = new InputStreamReader(fin, CharsetsUtils.UTF8);
+			final BufferedReader reader = new BufferedReader(streamReader);
+			final Scanner scanner = new Scanner(reader).useDelimiter("[-\n]")) {
 			scanner.nextInt(); // Skip leading number 0.
 			cpusPresent = 1 + scanner.nextInt();
-			scanner.close();
-		} catch (final FileNotFoundException e) {
-			Log.e(TAG, "Cannot do CPU stats since /sys/devices/system/cpu/present is missing");
-		} catch (final IOException e) {
-			Log.e(TAG, "Error closing file");
-		} catch (final Exception e) {
-			Log.e(TAG, "Cannot do CPU stats due to /sys/devices/system/cpu/present parsing problem");
+		} catch (FileNotFoundException e) {
+			if (DEBUG) Log.e(TAG, "Cannot do CPU stats since /sys/devices/system/cpu/present is missing");
+		} catch (IOException e) {
+			if (DEBUG) Log.e(TAG, "Error closing file");
+		} catch (Exception e) {
+			if (DEBUG) Log.e(TAG, "Cannot do CPU stats due to /sys/devices/system/cpu/present parsing problem");
 		}
-		
+
 		cpuFreqMax = new long[cpusPresent];
 		maxPath = new String[cpusPresent];
 		curPath = new String[cpusPresent];
@@ -274,13 +319,13 @@ class CpuMonitor {
 			maxPath[i] = "/sys/devices/system/cpu/cpu" + i + "/cpufreq/cpuinfo_max_freq";
 			curPath[i] = "/sys/devices/system/cpu/cpu" + i + "/cpufreq/scaling_cur_freq";
 		}
-		
+
 		lastProcStat = new ProcStat(0, 0, 0);
 		resetStat();
-		
+
 		initialized = true;
 	}
-	
+
 	private synchronized void resetStat() {
 		userCpuUsage.reset();
 		systemCpuUsage.reset();
@@ -288,21 +333,24 @@ class CpuMonitor {
 		frequencyScale.reset();
 		lastStatLogTimeMs = SystemClock.elapsedRealtime();
 	}
-	
+
 	private int getBatteryLevel() {
 		// Use sticky broadcast with null receiver to read battery level once only.
-		final Intent intent = appContext.registerReceiver(
-			null /* receiver */, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-		
 		int batteryLevel = 0;
-		final int batteryScale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100);
-		if (batteryScale > 0) {
-			batteryLevel =
-				(int) (100f * intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0) / batteryScale);
+		final Context appContext = mWeakAppContext.get();
+		if (appContext != null) {
+			final Intent intent = appContext.registerReceiver(
+				null /* receiver */, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+
+			int batteryScale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100);
+			if (batteryScale > 0) {
+				batteryLevel =
+					(int) (100f * intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0) / batteryScale);
+			}
 		}
 		return batteryLevel;
 	}
-	
+
 	/**
 	 * Re-measure CPU use.  Call this method at an interval of around 1/s.
 	 * This method returns true on success.  The fields
@@ -315,14 +363,14 @@ class CpuMonitor {
 		long lastSeenMaxFreq = 0;
 		long cpuFreqCurSum = 0;
 		long cpuFreqMaxSum = 0;
-		
+
 		if (!initialized) {
 			init();
 		}
 		if (cpusPresent == 0) {
 			return false;
 		}
-		
+
 		actualCpusPresent = 0;
 		for (int i = 0; i < cpusPresent; i++) {
 			/*
@@ -330,13 +378,13 @@ class CpuMonitor {
 			 * current frequency.  Once as the max frequency for a CPU is found,
 			 * save it in cpuFreqMax[].
 			 */
-			
+
 			curFreqScales[i] = 0;
 			if (cpuFreqMax[i] == 0) {
 				// We have never found this CPU's max frequency.  Attempt to read it.
 				long cpufreqMax = readFreqFromFile(maxPath[i]);
 				if (cpufreqMax > 0) {
-					Log.d(TAG, "Core " + i + ". Max frequency: " + cpufreqMax);
+					if (DEBUG) Log.d(TAG, "Core " + i + ". Max frequency: " + cpufreqMax);
 					lastSeenMaxFreq = cpufreqMax;
 					cpuFreqMax[i] = cpufreqMax;
 					maxPath[i] = null; // Kill path to free its memory.
@@ -344,7 +392,7 @@ class CpuMonitor {
 			} else {
 				lastSeenMaxFreq = cpuFreqMax[i]; // A valid, previously read value.
 			}
-			
+
 			long cpuFreqCur = readFreqFromFile(curPath[i]);
 			if (cpuFreqCur == 0 && lastSeenMaxFreq == 0) {
 				// No current frequency information for this CPU core - ignore it.
@@ -354,7 +402,7 @@ class CpuMonitor {
 				actualCpusPresent++;
 			}
 			cpuFreqCurSum += cpuFreqCur;
-			
+
 			/* Here, lastSeenMaxFreq might come from
 			 * 1. cpuFreq[i], or
 			 * 2. a previous iteration, or
@@ -366,12 +414,12 @@ class CpuMonitor {
 				curFreqScales[i] = (double) cpuFreqCur / lastSeenMaxFreq;
 			}
 		}
-		
+
 		if (cpuFreqCurSum == 0 || cpuFreqMaxSum == 0) {
-			Log.e(TAG, "Could not read max or current frequency for any CPU");
+			if (DEBUG) Log.e(TAG, "Could not read max or current frequency for any CPU");
 			return false;
 		}
-		
+
 		/*
 		 * Since the cycle counts are for the period between the last invocation
 		 * and this present one, we average the percentual CPU frequencies between
@@ -383,44 +431,44 @@ class CpuMonitor {
 		if (frequencyScale.getCurrent() > 0) {
 			currentFrequencyScale = (frequencyScale.getCurrent() + currentFrequencyScale) * 0.5;
 		}
-		
-		final ProcStat procStat = readProcStat();
+
+		ProcStat procStat = readProcStat();
 		if (procStat == null) {
 			return false;
 		}
-		
-		final long diffUserTime = procStat.userTime - lastProcStat.userTime;
-		final long diffSystemTime = procStat.systemTime - lastProcStat.systemTime;
-		final long diffIdleTime = procStat.idleTime - lastProcStat.idleTime;
-		final long allTime = diffUserTime + diffSystemTime + diffIdleTime;
-		
+
+		long diffUserTime = procStat.userTime - lastProcStat.userTime;
+		long diffSystemTime = procStat.systemTime - lastProcStat.systemTime;
+		long diffIdleTime = procStat.idleTime - lastProcStat.idleTime;
+		long allTime = diffUserTime + diffSystemTime + diffIdleTime;
+
 		if (currentFrequencyScale == 0 || allTime == 0) {
 			return false;
 		}
-		
+
 		// Update statistics.
 		frequencyScale.addValue(currentFrequencyScale);
-		
-		final double currentUserCpuUsage = diffUserTime / (double) allTime;
+
+		double currentUserCpuUsage = diffUserTime / (double) allTime;
 		userCpuUsage.addValue(currentUserCpuUsage);
-		
-		final double currentSystemCpuUsage = diffSystemTime / (double) allTime;
+
+		double currentSystemCpuUsage = diffSystemTime / (double) allTime;
 		systemCpuUsage.addValue(currentSystemCpuUsage);
-		
+
 		double currentTotalCpuUsage =
 			(currentUserCpuUsage + currentSystemCpuUsage) * currentFrequencyScale;
 		totalCpuUsage.addValue(currentTotalCpuUsage);
-		
+
 		// Save new measurements for next round's deltas.
 		lastProcStat = procStat;
-		
+
 		return true;
 	}
-	
-	private int doubleToPercent(final double d) {
+
+	private int doubleToPercent(double d) {
 		return (int) (d * 100 + 0.5);
 	}
-	
+
 	private synchronized String getStatString() {
 		StringBuilder stat = new StringBuilder();
 		stat.append("CPU User: ")
@@ -451,15 +499,15 @@ class CpuMonitor {
 		}
 		return stat.toString();
 	}
-	
+
 	/**
 	 * Read a single integer value from the named file.  Return the read value
 	 * or if an error occurs return 0.
 	 */
-	private long readFreqFromFile(final String fileName) {
+	private long readFreqFromFile(String fileName) {
 		long number = 0;
 		try (FileInputStream stream = new FileInputStream(fileName);
-			 InputStreamReader streamReader = new InputStreamReader(stream, Charset.forName("UTF-8"));
+			 InputStreamReader streamReader = new InputStreamReader(stream, CharsetsUtils.UTF8);
 			 BufferedReader reader = new BufferedReader(streamReader)) {
 			String line = reader.readLine();
 			number = parseLong(line);
@@ -472,17 +520,17 @@ class CpuMonitor {
 		}
 		return number;
 	}
-	
-	private static long parseLong(final String value) {
+
+	private static long parseLong(String value) {
 		long number = 0;
 		try {
 			number = Long.parseLong(value);
-		} catch (final NumberFormatException e) {
-			Log.e(TAG, "parseLong error.", e);
+		} catch (NumberFormatException e) {
+			if (DEBUG) Log.e(TAG, "parseLong error.", e);
 		}
 		return number;
 	}
-	
+
 	/*
 	 * Read the current utilization of all CPUs using the cumulative first line
 	 * of /proc/stat.
@@ -494,14 +542,14 @@ class CpuMonitor {
 		long systemTime = 0;
 		long idleTime = 0;
 		try (FileInputStream stream = new FileInputStream("/proc/stat");
-			 InputStreamReader streamReader = new InputStreamReader(stream, Charset.forName("UTF-8"));
+			 InputStreamReader streamReader = new InputStreamReader(stream, CharsetsUtils.UTF8);
 			 BufferedReader reader = new BufferedReader(streamReader)) {
 			// line should contain something like this:
 			// cpu  5093818 271838 3512830 165934119 101374 447076 272086 0 0 0
 			//       user    nice  system     idle   iowait  irq   softirq
-			final String line = reader.readLine();
-			final String[] lines = line.split("\\s+");
-			final int length = lines.length;
+			String line = reader.readLine();
+			String[] lines = line.split("\\s+");
+			int length = lines.length;
 			if (length >= 5) {
 				userTime = parseLong(lines[1]); // user
 				userTime += parseLong(lines[2]); // nice
@@ -513,11 +561,11 @@ class CpuMonitor {
 				systemTime += parseLong(lines[6]); // irq
 				systemTime += parseLong(lines[7]); // softirq
 			}
-		} catch (final FileNotFoundException e) {
-			Log.e(TAG, "Cannot open /proc/stat for reading", e);
+		} catch (FileNotFoundException e) {
+			if (DEBUG) Log.e(TAG, "Cannot open /proc/stat for reading", e);
 			return null;
-		} catch (final Exception e) {
-			Log.e(TAG, "Problems parsing /proc/stat", e);
+		} catch (Exception e) {
+			if (DEBUG) Log.e(TAG, "Problems parsing /proc/stat", e);
 			return null;
 		}
 		return new ProcStat(userTime, systemTime, idleTime);
