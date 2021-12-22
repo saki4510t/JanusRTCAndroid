@@ -33,7 +33,7 @@ ext {
 	javaSourceCompatibility = JavaVersion.VERSION_1_8
 	javaTargetCompatibility = JavaVersion.VERSION_1_8
 
-	versionBuildTool = "30.0.3"
+//	versionBuildTool = "30.0.3"
 	versionCompiler = 30
 	versionTarget = 28
 
@@ -45,9 +45,9 @@ ext {
 	constraintLibVersion = '2.0.4'
 
 	gsonVersion = '2.8.7'
-	okHttpVersion = '3.12.1'
+	okHttpVersion = '3.12.12'
 	retrofit2Version = '2.4.0'
-	socketIOClientJavaVersion = '1.0.0'
+	socketIOClientJavaVersion = '1.0.1'
 	webRTCVersion = '1.0.32006'
 
 	commonLibVersion= '7.22.0'
