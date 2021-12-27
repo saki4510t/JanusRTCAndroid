@@ -40,7 +40,8 @@ public class AppRTCAudioManager {
 	private static final String SPEAKERPHONE_AUTO = "auto";
 	private static final String SPEAKERPHONE_TRUE = "true";
 	private static final String SPEAKERPHONE_FALSE = "false";
-	
+  private static final String SPEAKERPHONE_AS_POSSIBLE = "asPossible";
+
 	/**
 	 * AudioDevice is the names of possible audio devices that we currently
 	 * support.
@@ -69,7 +70,7 @@ public class AppRTCAudioManager {
 	
 	private final Context apprtcContext;
 	@Nullable
-	private AudioManager audioManager;
+	private final AudioManager audioManager;
 	
 	@Nullable
 	private AudioManagerEvents audioManagerEvents;
@@ -104,7 +105,7 @@ public class AppRTCAudioManager {
 	// assist device switching (close to ear <=> use headset earpiece if
 	// available, far from ear <=> use speaker phone).
 	@Nullable
-	private AppRTCProximitySensor proximitySensor = null;
+	private AppRTCProximitySensor proximitySensor;
 	
 	// Handles all tasks related to Bluetooth headset devices.
 	private final AppRTCBluetoothManager bluetoothManager;
@@ -114,7 +115,7 @@ public class AppRTCAudioManager {
 	private Set<AudioDevice> audioDevices = new HashSet<>();
 	
 	// Broadcast receiver for wired headset intent broadcasts.
-	private BroadcastReceiver wiredHeadsetReceiver;
+	private final BroadcastReceiver wiredHeadsetReceiver;
 	
 	// Callback method for changes in audio focus.
 	@Nullable
@@ -315,7 +316,7 @@ public class AppRTCAudioManager {
 		if (DEBUG) Log.d(TAG, "AudioManager started");
 	}
 	
-	@SuppressWarnings("deprecation")
+	@SuppressLint("WrongConstant")
 	// TODO(henrika): audioManager.abandonAudioFocus() is deprecated.
 	public void stop() {
 		if (DEBUG) Log.d(TAG, "stop");
@@ -361,11 +362,7 @@ public class AppRTCAudioManager {
 			setSpeakerphoneOn(true);
 			break;
 		case EARPIECE:
-			setSpeakerphoneOn(false);
-			break;
 		case WIRED_HEADSET:
-			setSpeakerphoneOn(false);
-			break;
 		case BLUETOOTH:
 			setSpeakerphoneOn(false);
 			break;
@@ -484,6 +481,7 @@ public class AppRTCAudioManager {
 		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
 			return audioManager.isWiredHeadsetOn();
 		} else {
+     		@SuppressLint("WrongConstant")
 			final AudioDeviceInfo[] devices = audioManager.getDevices(AudioManager.GET_DEVICES_ALL);
 			for (AudioDeviceInfo device : devices) {
 				final int type = device.getType();
@@ -603,8 +601,10 @@ public class AppRTCAudioManager {
 		
 		// Update selected audio device.
 		final AudioDevice newAudioDevice;
-		
-		if (bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_CONNECTED) {
+		if (useSpeakerphone.equals(SPEAKERPHONE_AS_POSSIBLE)
+			&& audioDevices.contains(AudioDevice.SPEAKER_PHONE)) {
+			newAudioDevice = AudioDevice.SPEAKER_PHONE;
+		} else if (bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_CONNECTED) {
 			// If a Bluetooth is connected, then it should be used as output audio
 			// device. Note that it is not sufficient that a headset is available;
 			// an active SCO channel must also be up and running.
