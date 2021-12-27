@@ -50,7 +50,7 @@ ext {
 	socketIOClientJavaVersion = '1.0.1'
 	webRTCVersion = '1.0.32006'
 
-	commonLibVersion= '7.22.0'
+	commonLibVersion= '7.23.1'
 
 	versionCodeNum = 47
 	versionNameString = '1.7.3'
