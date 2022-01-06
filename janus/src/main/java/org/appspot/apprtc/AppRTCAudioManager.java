@@ -40,7 +40,7 @@ public class AppRTCAudioManager {
 	private static final String SPEAKERPHONE_AUTO = "auto";
 	private static final String SPEAKERPHONE_TRUE = "true";
 	private static final String SPEAKERPHONE_FALSE = "false";
-  private static final String SPEAKERPHONE_AS_POSSIBLE = "asPossible";
+	private static final String SPEAKERPHONE_AS_POSSIBLE = "asPossible";
 
 	/**
 	 * AudioDevice is the names of possible audio devices that we currently
