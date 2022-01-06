@@ -193,7 +193,7 @@ public class AppRTCAudioManager {
 		} else {
 			defaultAudioDevice = AudioDevice.SPEAKER_PHONE;
 		}
-		
+
 		// Create and initialize the proximity sensor.
 		// Tablet devices (e.g. Nexus 7) does not support proximity sensors.
 		// Note that, the sensor will not be active until start() has been called.
@@ -202,7 +202,7 @@ public class AppRTCAudioManager {
 			// Example: user holds his hand over the device (closer than ~5 cm),
 			// or removes his hand from the device.
 			this::onProximitySensorChangedState);
-		
+
 		if (DEBUG) Log.d(TAG, "defaultAudioDevice: " + defaultAudioDevice);
 		AppRTCUtils.logDeviceInfo(TAG);
 	}
@@ -304,7 +304,10 @@ public class AppRTCAudioManager {
 		// Initialize and start Bluetooth if a BT device is available or initiate
 		// detection of new (enabled) BT devices.
 		bluetoothManager.start();
-		
+
+		if (proximitySensor != null) {
+			proximitySensor.start();
+		}
 		// Do initial selection of audio device. This setting can later be changed
 		// either by adding/removing a BT or wired headset or by covering/uncovering
 		// the proximity sensor.
