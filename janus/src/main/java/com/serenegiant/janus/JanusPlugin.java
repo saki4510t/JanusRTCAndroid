@@ -50,6 +50,8 @@ import org.webrtc.IceCandidate;
 import org.webrtc.MediaConstraints;
 import org.webrtc.MediaStream;
 import org.webrtc.PeerConnection;
+import org.webrtc.RTCStatsCollectorCallback;
+import org.webrtc.RTCStatsReport;
 import org.webrtc.RtpReceiver;
 import org.webrtc.SdpObserver;
 import org.webrtc.SessionDescription;
@@ -160,6 +162,9 @@ import retrofit2.Response;
 		 */
 		public void onRemoteDescription(@NonNull final JanusPlugin plugin,
 			final SessionDescription sdp);
+
+		public void onPeerConnectionStatsReady(@NonNull final JanusPlugin plugin,
+			final RTCStatsReport report);
 
 		public void onError(@NonNull final JanusPlugin plugin,
 			@NonNull final Throwable t);
@@ -799,6 +804,19 @@ import retrofit2.Response;
 		// 今は何もしない
 	}
 
+	public void getStats() {
+		if (peerConnection != null) {
+			peerConnection.getStats(mRTCStatsCollectorCallback);
+		}
+	}
+
+	private final RTCStatsCollectorCallback mRTCStatsCollectorCallback
+		= new RTCStatsCollectorCallback() {
+		@Override
+		public void onStatsDelivered(final RTCStatsReport rtcStatsReport) {
+			mCallback.onPeerConnectionStatsReady(JanusPlugin.this, rtcStatsReport);
+		}
+	};
 //--------------------------------------------------------------------------------
 // Long pollによるメッセージ受信時の処理関係
 	/**

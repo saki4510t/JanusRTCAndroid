@@ -58,6 +58,7 @@ import org.webrtc.MediaStream;
 import org.webrtc.MediaStreamTrack;
 import org.webrtc.PeerConnection;
 import org.webrtc.PeerConnectionFactory;
+import org.webrtc.RTCStatsReport;
 import org.webrtc.RtpParameters;
 import org.webrtc.RtpSender;
 import org.webrtc.RtpTransceiver;
@@ -1026,6 +1027,11 @@ public class JanusRTCClient implements JanusClient {
 	@SuppressWarnings("deprecation") // TODO(sakal): getStats is deprecated.
 	private void getStats() {
 		if (DEBUG) Log.v(TAG, "getStats:");
+		synchronized (mAttachedPlugins) {
+			for (final JanusPlugin plugin: mAttachedPlugins.values()) {
+				plugin.getStats();
+			}
+		}
 		// FIXME 未実装 PublisherのPeerConnectionから取得する
 //		if (peerConnection == null || isError) {
 //			return;
@@ -1040,7 +1046,6 @@ public class JanusRTCClient implements JanusClient {
 //			Log.e(TAG, "getStats() returns false!");
 //		}
 	}
-
 
 //--------------------------------------------------------------------------------
 	@Nullable
@@ -1545,6 +1550,14 @@ public class JanusRTCClient implements JanusClient {
 			executor.execute(() -> mCallback.onRemoteDescription(sdp));
 		}
 		
+		@Override
+		public void onPeerConnectionStatsReady(@NonNull final JanusPlugin plugin,
+			final RTCStatsReport report) {
+			executor.execute(() -> mCallback.onPeerConnectionStatsReady(
+					plugin instanceof JanusPlugin.Publisher, report)
+			);
+		}
+
 		@Override
 		public void onError(@NonNull final JanusPlugin plugin,
 			@NonNull final Throwable t) {

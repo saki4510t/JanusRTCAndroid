@@ -57,6 +57,7 @@ import org.webrtc.IceCandidate;
 import org.webrtc.Logging;
 import org.webrtc.PeerConnection;
 import org.webrtc.PeerConnectionFactory;
+import org.webrtc.RTCStatsReport;
 import org.webrtc.RendererCommon.ScalingType;
 import org.webrtc.ScreenCapturerAndroid;
 import org.webrtc.SessionDescription;
@@ -949,6 +950,12 @@ public class CallActivity extends BaseActivity
 			if (DEBUG) Log.v(TAG, "onEvent:" + event);
 		}
 		
+		@Override
+		public void onPeerConnectionStatsReady(final boolean isPublisher,
+			final RTCStatsReport report) {
+			Log.d(TAG, "onPeerConnectionStatsReady:isPublisher=" + isPublisher + ",stat=" + report);
+		}
+
 		@Override
 		public void onChannelError(final String description) {
 			reportError(description);
