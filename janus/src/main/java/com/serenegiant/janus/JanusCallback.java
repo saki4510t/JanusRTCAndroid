@@ -26,6 +26,7 @@ import com.serenegiant.janus.response.PublisherInfo;
 import org.json.JSONObject;
 import org.webrtc.IceCandidate;
 import org.webrtc.PeerConnection;
+import org.webrtc.RTCStatsReport;
 import org.webrtc.SessionDescription;
 
 import java.util.List;
@@ -116,6 +117,14 @@ public interface JanusCallback {
 	 * Callback fired once peer connection is closed.
 	 */
 	public void onDisconnected();
+
+	/**
+	 * Callback fired when stat info from peer connection is ready
+	 * @param isPublisher
+	 * @param report
+	 */
+	public void onPeerConnectionStatsReady(final boolean isPublisher,
+		final RTCStatsReport report);
 
 	/**
 	 * Callback fired once channel error happened.
