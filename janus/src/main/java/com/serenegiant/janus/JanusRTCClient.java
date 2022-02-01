@@ -632,6 +632,8 @@ public class JanusRTCClient implements JanusClient {
 		};
 		
 		return JavaAudioDeviceModule.builder(getContext())
+			.setAudioSource(peerConnectionParameters.audioSource)
+			.setAudioFormat(peerConnectionParameters.audioFormat)
 			.setSamplesReadyCallback(saveRecordedAudioToFile)
 			.setUseHardwareAcousticEchoCanceler(!peerConnectionParameters.disableBuiltInAEC)
 			.setUseHardwareNoiseSuppressor(!peerConnectionParameters.disableBuiltInNS)
