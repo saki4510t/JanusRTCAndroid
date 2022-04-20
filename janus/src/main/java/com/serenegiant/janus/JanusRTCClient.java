@@ -1263,7 +1263,7 @@ public class JanusRTCClient implements JanusClient {
 	private void createSession() {
 		if (DEBUG) Log.v(TAG, "createSession:");
 		// サーバー情報を取得できたらセッションを生成
-		final Call<Session> call = mJanus.create(
+		final Call<Session> call = mJanus.createSession(
 			roomConnectionParameters.apiName, new Creator());
 		addCall(call);
 		call.enqueue(new Callback<Session>() {
@@ -1327,7 +1327,7 @@ public class JanusRTCClient implements JanusClient {
 		detachAll();
 		if (mSession != null) {
 			final Destroy destroy = new Destroy(mSession, null);
-			final Call<Void> call = mJanus.destroy(
+			final Call<Void> call = mJanus.destroySession(
 				roomConnectionParameters.apiName, mSession.id(), destroy);
 			addCall(call);
 			try {

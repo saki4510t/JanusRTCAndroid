@@ -22,6 +22,7 @@ package com.serenegiant.janus;
 import com.serenegiant.janus.request.Attach;
 import com.serenegiant.janus.request.Creator;
 import com.serenegiant.janus.request.Destroy;
+import com.serenegiant.janus.request.Detach;
 import com.serenegiant.janus.response.Plugin;
 import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
@@ -39,7 +40,7 @@ import retrofit2.http.Path;
  */
 public interface Janus {
 	@POST("{api}")
-	public Call<Session> create(
+	public Call<Session> createSession(
 		@Path("api") final String api,
 		@Body final Creator create);
 
@@ -47,13 +48,20 @@ public interface Janus {
 	public Call<ServerInfo> getInfo(@Path("api") final String api);
 
 	@POST("{api}/{session_id}")
-	public Call<Plugin> attach(
+	public Call<Plugin> attachPlugin(
 		@Path("api") final String api,
 		@Path("session_id") final BigInteger sessionId,
 		@Body final Attach attach);
-	
+
+	@POST("{api}/{session_id}/{plugin_id}")
+	public Call<Void> detachPlugin(
+		@Path("api") final String api,
+		@Path("session_id") final BigInteger sessionId,
+		@Path("plugin_id") final BigInteger pluginId,
+		@Body final Detach detach);
+
 	@POST("{api}/{session_id}")
-	public Call<Void> destroy(
+	public Call<Void> destroySession(
 		@Path("api") final String api,
 		@Path("session_id") final BigInteger sessionId,
 		@Body final Destroy destroy);

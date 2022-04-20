@@ -379,7 +379,7 @@ import retrofit2.Response;
 		final Attach attach = new Attach(mSession,
 			"janus.plugin.videoroom",
 			null);
-		final Call<Plugin> call = mVideoRoom.attach(
+		final Call<Plugin> call = mVideoRoom.attachPlugin(
 			roomConnectionParameters.apiName, mSession.id(), attach);
 		addCall(call);
 		call.enqueue(new Callback<Plugin>() {
@@ -486,7 +486,7 @@ import retrofit2.Response;
 			mRoomState = RoomState.CLOSED;
 			if (DEBUG) Log.v(TAG, "detach:");
 			cancelCall();
-			final Call<Void> call = mVideoRoom.detach(
+			final Call<Void> call = mVideoRoom.detachPlugin(
 				roomConnectionParameters.apiName,
 				mSession.id(), mPlugin.id(),
 				new Detach(mSession, mTransactionCallback));
