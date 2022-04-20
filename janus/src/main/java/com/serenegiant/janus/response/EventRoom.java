@@ -68,7 +68,7 @@ public class EventRoom {
 		public final int room;
 		public final String description;
 		public final boolean configured;
-		public final boolean started;
+		public final Object started;
 		public final String audio_codec;
 		public final String video_codec;
 		public final BigInteger unpublished;
@@ -76,15 +76,23 @@ public class EventRoom {
 		public final BigInteger id;
 		public final BigInteger private_id;
 		public PublisherInfo[] publishers;
+		public final String paused;
+		public final String switched;
+		public final String changes;
+		public final StreamInfo[] streams;
 		
 		public Data(final String videoroom, final int room,
 			final String description,
-			final boolean configured, final boolean started,
+			final boolean configured, final Object started,
 			final String audio_codec, final String video_codec,
 			final BigInteger unpublished,
 			final BigInteger leaving,
 			final BigInteger id, final BigInteger private_id,
-			final PublisherInfo[] publishers) {
+			final PublisherInfo[] publishers,
+			final String paused,
+			final String switched,
+			final String changes,
+			final StreamInfo[] streams) {
 
 			this.videoroom = videoroom;
 			this.room = room;
@@ -98,6 +106,10 @@ public class EventRoom {
 			this.id = id;
 			this.private_id = private_id;
 			this.publishers = publishers;
+			this.paused = paused;
+			this.switched = switched;
+			this.changes = changes;
+			this.streams = streams;
 		}
 
 		@NonNull
@@ -115,7 +127,11 @@ public class EventRoom {
 				", leaving=" + leaving +
 				", id=" + id +
 				", private_id=" + private_id +
-				", publishers=" + Arrays.toString(publishers) +
+				", publishers=" + Arrays.toString(publishers) + '\'' +
+				", paused=" + paused +
+				", changes=" + changes +
+				", switched=" + switched +
+				", publishers=" + Arrays.toString(streams) + '\'' +
 				'}';
 		}
 	}

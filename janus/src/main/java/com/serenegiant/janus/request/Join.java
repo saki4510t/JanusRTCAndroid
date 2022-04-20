@@ -34,11 +34,22 @@ public class Join {
 	public final String username;
 	public final String display;
 	public final BigInteger feed;
+	@Nullable
+	public final String token;
 	
 	public Join(final int room, @NonNull final String pType,
 		@Nullable final String username,
 		@Nullable final String display,
 		@Nullable final BigInteger feed) {
+
+		this(room, pType, username, display, feed, null);
+	}
+
+	public Join(final int room, @NonNull final String pType,
+		@Nullable final String username,
+		@Nullable final String display,
+		@Nullable final BigInteger feed,
+		@Nullable final String token) {
 
 		this.request = "join";
 		this.room = room;
@@ -46,8 +57,9 @@ public class Join {
 		this.username = username;
 		this.display = display;
 		this.feed = feed;
+		this.token = token;
 	}
-	
+
 	@NonNull
 	@Override
 	public String toString() {
@@ -58,6 +70,7 @@ public class Join {
 			", username='" + username + '\'' +
 			", display='" + display + '\'' +
 			", feed='" + feed + '\'' +
+			", token='" + token + '\'' +
 			'}';
 	}
 }
