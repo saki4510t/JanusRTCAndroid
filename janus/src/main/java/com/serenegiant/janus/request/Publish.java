@@ -36,10 +36,10 @@ public class Publish {
 	}
 
 	public static class Description {
-		public final BigInteger mid;		// "<unique mid of a stream being published>",
+		public final String mid;		// "<unique mid of a stream being published>"
 		public final String description; // "<text description of the stream (e.g., My front webcam)>"
 
-		public Description(final BigInteger mid, final String description) {
+		public Description(final String mid, final String description) {
 			this.mid = mid;
 			this.description = description;
 		}
