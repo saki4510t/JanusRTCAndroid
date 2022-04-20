@@ -26,16 +26,16 @@ import java.util.Arrays;
 
 import androidx.annotation.NonNull;
 
-public class EventRoom {
+public class RoomEvent {
 	public final String janus;
 	public final BigInteger sender;
 	public final String transaction;
 	public final PluginData plugindata;
 	public final JsepSdp jsep;
 	
-	public EventRoom(final String janus, final BigInteger sender,
-		final String transaction,
-		final PluginData plugindata, final JsepSdp jsep) {
+	public RoomEvent(final String janus, final BigInteger sender,
+					 final String transaction,
+					 final PluginData plugindata, final JsepSdp jsep) {
 		
 		this.janus = janus;
 		this.sender = sender;

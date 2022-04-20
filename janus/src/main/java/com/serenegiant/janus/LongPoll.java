@@ -19,7 +19,7 @@ package com.serenegiant.janus;
  *
 */
 
-import com.serenegiant.janus.response.EventRoom;
+import com.serenegiant.janus.response.RoomEvent;
 
 import java.math.BigInteger;
 
@@ -38,7 +38,7 @@ public interface LongPoll {
 		@Path("session_id") final BigInteger sessionId);
 
 	@GET("{api}/{session_id}")
-	public Call<EventRoom> getRoomEvent(
+	public Call<RoomEvent> getRoomEvent(
 		@Path("api") final String api,
 		@Path("session_id") final BigInteger sessionId);
 }

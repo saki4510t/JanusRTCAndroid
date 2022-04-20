@@ -27,7 +27,7 @@ import com.serenegiant.janus.request.Hangup;
 import com.serenegiant.janus.request.Message;
 import com.serenegiant.janus.request.Trickle;
 import com.serenegiant.janus.request.TrickleCompleted;
-import com.serenegiant.janus.response.EventRoom;
+import com.serenegiant.janus.response.RoomEvent;
 import com.serenegiant.janus.response.Plugin;
 import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
@@ -60,28 +60,28 @@ public interface VideoRoom {
 		@Body final Attach attach);
 	
 	@POST("{api}/{session_id}/{plugin_id}")
-	public Call<EventRoom> join(
+	public Call<RoomEvent> join(
 		@Path("api") final String api,
 		@Path("session_id") final BigInteger sessionId,
 		@Path("plugin_id") final BigInteger pluginId,
 		@Body final Message message);
 
 	@POST("{api}/{session_id}/{plugin_id}")
-	public Call<EventRoom> offer(
+	public Call<RoomEvent> offer(
 		@Path("api") final String api,
 		@Path("session_id") final BigInteger sessionId,
 		@Path("plugin_id") final BigInteger pluginId,
 		@Body final Message message);
 
 	@POST("{api}/{session_id}/{plugin_id}")
-	public Call<EventRoom> trickle(
+	public Call<RoomEvent> trickle(
 		@Path("api") final String api,
 		@Path("session_id") final BigInteger sessionId,
 		@Path("plugin_id") final BigInteger pluginId,
 		@Body final Trickle trickle);
 	
 	@POST("{api}/{session_id}/{plugin_id}")
-	public Call<EventRoom> trickleCompleted(
+	public Call<RoomEvent> trickleCompleted(
 		@Path("api") final String api,
 		@Path("session_id") final BigInteger sessionId,
 		@Path("plugin_id") final BigInteger pluginId,

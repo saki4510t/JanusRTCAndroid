@@ -32,7 +32,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.internal.bind.DateTypeAdapter;
 import com.serenegiant.janus.request.Creator;
 import com.serenegiant.janus.request.Destroy;
-import com.serenegiant.janus.response.EventRoom;
+import com.serenegiant.janus.response.RoomEvent;
 import com.serenegiant.janus.response.PublisherInfo;
 import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
@@ -1436,7 +1436,7 @@ public class JanusRTCClient implements JanusClient {
 		
 		@Override
 		public void onJoin(@NonNull final JanusPlugin plugin,
-			final EventRoom room) {
+			final RoomEvent room) {
 
 			if (DEBUG) Log.v(TAG, "onJoin:" + plugin);
 			if (plugin instanceof JanusPlugin.Publisher) {
@@ -1710,13 +1710,13 @@ public class JanusRTCClient implements JanusClient {
 	private void handlePluginEvent(@NonNull final JSONObject body) {
 		if (DEBUG) Log.v(TAG, "handlePluginEvent:" + body);
 		final Gson gson = new Gson();
-		final EventRoom event = gson.fromJson(body.toString(), EventRoom.class);
+		final RoomEvent event = gson.fromJson(body.toString(), RoomEvent.class);
 
 		if (DEBUG) Log.v(TAG, "handlePluginEvent: unhandled event");
 	}
 	
 	private void handleOnJoin(@NonNull final JanusPlugin plugin,
-		final EventRoom room) {
+		final RoomEvent room) {
 
 		if (DEBUG) Log.v(TAG, "handleOnJoin:");
 		// roomにjoinできた

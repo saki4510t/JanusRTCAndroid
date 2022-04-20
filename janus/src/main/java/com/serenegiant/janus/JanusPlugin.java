@@ -34,7 +34,7 @@ import com.serenegiant.janus.request.Message;
 import com.serenegiant.janus.request.Start;
 import com.serenegiant.janus.request.Trickle;
 import com.serenegiant.janus.request.TrickleCompleted;
-import com.serenegiant.janus.response.EventRoom;
+import com.serenegiant.janus.response.RoomEvent;
 import com.serenegiant.janus.response.Plugin;
 import com.serenegiant.janus.response.PublisherInfo;
 import com.serenegiant.janus.response.Session;
@@ -88,7 +88,7 @@ import retrofit2.Response;
 		 * @param plugin
 		 * @param room
 		 */
-		public void onJoin(@NonNull final JanusPlugin plugin, final EventRoom room);
+		public void onJoin(@NonNull final JanusPlugin plugin, final RoomEvent room);
 		
 		/**
 		 * callback when detached from plugin
@@ -446,14 +446,14 @@ import retrofit2.Response;
 			new Join(roomConnectionParameters.roomId, getPType(), userName, displayName, getFeedId()),
 			mTransactionCallback);
 		if (DEBUG) Log.v(TAG, "join:" + message);
-		final Call<EventRoom> call = mVideoRoom.join(roomConnectionParameters.apiName,
+		final Call<RoomEvent> call = mVideoRoom.join(roomConnectionParameters.apiName,
 			mSession.id(), mPlugin.id(), message);
 		addCall(call);
 		try {
-			final Response<EventRoom> response = call.execute();
+			final Response<RoomEvent> response = call.execute();
 			if (response.isSuccessful() && (response.body() != null)) {
 				removeCall(call);
-				final EventRoom join = response.body();
+				final RoomEvent join = response.body();
 				if ("event".equals(join.janus)) {
 					if (DEBUG) Log.v(TAG, "多分ここにはこない, ackが返ってくるはず");
 					handlePluginEvent(message.transaction, join);
@@ -532,7 +532,7 @@ import retrofit2.Response;
 			reportError(new IllegalStateException("Unexpectedly room is null"));
 			return;
 		}
-		final Call<EventRoom> call = mVideoRoom.offer(
+		final Call<RoomEvent> call = mVideoRoom.offer(
 			roomConnectionParameters.apiName,
 			mSession.id(),
 			mPlugin.id(),
@@ -543,12 +543,12 @@ import retrofit2.Response;
 		);
 		addCall(call);
 		try {
-			final Response<EventRoom> response = call.execute();
+			final Response<RoomEvent> response = call.execute();
 			if (DEBUG) Log.v(TAG, "sendOfferSdp:response=" + response
 				+ "\n" + response.body());
 			if (response.isSuccessful() && (response.body() != null)) {
 				removeCall(call);
-				final EventRoom offer = response.body();
+				final RoomEvent offer = response.body();
 				if ("event".equals(offer.janus)) {
 					if (DEBUG) Log.v(TAG, "多分ここにはこない, ackが返ってくるはず");
 					final SessionDescription answerSdp
@@ -623,7 +623,7 @@ import retrofit2.Response;
 			reportError(new IllegalStateException("Unexpectedly room is null"));
 			return;
 		}
-		final Call<EventRoom> call;
+		final Call<RoomEvent> call;
 		if (candidate != null) {
 			call = mVideoRoom.trickle(
 				roomConnectionParameters.apiName,
@@ -641,12 +641,12 @@ import retrofit2.Response;
 		}
 		addCall(call);
 		try {
-			final Response<EventRoom> response = call.execute();
+			final Response<RoomEvent> response = call.execute();
 //				if (DEBUG) Log.v(TAG, "sendLocalIceCandidate:response=" + response
 //					+ "\n" + response.body());
 			if (response.isSuccessful() && (response.body() != null)) {
 				removeCall(call);
-				final EventRoom join = response.body();
+				final RoomEvent join = response.body();
 				if ("event".equals(join.janus)) {
 					if (DEBUG) Log.v(TAG, "多分ここにはこない, ackが返ってくるはず");
 //					// FIXME 正常に処理できた…Roomの情報を更新する
@@ -866,7 +866,7 @@ import retrofit2.Response;
 			{
 				// プラグインイベント
 				final Gson gson = new Gson();
-				final EventRoom event = gson.fromJson(body.toString(), EventRoom.class);
+				final RoomEvent event = gson.fromJson(body.toString(), RoomEvent.class);
 				handled = handlePluginEvent(transaction, event);
 				break;
 			}
@@ -896,7 +896,7 @@ import retrofit2.Response;
 	 * @return
 	 */
 	protected boolean handlePluginEvent(@NonNull final String transaction,
-		@NonNull final EventRoom room) {
+		@NonNull final RoomEvent room) {
 
 		if (DEBUG) Log.v(TAG, "handlePluginEvent:");
 		// XXX このsenderはPublisherとして接続したときのVideoRoomプラグインのidらしい
@@ -925,7 +925,7 @@ import retrofit2.Response;
 	 * @return
 	 */
 	protected boolean handlePluginEventAttached(@NonNull final String transaction,
-		@NonNull final EventRoom room) {
+		@NonNull final RoomEvent room) {
 
 		if (DEBUG) Log.v(TAG, "handlePluginEventAttached:");
 		if (room.jsep != null) {
@@ -959,7 +959,7 @@ import retrofit2.Response;
 	 * @return
 	 */
 	protected boolean handlePluginEventJoined(@NonNull final String transaction,
-		@NonNull final EventRoom room) {
+		@NonNull final RoomEvent room) {
 
 		if (DEBUG) Log.v(TAG, "handlePluginEventJoined:");
 		final Room roomCopy;
@@ -982,7 +982,7 @@ import retrofit2.Response;
 	 * @return
 	 */
 	protected boolean handlePluginEventEvent(@NonNull final String transaction,
-		@NonNull final EventRoom room) {
+		@NonNull final RoomEvent room) {
 
 		if (DEBUG) Log.v(TAG, "handlePluginEventEvent:");
 		if (room.jsep != null) {
@@ -1222,7 +1222,7 @@ import retrofit2.Response;
 		}
 
 		protected boolean handlePluginEvent(@NonNull final String transaction,
-			@NonNull final EventRoom room) {
+			@NonNull final RoomEvent room) {
 			
 			final boolean result = super.handlePluginEvent(transaction, room);
 			checkPublishers(room);
@@ -1233,7 +1233,7 @@ import retrofit2.Response;
 		 * リモート側のPublisherをチェックして増減があれば接続/切断する
 		 * @param room
 		 */
-		private void checkPublishers(@NonNull final EventRoom room) {
+		private void checkPublishers(@NonNull final RoomEvent room) {
 			if (DEBUG) Log.v(TAG, "checkPublishers:");
 			final Room roomCopy;
 			synchronized (mSync) {
@@ -1244,7 +1244,7 @@ import retrofit2.Response;
 				&& (room.plugindata.data != null)) {
 
 				// ローカルキャッシュ
-				final EventRoom.Data data = room.plugindata.data;
+				final RoomEvent.Data data = room.plugindata.data;
 				if (data.unpublished != null) {
 					roomCopy.updatePublisher(data.unpublished, false);
 				}
