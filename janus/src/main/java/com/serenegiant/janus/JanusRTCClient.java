@@ -107,6 +107,10 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 import static com.serenegiant.janus.Const.*;
 
+/**
+ * Janus-gatewayへアクセスするためのヘルパークラス
+ * FIXME 今はpublisherとsubscriberで別々のPeerConnectionを生成しているのを1つにする
+ */
 public class JanusRTCClient implements JanusClient {
 	private static final boolean DEBUG = false;	// set false on production
 	private static final String TAG = JanusRTCClient.class.getSimpleName();
