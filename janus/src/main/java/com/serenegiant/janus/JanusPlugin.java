@@ -595,7 +595,7 @@ import retrofit2.Response;
 			mSession.id(),
 			mPlugin.id(),
 			new Message(roomCopy,
-				new Start(1234),
+				new Start(roomConnectionParameters.roomId),
 				new JsepSdp("answer", sdp.description),
 				mTransactionCallback)
 		);
