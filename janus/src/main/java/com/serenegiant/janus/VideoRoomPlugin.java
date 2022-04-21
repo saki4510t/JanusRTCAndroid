@@ -70,44 +70,44 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-/*package*/ abstract class JanusPlugin implements PeerConnection.Observer {
+/*package*/ abstract class VideoRoomPlugin implements PeerConnection.Observer {
 	private static final boolean DEBUG = false;	// set false on production
 	
 	/**
 	 * callback interface for JanusPlugin
 	 */
-	interface JanusPluginCallback {
+	interface VideoRoomCallback {
 		/**
 		 * callback when attached to plugin
 		 * @param plugin
 		 */
-		public void onAttach(@NonNull final JanusPlugin plugin);
+		public void onAttach(@NonNull final VideoRoomPlugin plugin);
 		
 		/**
 		 * callback when jointed to room
 		 * @param plugin
 		 * @param room
 		 */
-		public void onJoin(@NonNull final JanusPlugin plugin, final RoomEvent room);
+		public void onJoin(@NonNull final VideoRoomPlugin plugin, final RoomEvent room);
 		
 		/**
 		 * callback when detached from plugin
 		 * @param plugin
 		 */
-		public void onDetach(@NonNull final JanusPlugin plugin);
+		public void onDetach(@NonNull final VideoRoomPlugin plugin);
 		
 		/**
 		 * callback when other publisher enter to the same room
  		 * @param plugin
 		 */
-		public void onEnter(@NonNull final JanusPlugin plugin);
+		public void onEnter(@NonNull final VideoRoomPlugin plugin);
 	
 		/**
 		 * callback when other publisher leaved from room
 		 * @param plugin
 		 * @param pluginId
 		 */
-		public void onLeave(@NonNull final JanusPlugin plugin,
+		public void onLeave(@NonNull final VideoRoomPlugin plugin,
 			@NonNull final BigInteger pluginId, final int numUsers);
 		
 		/**
@@ -115,7 +115,7 @@ import retrofit2.Response;
 		 * @param plugin
 		 * @param remoteStream
 		 */
-		public void onAddRemoteStream(@NonNull final JanusPlugin plugin,
+		public void onAddRemoteStream(@NonNull final VideoRoomPlugin plugin,
 			@NonNull final MediaStream remoteStream);
 		
 		/**
@@ -123,7 +123,7 @@ import retrofit2.Response;
 		 * @param plugin
 		 * @param stream
 		 */
-		public void onRemoveStream(@NonNull final JanusPlugin plugin,
+		public void onRemoveStream(@NonNull final VideoRoomPlugin plugin,
 			@NonNull final MediaStream stream);
 		
 		/**
@@ -131,27 +131,27 @@ import retrofit2.Response;
 		 * @param plugin
 		 * @param remoteCandidate
 		 */
-		public void onRemoteIceCandidate(@NonNull final JanusPlugin plugin,
+		public void onRemoteIceCandidate(@NonNull final VideoRoomPlugin plugin,
 			final IceCandidate remoteCandidate);
 		/**
 		 * Callback fired once connection is established (IceConnectionState is
 		 * CONNECTED).
 		 */
-		public void onIceConnected(@NonNull final JanusPlugin plugin);
+		public void onIceConnected(@NonNull final VideoRoomPlugin plugin);
 		
 		/**
 		 * Callback fired once connection is closed (IceConnectionState is
 		 * DISCONNECTED).
 		 */
 
-		public void onIceDisconnected(@NonNull final JanusPlugin plugin);
+		public void onIceDisconnected(@NonNull final VideoRoomPlugin plugin);
 		/**
 		 * Callback fired once local SDP is created and set.
 		 */
-		public void onLocalDescription(@NonNull final JanusPlugin plugin,
+		public void onLocalDescription(@NonNull final VideoRoomPlugin plugin,
 			final SessionDescription sdp);
 		
-		public void createSubscriber(@NonNull final JanusPlugin plugin,
+		public void createSubscriber(@NonNull final VideoRoomPlugin plugin,
 			@NonNull final PublisherInfo info);
 
 		/**
@@ -160,7 +160,7 @@ import retrofit2.Response;
 		 * @param plugin
 		 * @param sdp
 		 */
-		public void onRemoteDescription(@NonNull final JanusPlugin plugin,
+		public void onRemoteDescription(@NonNull final VideoRoomPlugin plugin,
 			final SessionDescription sdp);
 
 		/**
@@ -168,10 +168,10 @@ import retrofit2.Response;
 		 * @param plugin
 		 * @param report
 		 */
-		public void onPeerConnectionStatsReady(@NonNull final JanusPlugin plugin,
+		public void onPeerConnectionStatsReady(@NonNull final VideoRoomPlugin plugin,
 			final RTCStatsReport report);
 
-		public void onError(@NonNull final JanusPlugin plugin,
+		public void onError(@NonNull final VideoRoomPlugin plugin,
 			@NonNull final Throwable t);
 	}
 	
@@ -211,7 +211,7 @@ import retrofit2.Response;
 	@NonNull
 	protected final Session mSession;
 	@NonNull
-	protected final JanusPluginCallback mCallback;
+	protected final VideoRoomCallback mCallback;
 	protected final ExecutorService executor = JanusRTCClient.executor;
 	protected final List<Call<?>> mCurrentCalls = new ArrayList<>();
 	private final boolean isLoopback;
@@ -231,13 +231,13 @@ import retrofit2.Response;
 	 * @param session
 	 * @param callback
 	 */
-	public JanusPlugin(@NonNull VideoRoom videoRoom,
-		@NonNull final Session session,
-		@NonNull final JanusPluginCallback callback,
-		@NonNull final PeerConnectionParameters peerConnectionParameters,
-		@NonNull final RoomConnectionParameters roomConnectionParameters,
-		@NonNull final MediaConstraints sdpMediaConstraints,
-		final boolean isVideoCallEnabled) {
+	public VideoRoomPlugin(@NonNull VideoRoom videoRoom,
+						   @NonNull final Session session,
+						   @NonNull final VideoRoomCallback callback,
+						   @NonNull final PeerConnectionParameters peerConnectionParameters,
+						   @NonNull final RoomConnectionParameters roomConnectionParameters,
+						   @NonNull final MediaConstraints sdpMediaConstraints,
+						   final boolean isVideoCallEnabled) {
 		
 		this.mVideoRoom = videoRoom;
 		this.mSession = session;
@@ -398,7 +398,7 @@ import retrofit2.Response;
 						}
 						// プラグインにアタッチできた＼(^o^)／
 						if (DEBUG) Log.v(TAG, "attach:success");
-						mCallback.onAttach(JanusPlugin.this);
+						mCallback.onAttach(VideoRoomPlugin.this);
 						// ルームへjoin
 						executor.execute(() -> {
 							try {
@@ -690,10 +690,10 @@ import retrofit2.Response;
 			if (DEBUG) Log.d(TAG, "IceConnectionState: " + newState);
 			switch (newState) {
 			case CONNECTED:
-				mCallback.onIceConnected(JanusPlugin.this);
+				mCallback.onIceConnected(VideoRoomPlugin.this);
 				break;
 			case DISCONNECTED:
-				mCallback.onIceDisconnected(JanusPlugin.this);
+				mCallback.onIceDisconnected(VideoRoomPlugin.this);
 				break;
 			case FAILED:
 				Log.w(TAG, "ICE connection failed.");
@@ -747,14 +747,14 @@ import retrofit2.Response;
 	public void onAddStream(final MediaStream stream) {
 		if (DEBUG) Log.v(TAG, "onAddStream:" + stream);
 
-		executor.execute(() -> mCallback.onAddRemoteStream(JanusPlugin.this, stream));
+		executor.execute(() -> mCallback.onAddRemoteStream(VideoRoomPlugin.this, stream));
 	}
 	
 	@Override
 	public void onRemoveStream(final MediaStream stream) {
 		if (DEBUG) Log.v(TAG, "onRemoveStream:" + stream);
 	
-		executor.execute(() -> mCallback.onRemoveStream(JanusPlugin.this, stream));
+		executor.execute(() -> mCallback.onRemoveStream(VideoRoomPlugin.this, stream));
 	}
 	
 	@Override
@@ -817,7 +817,7 @@ import retrofit2.Response;
 		= new RTCStatsCollectorCallback() {
 		@Override
 		public void onStatsDelivered(final RTCStatsReport rtcStatsReport) {
-			mCallback.onPeerConnectionStatsReady(JanusPlugin.this, rtcStatsReport);
+			mCallback.onPeerConnectionStatsReady(VideoRoomPlugin.this, rtcStatsReport);
 		}
 	};
 //--------------------------------------------------------------------------------
@@ -838,7 +838,7 @@ import retrofit2.Response;
 		public boolean onReceived(@NonNull final String transaction,
 			 final JSONObject body) {
 
-			return JanusPlugin.this.onReceived(transaction, body);
+			return VideoRoomPlugin.this.onReceived(transaction, body);
 		}
 	};
 	
@@ -1013,7 +1013,7 @@ import retrofit2.Response;
 					synchronized (mSync) {
 						roomCopy = mRoom;
 					}
-					mCallback.onLeave(JanusPlugin.this,
+					mCallback.onLeave(VideoRoomPlugin.this,
 						room.plugindata.data.leaving,
 						roomCopy != null ? roomCopy.getNumPublishers() : 0);
 				});
@@ -1188,7 +1188,7 @@ import retrofit2.Response;
 		}
 	};
 //================================================================================
-	public static class Publisher extends JanusPlugin {
+	public static class Publisher extends VideoRoomPlugin {
 
 		/**
 		 * コンストラクタ
@@ -1196,7 +1196,7 @@ import retrofit2.Response;
 		 */
 		public Publisher(@NonNull VideoRoom videoRoom,
 			@NonNull final Session session,
-			@NonNull final JanusPluginCallback callback,
+			@NonNull final VideoRoomCallback callback,
 			@NonNull final PeerConnectionParameters peerConnectionParameters,
 			@NonNull final RoomConnectionParameters roomConnectionParameters,
 			@NonNull final MediaConstraints sdpMediaConstraints,
@@ -1267,7 +1267,7 @@ import retrofit2.Response;
 		}
 	}
 	
-	public static class Subscriber extends JanusPlugin {
+	public static class Subscriber extends VideoRoomPlugin {
 		@NonNull
 		public final PublisherInfo info;
 
@@ -1277,7 +1277,7 @@ import retrofit2.Response;
 		 */
 		public Subscriber(@NonNull VideoRoom videoRoom,
 			@NonNull final Session session,
-			@NonNull final JanusPluginCallback callback,
+			@NonNull final VideoRoomCallback callback,
 			@NonNull final PeerConnectionParameters peerConnectionParameters,
 			@NonNull final RoomConnectionParameters roomConnectionParameters,
 			@NonNull final MediaConstraints sdpMediaConstraints,

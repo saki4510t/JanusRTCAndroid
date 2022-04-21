@@ -194,8 +194,8 @@ public class JanusRTCClient implements JanusClient {
 	@NonNull
 	private final List<Call<?>> mCurrentCalls = new ArrayList<>();
 	@NonNull
-	private final Map<BigInteger, JanusPlugin> mAttachedPlugins
-		= new ConcurrentHashMap<BigInteger, JanusPlugin>();
+	private final Map<BigInteger, VideoRoomPlugin> mAttachedPlugins
+		= new ConcurrentHashMap<BigInteger, VideoRoomPlugin>();
 	private ConnectionState mConnectionState;
 	private ServerInfo mServerInfo;
 	private Session mSession;
@@ -727,10 +727,10 @@ public class JanusRTCClient implements JanusClient {
 
 		final List<String> mediaStreamLabels = Collections.singletonList("ARDAMS");
 		
-		final JanusPlugin.Publisher publisher
-			= new JanusPlugin.Publisher(
+		final VideoRoomPlugin.Publisher publisher
+			= new VideoRoomPlugin.Publisher(
 				mJanus, mSession,
-				mJanusPluginCallback,
+			mVideoRoomCallback,
 				peerConnectionParameters,
 				roomConnectionParameters,
 				sdpMediaConstraints,
@@ -870,8 +870,8 @@ public class JanusRTCClient implements JanusClient {
 		rtcConfig.enableDtlsSrtp = !peerConnectionParameters.loopback;
 		rtcConfig.sdpSemantics = SDP_SEMANTICS;
 		
-		final JanusPlugin.Subscriber subscriber = new JanusPlugin.Subscriber(
-			mJanus, mSession, mJanusPluginCallback,
+		final VideoRoomPlugin.Subscriber subscriber = new VideoRoomPlugin.Subscriber(
+			mJanus, mSession, mVideoRoomCallback,
 			peerConnectionParameters,
 			roomConnectionParameters,
 			sdpMediaConstraints,
@@ -1035,7 +1035,7 @@ public class JanusRTCClient implements JanusClient {
 	private void getStats() {
 		if (DEBUG) Log.v(TAG, "getStats:");
 		synchronized (mAttachedPlugins) {
-			for (final JanusPlugin plugin: mAttachedPlugins.values()) {
+			for (final VideoRoomPlugin plugin: mAttachedPlugins.values()) {
 				plugin.getStats();
 			}
 		}
@@ -1122,13 +1122,13 @@ public class JanusRTCClient implements JanusClient {
 	}
 
 //--------------------------------------------------------------------------------
-	private void addPlugin(@NonNull final BigInteger key, @NonNull final JanusPlugin plugin) {
+	private void addPlugin(@NonNull final BigInteger key, @NonNull final VideoRoomPlugin plugin) {
 		synchronized (mAttachedPlugins) {
 			mAttachedPlugins.put(key, plugin);
 		}
 	}
 
-	private void removePlugin(@NonNull final JanusPlugin plugin) {
+	private void removePlugin(@NonNull final VideoRoomPlugin plugin) {
 		final BigInteger key = plugin.id();
 		
 		executor.execute(() -> {
@@ -1138,7 +1138,7 @@ public class JanusRTCClient implements JanusClient {
 		});
 	}
 
-	private JanusPlugin getPlugin(@Nullable final BigInteger key) {
+	private VideoRoomPlugin getPlugin(@Nullable final BigInteger key) {
 		synchronized (mAttachedPlugins) {
 			if ((key != null) && mAttachedPlugins.containsKey(key)) {
 				return mAttachedPlugins.get(key);
@@ -1149,13 +1149,13 @@ public class JanusRTCClient implements JanusClient {
 	
 	private void leavePlugin(@NonNull BigInteger leavePlugin, final int numUsers) {
 		if (DEBUG) Log.v(TAG, "leavePlugin:" + leavePlugin);
-		JanusPlugin found = null;
+		VideoRoomPlugin found = null;
 	
 		synchronized (mAttachedPlugins) {
 			// feederIdが一致するSubscriberを探す
-			for (Map.Entry<BigInteger, JanusPlugin> entry: mAttachedPlugins.entrySet()) {
-				final JanusPlugin plugin = entry.getValue();
-				if (plugin instanceof JanusPlugin.Subscriber) {
+			for (Map.Entry<BigInteger, VideoRoomPlugin> entry: mAttachedPlugins.entrySet()) {
+				final VideoRoomPlugin plugin = entry.getValue();
+				if (plugin instanceof VideoRoomPlugin.Subscriber) {
 					if (leavePlugin.equals(plugin.getFeedId())) {
 						found = plugin;
 						break;
@@ -1166,11 +1166,11 @@ public class JanusRTCClient implements JanusClient {
 		if (DEBUG) Log.v(TAG, "leavePlugin:found=" + found);
 		if (found != null) {
 			// feederIdが一致するSubscriberが見つかった時はdetachする
-			final JanusPlugin subscriber = found;
+			final VideoRoomPlugin subscriber = found;
 			executor.execute(() -> {
 				subscriber.detach();
 				mCallback.onLeave(
-					((JanusPlugin.Subscriber)subscriber).info, numUsers);
+					((VideoRoomPlugin.Subscriber)subscriber).info, numUsers);
 			});
 		}
 	}
@@ -1309,7 +1309,7 @@ public class JanusRTCClient implements JanusClient {
 		cancelCall();
 		mConnectionState = ConnectionState.CLOSED;
 		synchronized (mAttachedPlugins) {
-			for (final Map.Entry<BigInteger, JanusPlugin> entry:
+			for (final Map.Entry<BigInteger, VideoRoomPlugin> entry:
 				mAttachedPlugins.entrySet()) {
 
 				entry.getValue().detach();
@@ -1430,46 +1430,46 @@ public class JanusRTCClient implements JanusClient {
 	/**
 	 * JanusPluginからのコールバックリスナーの実装
 	 */
-	private final JanusPlugin.JanusPluginCallback mJanusPluginCallback
-		= new JanusPlugin.JanusPluginCallback() {
+	private final VideoRoomPlugin.VideoRoomCallback mVideoRoomCallback
+		= new VideoRoomPlugin.VideoRoomCallback() {
 		@Override
-		public void onAttach(@NonNull final JanusPlugin plugin) {
+		public void onAttach(@NonNull final VideoRoomPlugin plugin) {
 			if (DEBUG) Log.v(TAG, "onAttach:" + plugin);
 			addPlugin(plugin.id(), plugin);
 		}
 		
 		@Override
-		public void onJoin(@NonNull final JanusPlugin plugin,
+		public void onJoin(@NonNull final VideoRoomPlugin plugin,
 			final RoomEvent room) {
 
 			if (DEBUG) Log.v(TAG, "onJoin:" + plugin);
-			if (plugin instanceof JanusPlugin.Publisher) {
+			if (plugin instanceof VideoRoomPlugin.Publisher) {
 				mConnectionState = ConnectionState.CONNECTED;
 				handleOnJoin(plugin, room);
 				plugin.createOffer();
-			} else if (plugin instanceof JanusPlugin.Subscriber) {
+			} else if (plugin instanceof VideoRoomPlugin.Subscriber) {
 				handleOnJoin(plugin, room);
 				plugin.createAnswer();
 			}
 		}
 		
 		@Override
-		public void onDetach(@NonNull final JanusPlugin plugin) {
+		public void onDetach(@NonNull final VideoRoomPlugin plugin) {
 			if (DEBUG) Log.v(TAG, "onDetach:" + plugin);
 
 			removePlugin(plugin);
 		}
 		
 		@Override
-		public void onEnter(@NonNull final JanusPlugin plugin) {
+		public void onEnter(@NonNull final VideoRoomPlugin plugin) {
 			if (DEBUG) Log.v(TAG, "onEnter:" + plugin);
-			if (plugin instanceof JanusPlugin.Subscriber) {
-				mCallback.onEnter(((JanusPlugin.Subscriber) plugin).info);
+			if (plugin instanceof VideoRoomPlugin.Subscriber) {
+				mCallback.onEnter(((VideoRoomPlugin.Subscriber) plugin).info);
 			}
 		}
 		
 		@Override
-		public void onLeave(@NonNull final JanusPlugin plugin,
+		public void onLeave(@NonNull final VideoRoomPlugin plugin,
 			@NonNull final BigInteger pluginId, final int numUsers) {
 			
 			if (DEBUG) Log.v(TAG, "onLeave:" + plugin + ",leave=" + pluginId);
@@ -1479,7 +1479,7 @@ public class JanusRTCClient implements JanusClient {
 		}
 		
 		@Override
-		public void onAddRemoteStream(@NonNull final JanusPlugin plugin,
+		public void onAddRemoteStream(@NonNull final VideoRoomPlugin plugin,
 			@NonNull final MediaStream stream) {
 
 			if (DEBUG) Log.v(TAG, "onAddRemoteStream:" + plugin);
@@ -1487,14 +1487,14 @@ public class JanusRTCClient implements JanusClient {
 		}
 		
 		@Override
-		public void onRemoveStream(@NonNull final JanusPlugin plugin,
+		public void onRemoveStream(@NonNull final VideoRoomPlugin plugin,
 			@NonNull final MediaStream stream) {
 		
 			if (DEBUG) Log.v(TAG, "onRemoveStream:" + plugin);
 		}
 		
 		@Override
-		public void onRemoteIceCandidate(@NonNull final JanusPlugin plugin,
+		public void onRemoteIceCandidate(@NonNull final VideoRoomPlugin plugin,
 			final IceCandidate candidate) {
 
 			if (DEBUG) Log.v(TAG, "onRemoteIceCandidate:" + plugin
@@ -1503,25 +1503,25 @@ public class JanusRTCClient implements JanusClient {
 		}
 		
 		@Override
-		public void onIceConnected(@NonNull final JanusPlugin plugin) {
+		public void onIceConnected(@NonNull final VideoRoomPlugin plugin) {
 			if (DEBUG) Log.v(TAG, "onIceConnected:" + plugin);
-			if (plugin instanceof JanusPlugin.Publisher) {
+			if (plugin instanceof VideoRoomPlugin.Publisher) {
 				// 複数のSubscriberが存在しうるのでPublisherからのイベントのみハンドリング
 				executor.execute(() -> mCallback.onIceConnected());
 			}
 		}
 		
 		@Override
-		public void onIceDisconnected(@NonNull final JanusPlugin plugin) {
+		public void onIceDisconnected(@NonNull final VideoRoomPlugin plugin) {
 			if (DEBUG) Log.v(TAG, "onIceDisconnected:" + plugin);
-			if (plugin instanceof JanusPlugin.Publisher) {
+			if (plugin instanceof VideoRoomPlugin.Publisher) {
 				// 複数のSubscriberが存在しうるのでPublisherからのイベントのみハンドリング
 				executor.execute(() -> mCallback.onIceDisconnected());
 			}
 		}
 		
 		@Override
-		public void onLocalDescription(@NonNull final JanusPlugin plugin,
+		public void onLocalDescription(@NonNull final VideoRoomPlugin plugin,
 			final SessionDescription sdp) {
 
 			if (DEBUG) Log.v(TAG, "onLocalDescription:" + plugin);
@@ -1538,7 +1538,7 @@ public class JanusRTCClient implements JanusClient {
 		}
 
 		@Override
-		public void createSubscriber(@NonNull final JanusPlugin plugin,
+		public void createSubscriber(@NonNull final VideoRoomPlugin plugin,
 			@NonNull final PublisherInfo info) {
 
 			if (DEBUG) Log.v(TAG, "createSubscriber:" + plugin);
@@ -1548,7 +1548,7 @@ public class JanusRTCClient implements JanusClient {
 		}
 		
 		@Override
-		public void onRemoteDescription(@NonNull final JanusPlugin plugin,
+		public void onRemoteDescription(@NonNull final VideoRoomPlugin plugin,
 			final SessionDescription sdp) {
 			
 			if (DEBUG) Log.v(TAG, "onRemoteDescription:" + plugin
@@ -1558,15 +1558,15 @@ public class JanusRTCClient implements JanusClient {
 		}
 		
 		@Override
-		public void onPeerConnectionStatsReady(@NonNull final JanusPlugin plugin,
+		public void onPeerConnectionStatsReady(@NonNull final VideoRoomPlugin plugin,
 			final RTCStatsReport report) {
 			executor.execute(() -> mCallback.onPeerConnectionStatsReady(
-					plugin instanceof JanusPlugin.Publisher, report)
+					plugin instanceof VideoRoomPlugin.Publisher, report)
 			);
 		}
 
 		@Override
-		public void onError(@NonNull final JanusPlugin plugin,
+		public void onError(@NonNull final VideoRoomPlugin plugin,
 			@NonNull final Throwable t) {
 
 			reportError(t);
@@ -1663,7 +1663,7 @@ public class JanusRTCClient implements JanusClient {
 						return;	// 処理済みの時はここで終了
 					}
 				}
-				final JanusPlugin plugin = getPlugin(sender);
+				final VideoRoomPlugin plugin = getPlugin(sender);
 				if (plugin != null) {
 					if (DEBUG) Log.v(TAG, "handlePluginEvent: try handle message on plugin specified by sender");
 					if (plugin.onReceived("", body)) {
@@ -1719,7 +1719,7 @@ public class JanusRTCClient implements JanusClient {
 		if (DEBUG) Log.v(TAG, "handlePluginEvent: unhandled event");
 	}
 	
-	private void handleOnJoin(@NonNull final JanusPlugin plugin,
+	private void handleOnJoin(@NonNull final VideoRoomPlugin plugin,
 		final RoomEvent room) {
 
 		if (DEBUG) Log.v(TAG, "handleOnJoin:");
