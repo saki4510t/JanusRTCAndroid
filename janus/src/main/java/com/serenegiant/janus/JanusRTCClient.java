@@ -195,7 +195,7 @@ public class JanusRTCClient implements JanusClient {
 	private final List<Call<?>> mCurrentCalls = new ArrayList<>();
 	@NonNull
 	private final Map<BigInteger, VideoRoomPlugin> mAttachedPlugins
-		= new ConcurrentHashMap<BigInteger, VideoRoomPlugin>();
+		= new ConcurrentHashMap<>();
 	private ConnectionState mConnectionState;
 	private ServerInfo mServerInfo;
 	private Session mSession;
