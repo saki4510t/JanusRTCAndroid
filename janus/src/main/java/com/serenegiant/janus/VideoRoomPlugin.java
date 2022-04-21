@@ -70,31 +70,21 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-/*package*/ abstract class VideoRoomPlugin implements PeerConnection.Observer {
+/*package*/ abstract class VideoRoomPlugin extends JanusPlugin
+	implements PeerConnection.Observer {
+
 	private static final boolean DEBUG = false;	// set false on production
 	
 	/**
 	 * callback interface for JanusPlugin
 	 */
-	interface VideoRoomCallback {
-		/**
-		 * callback when attached to plugin
-		 * @param plugin
-		 */
-		public void onAttach(@NonNull final VideoRoomPlugin plugin);
-		
+	interface VideoRoomCallback extends PluginCallback {
 		/**
 		 * callback when jointed to room
 		 * @param plugin
 		 * @param room
 		 */
 		public void onJoin(@NonNull final VideoRoomPlugin plugin, final RoomEvent room);
-		
-		/**
-		 * callback when detached from plugin
-		 * @param plugin
-		 */
-		public void onDetach(@NonNull final VideoRoomPlugin plugin);
 		
 		/**
 		 * callback when other publisher enter to the same room
@@ -209,15 +199,12 @@ import retrofit2.Response;
 	@NonNull
 	protected final VideoRoom mVideoRoom;
 	@NonNull
-	protected final Session mSession;
-	@NonNull
 	protected final VideoRoomCallback mCallback;
 	protected final ExecutorService executor = JanusRTCClient.executor;
 	protected final List<Call<?>> mCurrentCalls = new ArrayList<>();
 	private final boolean isLoopback;
 	private final boolean isVideoCallEnabled;
 	protected RoomState mRoomState = RoomState.UNINITIALIZED;
-	protected PluginInfo mPlugin;
 	@Nullable
 	protected Room mRoom;
 	protected SessionDescription mLocalSdp;
@@ -231,16 +218,17 @@ import retrofit2.Response;
 	 * @param session
 	 * @param callback
 	 */
-	public VideoRoomPlugin(@NonNull VideoRoom videoRoom,
-						   @NonNull final Session session,
-						   @NonNull final VideoRoomCallback callback,
-						   @NonNull final PeerConnectionParameters peerConnectionParameters,
-						   @NonNull final RoomConnectionParameters roomConnectionParameters,
-						   @NonNull final MediaConstraints sdpMediaConstraints,
-						   final boolean isVideoCallEnabled) {
-		
+	public VideoRoomPlugin(
+		@NonNull VideoRoom videoRoom,
+		@NonNull final Session session,
+		@NonNull final VideoRoomCallback callback,
+		@NonNull final PeerConnectionParameters peerConnectionParameters,
+		@NonNull final RoomConnectionParameters roomConnectionParameters,
+		@NonNull final MediaConstraints sdpMediaConstraints,
+		final boolean isVideoCallEnabled) {
+
+		super(session);
 		this.mVideoRoom = videoRoom;
-		this.mSession = session;
 		this.mCallback = callback;
 		this.peerConnectionParameters = peerConnectionParameters;
 		this.roomConnectionParameters = roomConnectionParameters;
@@ -260,10 +248,6 @@ import retrofit2.Response;
 		} finally {
 			super.finalize();
 		}
-	}
-	
-	BigInteger id() {
-		return mPlugin != null ? mPlugin.id() : null;
 	}
 	
 	@Nullable
@@ -374,6 +358,7 @@ import retrofit2.Response;
 	/**
 	 * attach to VideoRoom plugin
 	 */
+	@Override
 	public void attach() {
 		if (DEBUG) Log.v(TAG, "attach:");
 		final Attach attach = new Attach(mSession,
@@ -477,6 +462,7 @@ import retrofit2.Response;
 	/**
 	 * detach from VideoRoom plugin
 	 */
+	@Override
 	public void detach() {
 		if ((mRoomState == RoomState.CONNECTED)
 			|| (mRoomState == RoomState.ATTACHED)

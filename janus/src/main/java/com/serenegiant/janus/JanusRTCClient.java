@@ -1433,11 +1433,22 @@ public class JanusRTCClient implements JanusClient {
 	private final VideoRoomPlugin.VideoRoomCallback mVideoRoomCallback
 		= new VideoRoomPlugin.VideoRoomCallback() {
 		@Override
-		public void onAttach(@NonNull final VideoRoomPlugin plugin) {
+		public void onAttach(@NonNull final JanusPlugin plugin) {
 			if (DEBUG) Log.v(TAG, "onAttach:" + plugin);
-			addPlugin(plugin.id(), plugin);
+			if (plugin instanceof VideoRoomPlugin) {
+				addPlugin(plugin.id(), (VideoRoomPlugin) plugin);
+			}
 		}
-		
+
+		@Override
+		public void onDetach(@NonNull final JanusPlugin plugin) {
+			if (DEBUG) Log.v(TAG, "onDetach:" + plugin);
+
+			if (plugin instanceof VideoRoomPlugin) {
+				removePlugin((VideoRoomPlugin) plugin);
+			}
+		}
+
 		@Override
 		public void onJoin(@NonNull final VideoRoomPlugin plugin,
 			final RoomEvent room) {
@@ -1452,14 +1463,7 @@ public class JanusRTCClient implements JanusClient {
 				plugin.createAnswer();
 			}
 		}
-		
-		@Override
-		public void onDetach(@NonNull final VideoRoomPlugin plugin) {
-			if (DEBUG) Log.v(TAG, "onDetach:" + plugin);
 
-			removePlugin(plugin);
-		}
-		
 		@Override
 		public void onEnter(@NonNull final VideoRoomPlugin plugin) {
 			if (DEBUG) Log.v(TAG, "onEnter:" + plugin);
