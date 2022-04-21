@@ -27,6 +27,9 @@ import com.serenegiant.janus.TransactionManager;
 
 import java.math.BigInteger;
 
+/**
+ * VideoRoomプラグインメッセージ送信用のヘルパークラス
+ */
 public class Message {
 	@NonNull
 	public final String janus;

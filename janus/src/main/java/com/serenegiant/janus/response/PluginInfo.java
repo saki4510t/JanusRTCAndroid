@@ -23,12 +23,12 @@ import java.math.BigInteger;
 
 import androidx.annotation.NonNull;
 
-public class Plugin {
+public class PluginInfo {
 	public final String janus;
 	public final String transaction;
 	public final Data data;
 	
-	public Plugin(final String janus, final String transaction, final Data data) {
+	public PluginInfo(final String janus, final String transaction, final Data data) {
 		this.janus = janus;
 		this.transaction = transaction;
 		this.data = data;

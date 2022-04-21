@@ -22,7 +22,7 @@ package com.serenegiant.janus;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.serenegiant.janus.response.Plugin;
+import com.serenegiant.janus.response.PluginInfo;
 import com.serenegiant.janus.response.PublisherInfo;
 import com.serenegiant.janus.response.Session;
 
@@ -42,7 +42,7 @@ public class Room {
 	 * プラグイン
 	 */
 	@NonNull
-	private final Plugin plugin;
+	private final PluginInfo plugin;
 	
 	/**
 	 * 接続状態
@@ -67,7 +67,7 @@ public class Room {
 	 * @param session
 	 * @param plugin
 	 */
-	public Room(@NonNull final Session session, @NonNull final Plugin plugin) {
+	public Room(@NonNull final Session session, @NonNull final PluginInfo plugin) {
 		this.session = session;
 		this.plugin = plugin;
 	}

@@ -28,7 +28,7 @@ import com.serenegiant.janus.request.Message;
 import com.serenegiant.janus.request.Trickle;
 import com.serenegiant.janus.request.TrickleCompleted;
 import com.serenegiant.janus.response.RoomEvent;
-import com.serenegiant.janus.response.Plugin;
+import com.serenegiant.janus.response.PluginInfo;
 import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
 
@@ -74,7 +74,7 @@ public interface VideoRoom /*extends Janus*/ {
 	 * @return
 	 */
 	@POST("{api}/{session_id}")
-	public Call<Plugin> attachPlugin(
+	public Call<PluginInfo> attachPlugin(
 		@Path("api") final String api,
 		@Path("session_id") final BigInteger sessionId,
 		@Body final Attach attach);

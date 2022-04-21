@@ -35,7 +35,7 @@ import com.serenegiant.janus.request.videoroom.Start;
 import com.serenegiant.janus.request.Trickle;
 import com.serenegiant.janus.request.TrickleCompleted;
 import com.serenegiant.janus.response.RoomEvent;
-import com.serenegiant.janus.response.Plugin;
+import com.serenegiant.janus.response.PluginInfo;
 import com.serenegiant.janus.response.PublisherInfo;
 import com.serenegiant.janus.response.Session;
 import com.serenegiant.nio.CharsetsUtils;
@@ -217,7 +217,7 @@ import retrofit2.Response;
 	private final boolean isLoopback;
 	private final boolean isVideoCallEnabled;
 	protected RoomState mRoomState = RoomState.UNINITIALIZED;
-	protected Plugin mPlugin;
+	protected PluginInfo mPlugin;
 	@Nullable
 	protected Room mRoom;
 	protected SessionDescription mLocalSdp;
@@ -379,17 +379,17 @@ import retrofit2.Response;
 		final Attach attach = new Attach(mSession,
 			"janus.plugin.videoroom",
 			null);
-		final Call<Plugin> call = mVideoRoom.attachPlugin(
+		final Call<PluginInfo> call = mVideoRoom.attachPlugin(
 			roomConnectionParameters.apiName, mSession.id(), attach);
 		addCall(call);
-		call.enqueue(new Callback<Plugin>() {
+		call.enqueue(new Callback<PluginInfo>() {
 			@Override
-			public void onResponse(@NonNull final Call<Plugin> call,
-				@NonNull final Response<Plugin> response) {
+			public void onResponse(@NonNull final Call<PluginInfo> call,
+				@NonNull final Response<PluginInfo> response) {
 
 				if (response.isSuccessful() && (response.body() != null)) {
 					removeCall(call);
-					final Plugin plugin = response.body();
+					final PluginInfo plugin = response.body();
 					if ("success".equals(plugin.janus)) {
 						synchronized (mSync) {
 							mPlugin = plugin;
@@ -416,7 +416,7 @@ import retrofit2.Response;
 			}
 			
 			@Override
-			public void onFailure(@NonNull final Call<Plugin> call,
+			public void onFailure(@NonNull final Call<PluginInfo> call,
 				@NonNull final Throwable t) {
 
 				reportError(t);
