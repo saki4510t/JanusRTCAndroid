@@ -172,7 +172,7 @@ import retrofit2.Response;
 		CLOSED,
 		ERROR }
 
-	protected final String TAG = "JanusPlugin:" + getClass().getSimpleName();
+	protected final String TAG = "VideoRoomPlugin:" + getClass().getSimpleName();
 
 	@NonNull
 	protected final Object mSync = new Object();

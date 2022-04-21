@@ -140,7 +140,7 @@ public class RoomEvent {
 	@NonNull
 	@Override
 	public String toString() {
-		return "EventRoom{" +
+		return "RoomEvent{" +
 			"janus='" + janus + '\'' +
 			", sender='" + sender + '\'' +
 			", transaction='" + transaction + '\'' +

@@ -53,7 +53,7 @@ public class PluginInfo {
 	@NonNull
 	@Override
 	public String toString() {
-		return "Plugin{" +
+		return "PluginInfo{" +
 			"janus='" + janus + '\'' +
 			", transaction='" + transaction + '\'' +
 			", id=" + id() +
