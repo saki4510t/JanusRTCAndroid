@@ -41,7 +41,11 @@ public class Plugin {
 			this.id = id;
 		}
 	}
-	
+
+	/**
+	 * プラグインIDを取得
+	 * @return
+	 */
 	public BigInteger id() {
 		return data != null ? data.id : null;
 	}
