@@ -189,7 +189,7 @@ public class JanusRTCClient implements JanusClient {
 	private boolean renderVideo = true;
 //--------------------------------------------------------------------------------
 
-	private VideoRoom mJanus;
+	private VideoRoomAPI mJanus;
 	private LongPoll mLongPoll;
 	@NonNull
 	private final List<Call<?>> mCurrentCalls = new ArrayList<>();
@@ -1204,7 +1204,7 @@ public class JanusRTCClient implements JanusClient {
 		// 通常のRESTアクセス用APIインターフェースを生成
 		mJanus = setupRetrofit(
 			setupHttpClient(false, HTTP_READ_TIMEOUT_MS, HTTP_WRITE_TIMEOUT_MS),
-			roomConnectionParameters.roomUrl).create(VideoRoom.class);
+			roomConnectionParameters.roomUrl).create(VideoRoomAPI.class);
 		// long poll用APIインターフェースを生成
 		mLongPoll = setupRetrofit(
 			setupHttpClient(true, HTTP_READ_TIMEOUT_MS_LONG_POLL, HTTP_WRITE_TIMEOUT_MS),

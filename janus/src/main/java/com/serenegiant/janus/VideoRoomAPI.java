@@ -23,12 +23,18 @@ import com.serenegiant.janus.request.Attach;
 import com.serenegiant.janus.request.CreateSession;
 import com.serenegiant.janus.request.DestroySession;
 import com.serenegiant.janus.request.Detach;
+import com.serenegiant.janus.request.Hangup;
+import com.serenegiant.janus.request.Message;
+import com.serenegiant.janus.request.Trickle;
+import com.serenegiant.janus.request.TrickleCompleted;
+import com.serenegiant.janus.response.RoomEvent;
 import com.serenegiant.janus.response.PluginInfo;
 import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
 
 import java.math.BigInteger;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -36,9 +42,11 @@ import retrofit2.http.POST;
 import retrofit2.http.Path;
 
 /**
- * API interface of janus-gateway over http://https
+ * API interface of videoroom plugin on janus-gateway over http://https
+ * retrofit2でエンドポイント定義のインターフェースを継承していいのかどうかわからないので
+ * Janusインターフェースを継承せずに直接ここで定義
  */
-public interface Janus {
+public interface VideoRoomAPI /*extends JanusAPI*/ {
 	/**
 	 * janus-gatewayサーバーの情報を取得
 	 * @param api
@@ -49,7 +57,6 @@ public interface Janus {
 
 	/**
 	 * セッションを作成
-	 * セッションエンドポイント
 	 * @param api
 	 * @param create
 	 * @return
@@ -61,7 +68,6 @@ public interface Janus {
 
 	/**
 	 * 指定したプラグインへ接続
-	 * セッションエンドポイント
 	 * @param api
 	 * @param sessionId
 	 * @param attach
@@ -91,7 +97,6 @@ public interface Janus {
 
 	/**
 	 * セッションを破棄
-	 * セッションエンドポイント
 	 * @param api
 	 * @param sessionId
 	 * @param destroy
@@ -102,4 +107,50 @@ public interface Janus {
 		@Path("api") final String api,
 		@Path("session_id") final BigInteger sessionId,
 		@Body final DestroySession destroy);
+
+//--------------------------------------------------------------------------------
+// ここから下がvideoroomプラグインのエンドポイント定義
+//--------------------------------------------------------------------------------
+	@POST("{api}/{session_id}/{plugin_id}")
+	public Call<RoomEvent> join(
+		@Path("api") final String api,
+		@Path("session_id") final BigInteger sessionId,
+		@Path("plugin_id") final BigInteger pluginId,
+		@Body final Message message);
+
+	@POST("{api}/{session_id}/{plugin_id}")
+	public Call<RoomEvent> offer(
+		@Path("api") final String api,
+		@Path("session_id") final BigInteger sessionId,
+		@Path("plugin_id") final BigInteger pluginId,
+		@Body final Message message);
+
+	@POST("{api}/{session_id}/{plugin_id}")
+	public Call<RoomEvent> trickle(
+		@Path("api") final String api,
+		@Path("session_id") final BigInteger sessionId,
+		@Path("plugin_id") final BigInteger pluginId,
+		@Body final Trickle trickle);
+	
+	@POST("{api}/{session_id}/{plugin_id}")
+	public Call<RoomEvent> trickleCompleted(
+		@Path("api") final String api,
+		@Path("session_id") final BigInteger sessionId,
+		@Path("plugin_id") final BigInteger pluginId,
+		@Body final TrickleCompleted trickle);
+
+	@POST("{api}/{session_id}/{plugin_id}")
+	public Call<ResponseBody> send(
+		@Path("api") final String api,
+		@Path("session_id") final BigInteger sessionId,
+		@Path("plugin_id") final BigInteger pluginId,
+		@Body final Message message);
+	
+	@POST("{api}/{session_id}/{plugin_id}")
+	public Call<Void> hangup(
+		@Path("api") final String api,
+		@Path("session_id") final BigInteger sessionId,
+		@Path("plugin_id") final BigInteger pluginId,
+		@Body final Hangup hangup);
+	
 }

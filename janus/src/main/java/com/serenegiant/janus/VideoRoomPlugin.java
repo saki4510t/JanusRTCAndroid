@@ -197,7 +197,7 @@ import retrofit2.Response;
 	private final List<IceCandidate> queuedRemoteCandidates = new ArrayList<>();
 
 	@NonNull
-	protected final VideoRoom mVideoRoom;
+	protected final VideoRoomAPI mVideoRoomAPI;
 	@NonNull
 	protected final VideoRoomCallback mCallback;
 	protected final ExecutorService executor = JanusRTCClient.executor;
@@ -219,7 +219,7 @@ import retrofit2.Response;
 	 * @param callback
 	 */
 	public VideoRoomPlugin(
-		@NonNull VideoRoom videoRoom,
+		@NonNull VideoRoomAPI videoRoomAPI,
 		@NonNull final Session session,
 		@NonNull final VideoRoomCallback callback,
 		@NonNull final PeerConnectionParameters peerConnectionParameters,
@@ -228,7 +228,7 @@ import retrofit2.Response;
 		final boolean isVideoCallEnabled) {
 
 		super(session);
-		this.mVideoRoom = videoRoom;
+		this.mVideoRoomAPI = videoRoomAPI;
 		this.mCallback = callback;
 		this.peerConnectionParameters = peerConnectionParameters;
 		this.roomConnectionParameters = roomConnectionParameters;
@@ -364,7 +364,7 @@ import retrofit2.Response;
 		final Attach attach = new Attach(mSession,
 			"janus.plugin.videoroom",
 			null);
-		final Call<PluginInfo> call = mVideoRoom.attachPlugin(
+		final Call<PluginInfo> call = mVideoRoomAPI.attachPlugin(
 			roomConnectionParameters.apiName, mSession.id(), attach);
 		addCall(call);
 		call.enqueue(new Callback<PluginInfo>() {
@@ -431,7 +431,7 @@ import retrofit2.Response;
 			new Join(roomConnectionParameters.roomId, getPType(), userName, displayName, getFeedId()),
 			mTransactionCallback);
 		if (DEBUG) Log.v(TAG, "join:" + message);
-		final Call<RoomEvent> call = mVideoRoom.join(roomConnectionParameters.apiName,
+		final Call<RoomEvent> call = mVideoRoomAPI.join(roomConnectionParameters.apiName,
 			mSession.id(), mPlugin.id(), message);
 		addCall(call);
 		try {
@@ -472,7 +472,7 @@ import retrofit2.Response;
 			mRoomState = RoomState.CLOSED;
 			if (DEBUG) Log.v(TAG, "detach:");
 			cancelCall();
-			final Call<Void> call = mVideoRoom.detachPlugin(
+			final Call<Void> call = mVideoRoomAPI.detachPlugin(
 				roomConnectionParameters.apiName,
 				mSession.id(), mPlugin.id(),
 				new Detach(mSession, mTransactionCallback));
@@ -518,7 +518,7 @@ import retrofit2.Response;
 			reportError(new IllegalStateException("Unexpectedly room is null"));
 			return;
 		}
-		final Call<RoomEvent> call = mVideoRoom.offer(
+		final Call<RoomEvent> call = mVideoRoomAPI.offer(
 			roomConnectionParameters.apiName,
 			mSession.id(),
 			mPlugin.id(),
@@ -576,7 +576,7 @@ import retrofit2.Response;
 			reportError(new IllegalStateException("Unexpectedly room is null"));
 			return;
 		}
-		final Call<ResponseBody> call = mVideoRoom.send(
+		final Call<ResponseBody> call = mVideoRoomAPI.send(
 			roomConnectionParameters.apiName,
 			mSession.id(),
 			mPlugin.id(),
@@ -611,14 +611,14 @@ import retrofit2.Response;
 		}
 		final Call<RoomEvent> call;
 		if (candidate != null) {
-			call = mVideoRoom.trickle(
+			call = mVideoRoomAPI.trickle(
 				roomConnectionParameters.apiName,
 				mSession.id(),
 				mPlugin.id(),
 				new Trickle(roomCopy, candidate, mTransactionCallback)
 			);
 		} else {
-			call = mVideoRoom.trickleCompleted(
+			call = mVideoRoomAPI.trickleCompleted(
 				roomConnectionParameters.apiName,
 				mSession.id(),
 				mPlugin.id(),
@@ -1180,7 +1180,7 @@ import retrofit2.Response;
 		 * コンストラクタ
 		 * @param session
 		 */
-		public Publisher(@NonNull VideoRoom videoRoom,
+		public Publisher(@NonNull VideoRoomAPI videoRoomAPI,
 			@NonNull final Session session,
 			@NonNull final VideoRoomCallback callback,
 			@NonNull final PeerConnectionParameters peerConnectionParameters,
@@ -1188,7 +1188,7 @@ import retrofit2.Response;
 			@NonNull final MediaConstraints sdpMediaConstraints,
 			final boolean isVideoCallEnabled) {
 
-			super(videoRoom, session, callback,
+			super(videoRoomAPI, session, callback,
 				peerConnectionParameters,
 				roomConnectionParameters,
 				sdpMediaConstraints,
@@ -1261,7 +1261,7 @@ import retrofit2.Response;
 		 * コンストラクタ
 		 * @param session
 		 */
-		public Subscriber(@NonNull VideoRoom videoRoom,
+		public Subscriber(@NonNull VideoRoomAPI videoRoomAPI,
 			@NonNull final Session session,
 			@NonNull final VideoRoomCallback callback,
 			@NonNull final PeerConnectionParameters peerConnectionParameters,
@@ -1270,7 +1270,7 @@ import retrofit2.Response;
 			@NonNull final PublisherInfo info,
 			final boolean isVideoCallEnabled) {
 
-			super(videoRoom, session, callback,
+			super(videoRoomAPI, session, callback,
 				peerConnectionParameters,
 				roomConnectionParameters,
 				sdpMediaConstraints,
