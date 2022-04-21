@@ -110,6 +110,9 @@ import static com.serenegiant.janus.Const.*;
 /**
  * Janus-gatewayへアクセスするためのヘルパークラス
  * FIXME 今はpublisherとsubscriberで別々のPeerConnectionを生成しているのを1つにする
+ *       => 調べた限りではpublisherとsubscriberは別々のPeerConnectionにせざるをえな感じ
+ *          ただし、1つのsubscriberで複数の相手からのストリーム(マルチストリーム)が
+ *          できる感じ(今は1つの相手につき1つのsubscriberになっているけど)
  */
 public class JanusRTCClient implements VideoRoomClient {
 	private static final boolean DEBUG = false;	// set false on production
