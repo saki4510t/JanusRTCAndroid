@@ -1,4 +1,5 @@
-package com.serenegiant.janus;/*
+package com.serenegiant.janus;
+/*
  *  Copyright 2013 The WebRTC Project Authors. All rights reserved.
  *  Modified 2018 by saki t_saki@serenegiant.com
  *
@@ -82,16 +83,5 @@ public interface JanusClient {
 	 */
 	public void enableStatsEvents(final boolean enable, final int periodMs);
 
-	/**
-	 * Asynchronously connect to an Janus-gateway room URL using supplied connection
-	 * parameters. Once connection is established onConnectedToRoom()
-	 * callback with room parameters is invoked.
-	 */
-	public void connectToRoom(final RoomConnectionParameters connectionParameters);
-	
-	/**
-	 * Disconnect from room.
-	 */
-	public void disconnectFromRoom();
-	
+
 }
