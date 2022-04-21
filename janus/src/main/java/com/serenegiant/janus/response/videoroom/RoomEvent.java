@@ -132,7 +132,7 @@ public class RoomEvent {
 				", paused=" + paused +
 				", changes=" + changes +
 				", switched=" + switched +
-				", publishers=" + Arrays.toString(streams) + '\'' +
+				", streams=" + Arrays.toString(streams) + '\'' +
 				'}';
 		}
 	}
