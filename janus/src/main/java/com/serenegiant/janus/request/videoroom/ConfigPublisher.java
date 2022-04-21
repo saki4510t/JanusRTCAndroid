@@ -27,6 +27,7 @@ import androidx.annotation.Nullable;
 /**
  * VideoRoomプラグイン用メッセージボディー
  * パブリッシャーのconfigureリクエスト用
+ * パブリッシャーに対して発行するpublishリクエストとconfigureリクエストはほぼ同じ
  * XXX 要確認 基本的にオプションなので設定しない項目はnullを渡せばいい？
  */
 public class ConfigPublisher {
@@ -55,9 +56,9 @@ public class ConfigPublisher {
 	@Nullable
 	public final Integer max_delay;		// <maximum delay to enforce via the playout-delay RTP extension, in blocks of 10ms; optional>,
 	@Nullable
-	public final String[] descriptions;	// Updated descriptions for the published streams; see "publish" for syntax; optional
+	public final StreamDescription[] descriptions;	// Updated descriptions for the published streams; see "publish" for syntax; optional
 
-	public ConfigPublisher(@Nullable final Integer bitrate, @Nullable final Boolean keyframe, @Nullable final Boolean record, @Nullable final String filename, @Nullable final String display, @Nullable final Integer audio_active_packets, @Nullable final Integer audio_level_average, @Nullable final String mid, @Nullable final Boolean send, @Nullable final Integer min_delay, @Nullable final Integer max_delay, @Nullable final String[] descriptions) {
+	public ConfigPublisher(@Nullable final Integer bitrate, @Nullable final Boolean keyframe, @Nullable final Boolean record, @Nullable final String filename, @Nullable final String display, @Nullable final Integer audio_active_packets, @Nullable final Integer audio_level_average, @Nullable final String mid, @Nullable final Boolean send, @Nullable final Integer min_delay, @Nullable final Integer max_delay, @Nullable final StreamDescription[] descriptions) {
 		this.request = "configure";
 		this.bitrate = bitrate;
 		this.keyframe = keyframe;
@@ -73,6 +74,7 @@ public class ConfigPublisher {
 		this.descriptions = descriptions;
 	}
 
+	@NonNull
 	@Override
 	public String toString() {
 		return "ConfigPublisher{" +
