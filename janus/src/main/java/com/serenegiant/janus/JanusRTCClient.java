@@ -1049,7 +1049,7 @@ public class JanusRTCClient implements VideoRoomClient {
 		if (DEBUG) Log.v(TAG, "getStats:");
 		synchronized (mAttachedPlugins) {
 			for (final VideoRoomPlugin plugin: mAttachedPlugins.values()) {
-				plugin.getStats();
+				plugin.requestStats();
 			}
 		}
 		// FIXME 未実装 PublisherのPeerConnectionから取得する

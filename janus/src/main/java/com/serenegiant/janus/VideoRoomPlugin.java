@@ -663,13 +663,20 @@ import retrofit2.Response;
 	}
 
 //--------------------------------------------------------------------------------
-	
+	/**
+	 * PeerConnection.Observerの実装
+	 * @param newState
+	 */
 	@Override
 	public void onSignalingChange(final PeerConnection.SignalingState newState) {
 		if (DEBUG) Log.v(TAG, "onSignalingChange:" + newState);
 		// 今は何もしない
 	}
-	
+
+	/**
+	 * PeerConnection.Observerの実装
+	 * @param newState
+	 */
 	@Override
 	public void onIceConnectionChange(final PeerConnection.IceConnectionState newState) {
 		executor.execute(() -> {
@@ -691,13 +698,21 @@ import retrofit2.Response;
 			}
 		});
 	}
-	
+
+	/**
+	 * PeerConnection.Observerの実装
+	 * @param receiving
+	 */
 	@Override
 	public void onIceConnectionReceivingChange(final boolean receiving) {
 		if (DEBUG) Log.v(TAG, "onIceConnectionReceivingChange:receiving=" + receiving);
 		// 今は何もしない
 	}
-	
+
+	/**
+	 * PeerConnection.Observerの実装
+ 	 * @param newState
+	 */
 	@Override
 	public void onIceGatheringChange(final PeerConnection.IceGatheringState newState) {
 		if (DEBUG) Log.v(TAG, "onIceGatheringChange:" + newState);
@@ -711,7 +726,11 @@ import retrofit2.Response;
 			break;
 		}
 	}
-	
+
+	/**
+	 * PeerConnection.Observerの実装
+ 	 * @param candidate
+	 */
 	@Override
 	public void onIceCandidate(final IceCandidate candidate) {
 		if (DEBUG) Log.v(TAG, "onIceCandidate:");
@@ -721,28 +740,44 @@ import retrofit2.Response;
 			executor.execute(() -> sendLocalIceCandidate(candidate, isLoopback));
 		}
 	}
-	
+
+	/**
+	 * PeerConnection.Observerの実装
+	 * @param candidates
+	 */
 	@Override
 	public void onIceCandidatesRemoved(final IceCandidate[] candidates) {
 		if (DEBUG) Log.v(TAG, "onIceCandidatesRemoved:");
 
 //		executor.execute(() -> sendLocalIceCandidateRemovals(candidates));
 	}
-	
+
+	/**
+	 * PeerConnection.Observerの実装
+	 * @param stream
+	 */
 	@Override
 	public void onAddStream(final MediaStream stream) {
 		if (DEBUG) Log.v(TAG, "onAddStream:" + stream);
 
 		executor.execute(() -> mCallback.onAddRemoteStream(VideoRoomPlugin.this, stream));
 	}
-	
+
+	/**
+	 * PeerConnection.Observerの実装
+ 	 * @param stream
+	 */
 	@Override
 	public void onRemoveStream(final MediaStream stream) {
 		if (DEBUG) Log.v(TAG, "onRemoveStream:" + stream);
 	
 		executor.execute(() -> mCallback.onRemoveStream(VideoRoomPlugin.this, stream));
 	}
-	
+
+	/**
+	 * PeerConnection.Observerの実装
+ 	 * @param channel
+	 */
 	@Override
 	public void onDataChannel(final DataChannel channel) {
 		if (DEBUG) Log.v(TAG, "onDataChannel:");
@@ -780,20 +815,33 @@ import retrofit2.Response;
 			}
 		});
 	}
-	
+
+	/**
+	 * PeerConnection.Observerの実装
+	 */
 	@Override
 	public void onRenegotiationNeeded() {
 		if (DEBUG) Log.v(TAG, "onRenegotiationNeeded:");
 		// 今は何もしない
 	}
-	
+
+	/**
+	 * PeerConnection.Observerの実装
+ 	 * @param receiver
+	 * @param streams
+	 */
 	@Override
 	public void onAddTrack(final RtpReceiver receiver, final MediaStream[] streams) {
 		if (DEBUG) Log.v(TAG, "onAddTrack:");
 		// 今は何もしない
 	}
 
-	public void getStats() {
+//--------------------------------------------------------------------------------
+
+	/**
+	 * PeerConnectionの統計情報を取得要求
+	 */
+	public void requestStats() {
 		if (peerConnection != null) {
 			peerConnection.getStats(mRTCStatsCollectorCallback);
 		}
@@ -806,6 +854,7 @@ import retrofit2.Response;
 			mCallback.onPeerConnectionStatsReady(VideoRoomPlugin.this, rtcStatsReport);
 		}
 	};
+
 //--------------------------------------------------------------------------------
 // Long pollによるメッセージ受信時の処理関係
 	/**
