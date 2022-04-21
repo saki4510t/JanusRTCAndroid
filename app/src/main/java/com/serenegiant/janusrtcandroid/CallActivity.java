@@ -40,7 +40,7 @@ import org.appspot.apprtc.AppRTCAudioManager;
 import org.appspot.apprtc.AppRTCAudioManager.AudioDevice;
 import org.appspot.apprtc.AppRTCAudioManager.AudioManagerEvents;
 import com.serenegiant.janus.VideoRoomClient;
-import com.serenegiant.janus.response.PublisherInfo;
+import com.serenegiant.janus.response.videoroom.PublisherInfo;
 
 import org.appspot.apprtc.RoomConnectionParameters;
 import org.appspot.apprtc.DataChannelParameters;
