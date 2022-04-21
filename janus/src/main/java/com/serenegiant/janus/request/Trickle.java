@@ -41,31 +41,23 @@ public class Trickle {
 	@NonNull
 	public final Candidate candidate;
 
-	public Trickle(@NonNull final BigInteger session_id,
-		@NonNull final BigInteger handle_id,
+	public Trickle(@NonNull final Room room,
 		@NonNull final Candidate candidate,
 		@Nullable final TransactionManager.TransactionCallback callback) {
 
 		this.janus = "trickle";
 		this.transaction = TransactionManager.get(12, callback);
-		this.session_id = session_id;
-		this.handle_id = handle_id;
+		this.session_id = room.sessionId();
+		this.handle_id = room.pluginId();
 		this.candidate = candidate;
 	}
-	
-	public Trickle(@NonNull final Room room,
-	   @NonNull final Candidate candidate,
-		@Nullable final TransactionManager.TransactionCallback callback) {
-	   
-	   this(room.sessionId, room.pluginId, candidate, callback);
-	}
-	
+
 	public Trickle(@NonNull final Room room,
 		@NonNull final IceCandidate candidate,
 		@Nullable final TransactionManager.TransactionCallback callback) {
 		
 
-		this(room.sessionId, room.pluginId,
+		this(room,
 			new Candidate(candidate.sdpMLineIndex,
 				candidate.sdpMid, candidate.sdp),
 			callback);

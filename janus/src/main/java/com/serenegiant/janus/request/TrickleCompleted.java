@@ -39,21 +39,14 @@ public class TrickleCompleted {
 	@NonNull
 	public final Candidate candidate;
 
-	public TrickleCompleted(@NonNull final BigInteger session_id,
-		@NonNull final BigInteger handle_id,
+	public TrickleCompleted(@NonNull final Room room,
 		@Nullable final TransactionManager.TransactionCallback callback) {
 
 		this.janus = "trickle";
 		this.transaction = TransactionManager.get(12, callback);
-		this.session_id = session_id;
-		this.handle_id = handle_id;
+		this.session_id = room.sessionId();
+		this.handle_id = room.pluginId();
 		this.candidate = new Candidate();
-	}
-	
-	public TrickleCompleted(@NonNull final Room room,
-		@Nullable final TransactionManager.TransactionCallback callback) {
-
-	   this(room.sessionId, room.pluginId, callback);
 	}
 	
 	public static class Candidate {

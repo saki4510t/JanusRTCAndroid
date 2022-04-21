@@ -33,16 +33,16 @@ import java.util.List;
 
 public class Room {
 	/**
-	 * セッションId
+	 * セッション
 	 */
 	@NonNull
-	public final BigInteger sessionId;
+	private final Session session;
 
 	/**
-	 * プラグインId
+	 * プラグイン
 	 */
 	@NonNull
-	public final BigInteger pluginId;
+	private final Plugin plugin;
 	
 	/**
 	 * 接続状態
@@ -68,10 +68,26 @@ public class Room {
 	 * @param plugin
 	 */
 	public Room(@NonNull final Session session, @NonNull final Plugin plugin) {
-		this.sessionId = session.id();
-		this.pluginId = plugin.id();
+		this.session = session;
+		this.plugin = plugin;
 	}
-	
+
+	/**
+	 * セッションIDを取得
+	 * @return
+	 */
+	public BigInteger sessionId() {
+		return session.id();
+	}
+
+	/**
+	 * プラグインIDを取得
+	 * @return
+	 */
+	public BigInteger pluginId() {
+		return plugin.id();
+	}
+
 	/**
 	 * 現在保持しているPublisherInfoリストのコピーを返す
 	 * @return

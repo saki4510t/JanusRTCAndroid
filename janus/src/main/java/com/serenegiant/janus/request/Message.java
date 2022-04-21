@@ -40,40 +40,25 @@ public class Message {
 	public final Object body;
 	public final Object jsep;
 	
-	public Message(@NonNull final BigInteger session_id,
-		@NonNull final BigInteger handle_id,
+	public Message(@NonNull final Room room,
 		final Object body, final Object jsep,
 		@Nullable final TransactionManager.TransactionCallback callback) {
 
 		this.janus = "message";
 		this.transaction = TransactionManager.get(12, callback);
-		this.session_id = session_id;
-		this.handle_id = handle_id;
+		this.session_id = room.sessionId();
+		this.handle_id = room.pluginId();
 		this.body = body;
 		this.jsep = jsep;
 	}
 
-	public Message(@NonNull final BigInteger session_id,
-		@NonNull final BigInteger handle_id,
+	public Message(@NonNull final Room room,
 		final Object body,
 		@Nullable final TransactionManager.TransactionCallback callback) {
 
-		this(session_id, handle_id, body, null, callback);
+		this(room, body, null, callback);
 	}
 
-	public Message(@NonNull final Room room, final Object body,
-				   @Nullable final TransactionManager.TransactionCallback callback) {
-
-		this(room.sessionId, room.pluginId, body, null, callback);
-	}
-
-	public Message(@NonNull final Room room,
-		final Object body, final Object jsep,
-		@Nullable final TransactionManager.TransactionCallback callback) {
-
-		this(room.sessionId, room.pluginId, body, jsep, callback);
-	}
-	
 	@NonNull
 	@Override
 	public String toString() {
