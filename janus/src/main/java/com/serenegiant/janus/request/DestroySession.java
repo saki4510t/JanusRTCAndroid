@@ -35,17 +35,12 @@ public class DestroySession {
 	@NonNull
 	public final BigInteger session_id;
 	
-	public DestroySession(@NonNull final BigInteger session_id,
+	public DestroySession(@NonNull final Session session,
 		@Nullable final TransactionManager.TransactionCallback callback) {
 
 		this.janus = "destroy";
 		this.transaction = TransactionManager.get(12, callback);
-		this.session_id = session_id;
-	}
-	
-	public DestroySession(@NonNull final Session session,
-		@Nullable final TransactionManager.TransactionCallback callback) {
-		this(session.data.id, callback);
+		this.session_id = session.id();
 	}
 	
 	@NonNull

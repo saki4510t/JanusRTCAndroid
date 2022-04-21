@@ -37,21 +37,14 @@ public class Attach {
 	@NonNull
 	public final String plugin;
 	
-	public Attach(@NonNull final BigInteger session_id,
-		@NonNull final String plugin,
-		@Nullable TransactionManager.TransactionCallback callback) {
-		
-		this.janus = "attach";
-		this.transaction = TransactionManager.get(12, callback);
-		this.session_id = session_id;
-		this.plugin = plugin;
-	}
-	
 	public Attach(@NonNull final Session session,
 		@NonNull final String plugin,
 		@Nullable TransactionManager.TransactionCallback callback) {
 
-		this(session.id(), plugin, callback);
+		this.janus = "attach";
+		this.transaction = TransactionManager.get(12, callback);
+		this.session_id = session.id();
+		this.plugin = plugin;
 	}
 	
 	@NonNull

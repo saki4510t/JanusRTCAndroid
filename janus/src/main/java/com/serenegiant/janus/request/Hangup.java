@@ -35,18 +35,12 @@ public class Hangup {
 	@NonNull
 	public final BigInteger session_id;
 	
-	public Hangup(@NonNull final BigInteger session_id,
-		@Nullable final TransactionManager.TransactionCallback callback) {
-
-		this.janus = "hangup";
-		this.transaction = TransactionManager.get(12, callback);
-		this.session_id = session_id;
-	}
-	
 	public Hangup(@NonNull final Session session,
 		@NonNull final TransactionManager.TransactionCallback callback) {
 
-		this(session.id(), callback);
+		this.janus = "hangup";
+		this.transaction = TransactionManager.get(12, callback);
+		this.session_id = session.id();
 	}
 	
 	@NonNull

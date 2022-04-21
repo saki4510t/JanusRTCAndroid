@@ -35,18 +35,12 @@ public class Detach {
 	@NonNull
 	public final BigInteger session_id;
 	
-	public Detach(@NonNull final BigInteger session_id,
-		@Nullable final TransactionManager.TransactionCallback callback) {
-
-		this.janus = "detach";
-		this.transaction = TransactionManager.get(12, callback);
-		this.session_id = session_id;
-	}
-	
 	public Detach(@NonNull final Session session,
 		@Nullable TransactionManager.TransactionCallback callback) {
 
-		this(session.id(), callback);
+		this.janus = "detach";
+		this.transaction = TransactionManager.get(12, callback);
+		this.session_id = session.id();
 	}
 	
 	@NonNull
