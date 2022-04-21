@@ -1,9 +1,10 @@
-package com.serenegiant.janus.request;
+package com.serenegiant.janus.request.videoroom;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
+ * VideoRoomプラグイン用メッセージボディー
  * listリクエスト用
  */
 public class List {

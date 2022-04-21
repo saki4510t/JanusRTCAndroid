@@ -26,12 +26,12 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 import com.serenegiant.janus.request.Attach;
-import com.serenegiant.janus.request.Configure;
+import com.serenegiant.janus.request.videoroom.Configure;
 import com.serenegiant.janus.request.Detach;
-import com.serenegiant.janus.request.Join;
+import com.serenegiant.janus.request.videoroom.Join;
 import com.serenegiant.janus.request.JsepSdp;
 import com.serenegiant.janus.request.Message;
-import com.serenegiant.janus.request.Start;
+import com.serenegiant.janus.request.videoroom.Start;
 import com.serenegiant.janus.request.Trickle;
 import com.serenegiant.janus.request.TrickleCompleted;
 import com.serenegiant.janus.response.RoomEvent;

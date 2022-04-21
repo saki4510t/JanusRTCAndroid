@@ -1,4 +1,4 @@
-package com.serenegiant.janus.request;
+package com.serenegiant.janus.request.videoroom;
 
 import com.serenegiant.janus.response.StreamInfo;
 
@@ -7,6 +7,7 @@ import java.util.Arrays;
 import androidx.annotation.NonNull;
 
 /**
+ * VideoRoomプラグイン用メッセージボディー
  * switchリクエスト用
  */
 public class Switch {

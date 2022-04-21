@@ -1,9 +1,12 @@
-package com.serenegiant.janus.request;
+package com.serenegiant.janus.request.videoroom;
 
 import java.math.BigInteger;
 
 import androidx.annotation.NonNull;
 
+/**
+ * VideoRoomプラグイン用メッセージボディー
+ */
 public class ListParticipants {
 	@NonNull
 	public final String request;

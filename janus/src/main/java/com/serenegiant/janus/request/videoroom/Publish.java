@@ -1,12 +1,12 @@
-package com.serenegiant.janus.request;
+package com.serenegiant.janus.request.videoroom;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
+ * VideoRoomプラグイン用メッセージボディー
  * publishリクエスト用
  */
 public class Publish {

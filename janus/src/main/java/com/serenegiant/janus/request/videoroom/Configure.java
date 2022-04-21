@@ -1,4 +1,4 @@
-package com.serenegiant.janus.request;
+package com.serenegiant.janus.request.videoroom;
 /*
  * JanusRTCAndroid
  * Video chat sample app using videoroom plugin on janus-gateway server and WebRTC.
@@ -22,7 +22,7 @@ package com.serenegiant.janus.request;
 import androidx.annotation.NonNull;
 
 /**
- * message body
+ * VideoRoomプラグイン用メッセージボディー
  */
 public class Configure {
 	public final String request;

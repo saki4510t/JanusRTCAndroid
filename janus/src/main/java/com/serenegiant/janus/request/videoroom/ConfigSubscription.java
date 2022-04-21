@@ -1,4 +1,4 @@
-package com.serenegiant.janus.request;
+package com.serenegiant.janus.request.videoroom;
 
 import java.math.BigInteger;
 
@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
+ * VideoRoomプラグイン用メッセージボディー
  * configureリクエスト用
  * XXX 要確認 基本的にオプションなので設定しない項目はnullを渡せばいい？
  */
