@@ -26,7 +26,7 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 import com.serenegiant.janus.request.Attach;
-import com.serenegiant.janus.request.videoroom.Configure;
+import com.serenegiant.janus.request.videoroom.Offer;
 import com.serenegiant.janus.request.Detach;
 import com.serenegiant.janus.request.videoroom.Join;
 import com.serenegiant.janus.request.JsepSdp;
@@ -523,7 +523,7 @@ import retrofit2.Response;
 			mSession.id(),
 			mPlugin.id(),
 			new Message(roomCopy,
-				new Configure(true, true),
+				new Offer(true, true),
 				new JsepSdp("offer", sdp.description),
 				mTransactionCallback)
 		);

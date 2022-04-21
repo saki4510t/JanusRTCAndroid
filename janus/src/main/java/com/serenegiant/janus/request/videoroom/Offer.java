@@ -22,14 +22,16 @@ package com.serenegiant.janus.request.videoroom;
 import androidx.annotation.NonNull;
 
 /**
- * VideoRoomプラグイン用メッセージボディー
+ * offer SDP送信用メッセージボディー
+ * XXX https://janus.conf.meetecho.com/docs/rest.htmlだとrequestは無いんだけど
+ *     実際にはrequest="configure"を含めないとエラーが出て接続できない
  */
-public class Configure {
+public class Offer {
 	public final String request;
 	public final boolean audio;
 	public final boolean video;
 	
-	public Configure(final boolean audio, final boolean video) {
+	public Offer(final boolean audio, final boolean video) {
 		this.request = "configure";
 		this.audio = audio;
 		this.video = video;
@@ -38,7 +40,7 @@ public class Configure {
 	@NonNull
 	@Override
 	public String toString() {
-		return "Configure{" +
+		return "Offer{" +
 			"request='" + request + '\'' +
 			", audio=" + audio +
 			", video=" + video +
