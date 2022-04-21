@@ -51,6 +51,15 @@ dependencies {
 		exclude group: 'org.json', module: 'json'
 	}
 
+	api "io.reactivex.rxjava2:rxjava:${rxjavaVersion}"
+	api "io.reactivex.rxjava2:rxkotlin:${rxkotlinVersion}"
+	api "io.reactivex.rxjava2:rxandroid:${rxandroidVersion}"
+
+	api "com.tinder.scarlet:scarlet:${scarletVersion}"
+	api "com.tinder.scarlet:websocket-okhttp:${scarletVersion}"
+	api "com.tinder.scarlet:message-adapter-gson:${scarletVersion}"
+	api "com.tinder.scarlet:stream-adapter-rxjava2:${scarletVersion}"
+
 	api "org.webrtc:google-webrtc:${webRTCVersion}"
 	api project(':autobanh-jar')
 
