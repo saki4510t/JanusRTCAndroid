@@ -23,6 +23,7 @@ import androidx.annotation.NonNull;
 
 /**
  * VideoRoomプラグイン用メッセージボディー
+ * サブスクライバーでのデータ取得を再開する
  */
 public class Start {
 	public final String request;

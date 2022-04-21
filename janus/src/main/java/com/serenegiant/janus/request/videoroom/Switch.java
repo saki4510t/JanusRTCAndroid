@@ -8,7 +8,8 @@ import androidx.annotation.NonNull;
 
 /**
  * VideoRoomプラグイン用メッセージボディー
- * switchリクエスト用
+ * switchリクエスト用(feed/mdi/sub_midを切り替える場合)
+ * こちらはsubscribeと違ってICEが再起動されない
  */
 public class Switch {
 	public final String request;

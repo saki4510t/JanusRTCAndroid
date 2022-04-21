@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 
 /**
  * VideoRoomプラグイン用メッセージボディー
+ * ルームから退室するとき
  */
 public class Leave {
 	public final String request = "leave";

@@ -4,7 +4,7 @@ import androidx.annotation.NonNull;
 
 /**
  * VideoRoomプラグイン用メッセージボディー
- * unpublishリクエスト用
+ * unpublishリクエスト用(送信するストリームを解除するとき)
  */
 public class UnPublish {
 	public final String request = "unpublish";

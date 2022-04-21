@@ -7,7 +7,7 @@ import androidx.annotation.Nullable;
 
 /**
  * VideoRoomプラグイン用メッセージボディー
- * publishリクエスト用
+ * publishリクエスト用(伝送開始)
  */
 public class Publish {
 	public final String request;

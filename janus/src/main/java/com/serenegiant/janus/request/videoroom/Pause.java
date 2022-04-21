@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 
 /**
  * VideoRoomプラグイン用メッセージボディー
+ * サブスクライバーでのデータ取得を停止する
  */
 public class Pause {
 	public final String request ="pause";

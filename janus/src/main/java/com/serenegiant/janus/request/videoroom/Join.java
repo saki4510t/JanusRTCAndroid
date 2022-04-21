@@ -26,6 +26,7 @@ import java.math.BigInteger;
 
 /**
  * VideoRoomプラグイン用メッセージボディー
+ * ルームへ入室するとき
  */
 public class Join {
 	public final String request;

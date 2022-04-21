@@ -350,9 +350,19 @@ import retrofit2.Response;
 		});
 	}
 
+	/**
+	 * ルーム参加者の種類文字列を取得する
+	 * パブリッシャー場合は"publisher", サブスクライバーの場合は"subscriber"を返す
+	 * @return
+	 */
 	@NonNull
 	protected abstract String getPType();
 
+	/**
+	 * feed IDを取得する
+	 * パブリッシャーの時はnull, サブスクライバーの時はデータを取得するパブリッサシャーのIDを返す
+	 * @return
+	 */
 	protected abstract BigInteger getFeedId();
 
 	/**
