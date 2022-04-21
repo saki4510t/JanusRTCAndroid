@@ -43,22 +43,74 @@ import retrofit2.http.Path;
 
 /**
  * API interface of videoroom plugin on janus-gateway over http://https
+ * retrofit2でエンドポイント定義のインターフェースを継承していいのかどうかわからないので
+ * Janusインターフェースを継承せずに直接ここで定義
  */
-public interface VideoRoom {
+public interface VideoRoom /*extends Janus*/ {
+	/**
+	 * janus-gatewayサーバーの情報を取得
+	 * @param api
+	 * @return
+	 */
+	@GET("{api}/info")
+	public Call<ServerInfo> getInfo(@Path("api") final String api);
+
+	/**
+	 * セッションを作成
+	 * @param api
+	 * @param create
+	 * @return
+	 */
 	@POST("{api}")
 	public Call<Session> createSession(
 		@Path("api") final String api,
 		@Body final Creator create);
 
-	@GET("{api}/info")
-	public Call<ServerInfo> getInfo(@Path("api") final String api);
-
+	/**
+	 * 指定したプラグインへ接続
+	 * @param api
+	 * @param sessionId
+	 * @param attach
+	 * @return
+	 */
 	@POST("{api}/{session_id}")
 	public Call<Plugin> attachPlugin(
 		@Path("api") final String api,
 		@Path("session_id") final BigInteger sessionId,
 		@Body final Attach attach);
 
+	/**
+	 * 指定したプラグインから切断
+	 * これ自体はプラグインエンドポイントだけど#attachPluginの対なのでセッションエンドポイントとしてここに入れておく
+	 * @param api
+	 * @param sessionId
+	 * @param pluginId
+	 * @param detach
+	 * @return
+	 */
+	@POST("{api}/{session_id}/{plugin_id}")
+	public Call<Void> detachPlugin(
+		@Path("api") final String api,
+		@Path("session_id") final BigInteger sessionId,
+		@Path("plugin_id") final BigInteger pluginId,
+		@Body final Detach detach);
+
+	/**
+	 * セッションを破棄
+	 * @param api
+	 * @param sessionId
+	 * @param destroy
+	 * @return
+	 */
+	@POST("{api}/{session_id}")
+	public Call<Void> destroySession(
+		@Path("api") final String api,
+		@Path("session_id") final BigInteger sessionId,
+		@Body final Destroy destroy);
+
+//--------------------------------------------------------------------------------
+// ここから下がvideoroomプラグインのエンドポイント定義
+//--------------------------------------------------------------------------------
 	@POST("{api}/{session_id}/{plugin_id}")
 	public Call<RoomEvent> join(
 		@Path("api") final String api,
@@ -95,22 +147,10 @@ public interface VideoRoom {
 		@Body final Message message);
 	
 	@POST("{api}/{session_id}/{plugin_id}")
-	public Call<Void> detachPlugin(
-		@Path("api") final String api,
-		@Path("session_id") final BigInteger sessionId,
-		@Path("plugin_id") final BigInteger pluginId,
-		@Body final Detach detach);
-	
-	@POST("{api}/{session_id}/{plugin_id}")
 	public Call<Void> hangup(
 		@Path("api") final String api,
 		@Path("session_id") final BigInteger sessionId,
 		@Path("plugin_id") final BigInteger pluginId,
 		@Body final Hangup hangup);
 	
-	@POST("{api}/{session_id}")
-	public Call<Void> destroySession(
-		@Path("api") final String api,
-		@Path("session_id") final BigInteger sessionId,
-		@Body final Destroy destroy);
 }
