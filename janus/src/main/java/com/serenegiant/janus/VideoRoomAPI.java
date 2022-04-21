@@ -27,7 +27,7 @@ import com.serenegiant.janus.request.Hangup;
 import com.serenegiant.janus.request.Message;
 import com.serenegiant.janus.request.Trickle;
 import com.serenegiant.janus.request.TrickleCompleted;
-import com.serenegiant.janus.response.RoomEvent;
+import com.serenegiant.janus.response.videoroom.RoomEvent;
 import com.serenegiant.janus.response.PluginInfo;
 import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;

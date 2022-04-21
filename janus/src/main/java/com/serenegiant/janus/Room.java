@@ -23,7 +23,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.serenegiant.janus.response.PluginInfo;
-import com.serenegiant.janus.response.PublisherInfo;
+import com.serenegiant.janus.response.videoroom.PublisherInfo;
 import com.serenegiant.janus.response.Session;
 
 import java.math.BigInteger;

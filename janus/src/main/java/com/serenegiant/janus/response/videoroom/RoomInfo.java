@@ -1,4 +1,4 @@
-package com.serenegiant.janus.response;
+package com.serenegiant.janus.response.videoroom;
 
 import java.math.BigInteger;
 

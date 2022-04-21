@@ -19,7 +19,7 @@ package com.serenegiant.janus;
  *
 */
 
-import com.serenegiant.janus.response.RoomEvent;
+import com.serenegiant.janus.response.videoroom.RoomEvent;
 
 import java.math.BigInteger;
 

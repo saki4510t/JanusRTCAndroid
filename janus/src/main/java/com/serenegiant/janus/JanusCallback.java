@@ -21,7 +21,7 @@ package com.serenegiant.janus;
 
 import androidx.annotation.NonNull;
 
-import com.serenegiant.janus.response.PublisherInfo;
+import com.serenegiant.janus.response.videoroom.PublisherInfo;
 
 import org.json.JSONObject;
 import org.webrtc.IceCandidate;

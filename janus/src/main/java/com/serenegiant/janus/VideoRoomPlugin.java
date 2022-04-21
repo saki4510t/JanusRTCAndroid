@@ -34,9 +34,9 @@ import com.serenegiant.janus.request.Message;
 import com.serenegiant.janus.request.videoroom.Start;
 import com.serenegiant.janus.request.Trickle;
 import com.serenegiant.janus.request.TrickleCompleted;
-import com.serenegiant.janus.response.RoomEvent;
+import com.serenegiant.janus.response.videoroom.RoomEvent;
 import com.serenegiant.janus.response.PluginInfo;
-import com.serenegiant.janus.response.PublisherInfo;
+import com.serenegiant.janus.response.videoroom.PublisherInfo;
 import com.serenegiant.janus.response.Session;
 import com.serenegiant.nio.CharsetsUtils;
 

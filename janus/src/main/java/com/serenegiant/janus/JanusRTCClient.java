@@ -32,8 +32,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.internal.bind.DateTypeAdapter;
 import com.serenegiant.janus.request.CreateSession;
 import com.serenegiant.janus.request.DestroySession;
-import com.serenegiant.janus.response.RoomEvent;
-import com.serenegiant.janus.response.PublisherInfo;
+import com.serenegiant.janus.response.videoroom.RoomEvent;
+import com.serenegiant.janus.response.videoroom.PublisherInfo;
 import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
 
