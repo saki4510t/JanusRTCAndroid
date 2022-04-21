@@ -22,13 +22,14 @@ package com.serenegiant.janus.request;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.serenegiant.janus.Plugin;
 import com.serenegiant.janus.Room;
 import com.serenegiant.janus.TransactionManager;
 
 import java.math.BigInteger;
 
 /**
- * VideoRoomプラグインメッセージ送信用のヘルパークラス
+ * プラグインメッセージ送信用のヘルパークラス
  */
 public class Message {
 	@NonNull
@@ -43,14 +44,14 @@ public class Message {
 	public final Object body;
 	public final Object jsep;
 	
-	public Message(@NonNull final Room room,
+	public Message(@NonNull final Plugin plugin,
 		final Object body, final Object jsep,
 		@Nullable final TransactionManager.TransactionCallback callback) {
 
 		this.janus = "message";
 		this.transaction = TransactionManager.get(12, callback);
-		this.session_id = room.sessionId();
-		this.handle_id = room.pluginId();
+		this.session_id = plugin.sessionId();
+		this.handle_id = plugin.pluginId();
 		this.body = body;
 		this.jsep = jsep;
 	}

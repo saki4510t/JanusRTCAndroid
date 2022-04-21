@@ -31,24 +31,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class Room {
-	/**
-	 * セッション
-	 */
-	@NonNull
-	private final Session session;
+/**
+ * VideoRoomプラグイン用のヘルパークラス
+ */
+public class Room extends Plugin {
 
-	/**
-	 * プラグイン
-	 */
-	@NonNull
-	private final PluginInfo plugin;
-	
-	/**
-	 * 接続状態
- 	 */
-	public String state;
-	
 	/**
 	 * クライアントID
 	 * EventRoom.plugindata.data.idの値
@@ -65,27 +52,10 @@ public class Room {
 	/**
 	 * Constructor
 	 * @param session
-	 * @param plugin
+	 * @param info
 	 */
-	public Room(@NonNull final Session session, @NonNull final PluginInfo plugin) {
-		this.session = session;
-		this.plugin = plugin;
-	}
-
-	/**
-	 * セッションIDを取得
-	 * @return
-	 */
-	public BigInteger sessionId() {
-		return session.id();
-	}
-
-	/**
-	 * プラグインIDを取得
-	 * @return
-	 */
-	public BigInteger pluginId() {
-		return plugin.id();
+	public Room(@NonNull final Session session, @NonNull final PluginInfo info) {
+		super(session, info);
 	}
 
 	/**
