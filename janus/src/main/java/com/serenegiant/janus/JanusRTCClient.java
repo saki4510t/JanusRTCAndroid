@@ -673,7 +673,20 @@ public class JanusRTCClient implements VideoRoomClient {
 			Logging.d(TAG, "Capturing format: " + videoWidth + "x" + videoHeight + "@" + videoFps);
 		}
 	}
-	
+
+	/**
+	 * PeerConnection生成用のヘルパーメソッド
+	 * @param rtcConfig
+	 * @param observer
+	 * @return
+	 */
+	private PeerConnection createPeerConnection(
+		PeerConnection.RTCConfiguration rtcConfig,
+		PeerConnection.Observer observer) {
+
+		return factory.createPeerConnection(rtcConfig, observer);
+	}
+
 	private void createPublisherInternal() {
 		if (DEBUG) Log.v(TAG, "createPublisherInternal:");
 		final Context context = getContext();
@@ -739,7 +752,7 @@ public class JanusRTCClient implements VideoRoomClient {
 		final PeerConnection peerConnection;
 		DataChannel dataChannel = null;
 		if (SDP_SEMANTICS == PeerConnection.SdpSemantics.UNIFIED_PLAN) {
-			peerConnection = factory.createPeerConnection(rtcConfig, publisher);
+			peerConnection = createPeerConnection(rtcConfig, publisher);
 			
 			if (dataChannelEnabled) {
 				final DataChannel.Init init = new DataChannel.Init();
@@ -776,7 +789,7 @@ public class JanusRTCClient implements VideoRoomClient {
 					stream.addTrack(videoTrack);
 				}
 			}
-			peerConnection = factory.createPeerConnection(rtcConfig, publisher);
+			peerConnection = createPeerConnection(rtcConfig, publisher);
 			if (stream != null) {
 				peerConnection.addStream(stream);
 				mLocalStream = stream;
@@ -880,7 +893,7 @@ public class JanusRTCClient implements VideoRoomClient {
 		final PeerConnection peerConnection;
 		DataChannel dataChannel = null;
 		if (SDP_SEMANTICS == PeerConnection.SdpSemantics.UNIFIED_PLAN) {
-			peerConnection = factory.createPeerConnection(rtcConfig, subscriber);
+			peerConnection = createPeerConnection(rtcConfig, subscriber);
 			
 			if (dataChannelEnabled) {
 				final DataChannel.Init init = new DataChannel.Init();
@@ -907,7 +920,7 @@ public class JanusRTCClient implements VideoRoomClient {
 				}
 			}
 		} else {
-			peerConnection = factory.createPeerConnection(rtcConfig, subscriber);
+			peerConnection = createPeerConnection(rtcConfig, subscriber);
 			if (dataChannelEnabled) {
 				final DataChannel.Init init = new DataChannel.Init();
 				init.ordered = peerConnectionParameters.dataChannelParameters.ordered;
