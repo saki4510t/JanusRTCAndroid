@@ -7,10 +7,10 @@ import androidx.annotation.Nullable;
 
 /**
  * VideoRoomプラグイン用メッセージボディー
- * configureリクエスト用
+ * サブスクライバーのconfigureリクエスト用
  * XXX 要確認 基本的にオプションなので設定しない項目はnullを渡せばいい？
  */
-public class ConfigSubscription {
+public class ConfigSubscriber {
 
 	public final String request;	// "configure",
 	@Nullable
@@ -38,7 +38,7 @@ public class ConfigSubscription {
 	@Nullable
 	public final Integer restart;		// <trigger an ICE restart; optional>
 
-	public ConfigSubscription(final String request, @Nullable final BigInteger mid, @Nullable final Boolean send, @Nullable final Integer substream, @Nullable final Integer temporal, @Nullable final Integer fallback, @Nullable final Integer spatial_layer, @Nullable final Integer temporal_layer, @Nullable final Integer audio_level_average, @Nullable final Integer audio_active_packets, @Nullable final Integer min_delay, @Nullable final Integer max_delay, @Nullable final Integer restart) {
+	public ConfigSubscriber(final String request, @Nullable final BigInteger mid, @Nullable final Boolean send, @Nullable final Integer substream, @Nullable final Integer temporal, @Nullable final Integer fallback, @Nullable final Integer spatial_layer, @Nullable final Integer temporal_layer, @Nullable final Integer audio_level_average, @Nullable final Integer audio_active_packets, @Nullable final Integer min_delay, @Nullable final Integer max_delay, @Nullable final Integer restart) {
 		this.request = "configure";
 		this.mid = mid;
 		this.send = send;
