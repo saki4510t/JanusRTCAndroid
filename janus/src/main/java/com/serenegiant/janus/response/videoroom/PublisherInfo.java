@@ -24,6 +24,7 @@ import java.math.BigInteger;
 import androidx.annotation.NonNull;
 
 public class PublisherInfo {
+	/** パブリッシャーのID, XXX これはStringの方がいいのかも */
 	public final BigInteger id;
 	public final String display;
 	public final String audio_codec;

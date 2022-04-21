@@ -361,6 +361,7 @@ import retrofit2.Response;
 	/**
 	 * feed IDを取得する
 	 * パブリッシャーの時はnull, サブスクライバーの時はデータを取得するパブリッサシャーのIDを返す
+	 * XXX Stringにした方がいいのかも
 	 * @return
 	 */
 	protected abstract BigInteger getFeedId();

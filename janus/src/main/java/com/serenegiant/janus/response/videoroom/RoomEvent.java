@@ -66,6 +66,7 @@ public class RoomEvent {
 	
 	public static class Data {
 		public final String videoroom;
+		/** ルームID、XXX BigIntegerにした方がいい？ */
 		public final int room;
 		public final String description;
 		public final boolean configured;
@@ -74,7 +75,9 @@ public class RoomEvent {
 		public final String video_codec;
 		public final BigInteger unpublished;
 		public final BigInteger leaving;
+		/** これは参加者のID, XXX これはStringの方がいいかも */
 		public final BigInteger id;
+		/** これはルームconfigで指定したID, XXX これはStringの方がいいかも */
 		public final BigInteger private_id;
 		public PublisherInfo[] publishers;
 		public final String paused;
