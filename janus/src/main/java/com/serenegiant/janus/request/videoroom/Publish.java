@@ -30,28 +30,32 @@ import androidx.annotation.Nullable;
  */
 public class Publish {
 	@NonNull
-	public final String request;
+	public final String request;// "publish"
 	@Nullable
-	public final String audiocodec;	// "<audio codec to prefer among the negotiated ones; optional>",
+	public String audiocodec;	// "<audio codec to prefer among the negotiated ones; optional>",
 	@Nullable
-	public final String videocodec;	// "<video codec to prefer among the negotiated ones; optional>",
+	public String videocodec;	// "<video codec to prefer among the negotiated ones; optional>",
 	@Nullable
-	public final Integer bitrate;	// <bitrate cap to return via REMB; optional, overrides the global room value if present>,
+	public Integer bitrate;		// <bitrate cap to return via REMB; optional, overrides the global room value if present>,
 	@Nullable
-	public final Boolean record;	// <true|false, whether this publisher should be recorded or not; optional>,
+	public Boolean record;		// <true|false, whether this publisher should be recorded or not; optional>,
 	@Nullable
-	public final String filename;	// "<if recording, the base path/file to use for the recording files; optional>",
+	public String filename;		// "<if recording, the base path/file to use for the recording files; optional>",
 	@Nullable
-	public final String display;	// "<new display name to use in the room; optional>",
+	public String display;		// "<new display name to use in the room; optional>",
 	@Nullable
-	public final Integer audio_level_average;	// "<if provided, overrided the room audio_level_average for this user; optional>",
+	public Integer audio_level_average;	// "<if provided, overrided the room audio_level_average for this user; optional>",
 	@Nullable
-	public final Integer audio_active_packets;	// "<if provided, overrided the room audio_active_packets for this user; optional>",
+	public Integer audio_active_packets;	// "<if provided, overrided the room audio_active_packets for this user; optional>",
 	@Nullable
-	public final StreamDescription[] descriptions;	// Other descriptions, if any
+	public StreamDescription[] descriptions;	// Other descriptions, if any
+
+	public Publish() {
+		this.request = "publish";
+	}
 
 	public Publish(@Nullable final String audiocodec, @Nullable final String videocodec, @Nullable final Integer bitrate, @Nullable final Boolean record, @Nullable final String filename, @Nullable final String display, @Nullable final Integer audio_level_average, @Nullable final Integer audio_active_packets, @Nullable final StreamDescription[] descriptions) {
-		this.request = "publish";
+		this();
 		this.audiocodec = audiocodec;
 		this.videocodec = videocodec;
 		this.bitrate = bitrate;

@@ -34,32 +34,36 @@ public class ConfigPublisher {
 	@NonNull
 	public final String request;	// "configure",
 	@Nullable
-	public final Integer bitrate;	// <bitrate cap to return via REMB; optional, overrides the global room value if present (unless bitrate_cap is set)>,
+	public Integer bitrate;	// <bitrate cap to return via REMB; optional, overrides the global room value if present (unless bitrate_cap is set)>,
 	@Nullable
-	public final Boolean keyframe;	// <true|false, whether we should send this publisher a keyframe request>,
+	public Boolean keyframe;// <true|false, whether we should send this publisher a keyframe request>,
 	@Nullable
-	public final Boolean record;	// <true|false, whether this publisher should be recorded or not; optional>,
+	public Boolean record;	// <true|false, whether this publisher should be recorded or not; optional>,
 	@Nullable
-	public final String filename;	// "<if recording, the base path/file to use for the recording files; optional>",
+	public String filename;	// "<if recording, the base path/file to use for the recording files; optional>",
 	@Nullable
-	public final String display;	// "<new display name to use in the room; optional>",
+	public String display;	// "<new display name to use in the room; optional>",
 	@Nullable
-	public final Integer audio_active_packets;	// "<new audio_active_packets to overwrite in the room one; optional>",
+	public Integer audio_active_packets;// "<new audio_active_packets to overwrite in the room one; optional>",
 	@Nullable
-	public final Integer audio_level_average;	// "<new audio_level_average to overwrite the room one; optional>",
+	public Integer audio_level_average;	// "<new audio_level_average to overwrite the room one; optional>",
 	@Nullable
-	public final String mid;		// <mid of the m-line to refer to for this configure request; optional>,
+	public String mid;			// <mid of the m-line to refer to for this configure request; optional>,
 	@Nullable
-	public final Boolean send;		// <true|false, depending on whether the media addressed by the above mid should be relayed or not; optional>,
+	public Boolean send;		// <true|false, depending on whether the media addressed by the above mid should be relayed or not; optional>,
 	@Nullable
-	public final Integer min_delay;		// <minimum delay to enforce via the playout-delay RTP extension, in blocks of 10ms; optional>,
+	public Integer min_delay;	// <minimum delay to enforce via the playout-delay RTP extension, in blocks of 10ms; optional>,
 	@Nullable
-	public final Integer max_delay;		// <maximum delay to enforce via the playout-delay RTP extension, in blocks of 10ms; optional>,
+	public Integer max_delay;	// <maximum delay to enforce via the playout-delay RTP extension, in blocks of 10ms; optional>,
 	@Nullable
-	public final StreamDescription[] descriptions;	// Updated descriptions for the published streams; see "publish" for syntax; optional
+	public StreamDescription[] descriptions;	// Updated descriptions for the published streams; see "publish" for syntax; optional
+
+	public ConfigPublisher() {
+		this.request = "configure";
+	}
 
 	public ConfigPublisher(@Nullable final Integer bitrate, @Nullable final Boolean keyframe, @Nullable final Boolean record, @Nullable final String filename, @Nullable final String display, @Nullable final Integer audio_active_packets, @Nullable final Integer audio_level_average, @Nullable final String mid, @Nullable final Boolean send, @Nullable final Integer min_delay, @Nullable final Integer max_delay, @Nullable final StreamDescription[] descriptions) {
-		this.request = "configure";
+		this();
 		this.bitrate = bitrate;
 		this.keyframe = keyframe;
 		this.record = record;
