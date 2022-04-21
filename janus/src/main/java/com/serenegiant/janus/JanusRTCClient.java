@@ -30,8 +30,8 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.internal.bind.DateTypeAdapter;
-import com.serenegiant.janus.request.Creator;
-import com.serenegiant.janus.request.Destroy;
+import com.serenegiant.janus.request.CreateSession;
+import com.serenegiant.janus.request.DestroySession;
 import com.serenegiant.janus.response.RoomEvent;
 import com.serenegiant.janus.response.PublisherInfo;
 import com.serenegiant.janus.response.ServerInfo;
@@ -1264,7 +1264,7 @@ public class JanusRTCClient implements JanusClient {
 		if (DEBUG) Log.v(TAG, "createSession:");
 		// サーバー情報を取得できたらセッションを生成
 		final Call<Session> call = mJanus.createSession(
-			roomConnectionParameters.apiName, new Creator());
+			roomConnectionParameters.apiName, new CreateSession());
 		addCall(call);
 		call.enqueue(new Callback<Session>() {
 			@Override
@@ -1326,7 +1326,7 @@ public class JanusRTCClient implements JanusClient {
 		cancelCall();
 		detachAll();
 		if (mSession != null) {
-			final Destroy destroy = new Destroy(mSession, null);
+			final DestroySession destroy = new DestroySession(mSession, null);
 			final Call<Void> call = mJanus.destroySession(
 				roomConnectionParameters.apiName, mSession.id(), destroy);
 			addCall(call);

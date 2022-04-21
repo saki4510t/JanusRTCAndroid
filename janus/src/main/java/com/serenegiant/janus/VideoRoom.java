@@ -20,8 +20,8 @@ package com.serenegiant.janus;
 */
 
 import com.serenegiant.janus.request.Attach;
-import com.serenegiant.janus.request.Creator;
-import com.serenegiant.janus.request.Destroy;
+import com.serenegiant.janus.request.CreateSession;
+import com.serenegiant.janus.request.DestroySession;
 import com.serenegiant.janus.request.Detach;
 import com.serenegiant.janus.request.Hangup;
 import com.serenegiant.janus.request.Message;
@@ -64,7 +64,7 @@ public interface VideoRoom /*extends Janus*/ {
 	@POST("{api}")
 	public Call<Session> createSession(
 		@Path("api") final String api,
-		@Body final Creator create);
+		@Body final CreateSession create);
 
 	/**
 	 * 指定したプラグインへ接続
@@ -106,7 +106,7 @@ public interface VideoRoom /*extends Janus*/ {
 	public Call<Void> destroySession(
 		@Path("api") final String api,
 		@Path("session_id") final BigInteger sessionId,
-		@Body final Destroy destroy);
+		@Body final DestroySession destroy);
 
 //--------------------------------------------------------------------------------
 // ここから下がvideoroomプラグインのエンドポイント定義

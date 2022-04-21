@@ -20,26 +20,41 @@ package com.serenegiant.janus.request;
 */
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.serenegiant.janus.TransactionManager;
+import com.serenegiant.janus.response.Session;
 
-public class Creator {
+import java.math.BigInteger;
+
+public class DestroySession {
 	@NonNull
 	public final String janus;
 	@NonNull
 	public final String transaction;
+	@NonNull
+	public final BigInteger session_id;
 	
-	public Creator() {
-		this.janus = "create";
-		this.transaction = TransactionManager.get(12, null);
+	public DestroySession(@NonNull final BigInteger session_id,
+		@Nullable final TransactionManager.TransactionCallback callback) {
+
+		this.janus = "destroy";
+		this.transaction = TransactionManager.get(12, callback);
+		this.session_id = session_id;
+	}
+	
+	public DestroySession(@NonNull final Session session,
+		@Nullable final TransactionManager.TransactionCallback callback) {
+		this(session.data.id, callback);
 	}
 	
 	@NonNull
 	@Override
 	public String toString() {
-		return "Creator{" +
+		return "DestroySession{" +
 			"janus='" + janus + '\'' +
 			", transaction='" + transaction + '\'' +
+			", session_id=" + session_id +
 			'}';
 	}
 }
