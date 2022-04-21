@@ -85,6 +85,36 @@ public class ServerInfo {
 		}
 	}
 
+	public static class PluginInfo {
+		public final String name;
+		public final String author;
+		public final String description;
+		public final String version_string;
+		public final int version;
+
+		public PluginInfo(final String name, final String author, final String description,
+						  final String version_string, final int version) {
+
+			this.name = name;
+			this.author = author;
+			this.description = description;
+			this.version_string = version_string;
+			this.version = version;
+		}
+
+		@NonNull
+		@Override
+		public String toString() {
+			return "PluginInfo{" +
+				"name='" + name + '\'' +
+				", author='" + author + '\'' +
+				", description='" + description + '\'' +
+				", version_string='" + version_string + '\'' +
+				", version=" + version +
+				'}';
+		}
+	}
+
 	public static class PluginInfos {
 		@NonNull
 		public final List<PluginInfo> plugins;
