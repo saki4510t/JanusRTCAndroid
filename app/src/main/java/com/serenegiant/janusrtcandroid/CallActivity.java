@@ -39,7 +39,7 @@ import com.serenegiant.janus.JanusRTCClient;
 import org.appspot.apprtc.AppRTCAudioManager;
 import org.appspot.apprtc.AppRTCAudioManager.AudioDevice;
 import org.appspot.apprtc.AppRTCAudioManager.AudioManagerEvents;
-import com.serenegiant.janus.JanusClient;
+import com.serenegiant.janus.VideoRoomClient;
 import com.serenegiant.janus.response.PublisherInfo;
 
 import org.appspot.apprtc.RoomConnectionParameters;
@@ -174,7 +174,7 @@ public class CallActivity extends BaseActivity
 	private final ProxyVideoSink remoteProxyRenderer = new ProxyVideoSink();
 	private final ProxyVideoSink localProxyVideoSink = new ProxyVideoSink();
 	@Nullable
-	private JanusClient janusClient;
+	private VideoRoomClient janusClient;
 	@Nullable
 	private AppRTCAudioManager audioManager = null;
 	@Nullable
