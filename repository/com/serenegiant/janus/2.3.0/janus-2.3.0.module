@@ -1,0 +1,305 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "com.serenegiant",
+    "module": "janus",
+    "version": "2.3.0",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "7.3.3"
+    }
+  },
+  "variants": [
+    {
+      "name": "releaseVariantReleaseApiPublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "com.google.code.gson",
+          "module": "gson",
+          "version": {
+            "requires": "2.8.7"
+          }
+        },
+        {
+          "group": "com.squareup.okhttp3",
+          "module": "okhttp",
+          "version": {
+            "requires": "3.12.12"
+          }
+        },
+        {
+          "group": "com.squareup.okhttp3",
+          "module": "logging-interceptor",
+          "version": {
+            "requires": "3.12.12"
+          }
+        },
+        {
+          "group": "com.squareup.retrofit2",
+          "module": "retrofit",
+          "version": {
+            "requires": "2.4.0"
+          }
+        },
+        {
+          "group": "com.squareup.retrofit2",
+          "module": "converter-gson",
+          "version": {
+            "requires": "2.4.0"
+          }
+        },
+        {
+          "group": "io.socket",
+          "module": "socket.io-client",
+          "version": {
+            "requires": "1.0.1"
+          },
+          "excludes": [
+            {
+              "group": "org.json",
+              "module": "json"
+            }
+          ]
+        },
+        {
+          "group": "io.reactivex.rxjava2",
+          "module": "rxjava",
+          "version": {
+            "requires": "2.2.21"
+          }
+        },
+        {
+          "group": "io.reactivex.rxjava2",
+          "module": "rxkotlin",
+          "version": {
+            "requires": "2.4.0"
+          }
+        },
+        {
+          "group": "io.reactivex.rxjava2",
+          "module": "rxandroid",
+          "version": {
+            "requires": "2.1.1"
+          }
+        },
+        {
+          "group": "com.tinder.scarlet",
+          "module": "scarlet",
+          "version": {
+            "requires": "0.1.12"
+          }
+        },
+        {
+          "group": "com.tinder.scarlet",
+          "module": "websocket-okhttp",
+          "version": {
+            "requires": "0.1.12"
+          }
+        },
+        {
+          "group": "com.tinder.scarlet",
+          "module": "message-adapter-gson",
+          "version": {
+            "requires": "0.1.12"
+          }
+        },
+        {
+          "group": "com.tinder.scarlet",
+          "module": "stream-adapter-rxjava2",
+          "version": {
+            "requires": "0.1.12"
+          }
+        },
+        {
+          "group": "org.webrtc",
+          "module": "google-webrtc",
+          "version": {
+            "requires": "1.0.32006"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib-jdk8",
+          "version": {
+            "requires": "1.6.21"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "janus-2.3.0.aar",
+          "url": "janus-2.3.0.aar",
+          "size": 179344,
+          "sha512": "24adc9e0a53c96c548e92152b7d7ac4fd4d0a2554db215c5970c0baecc724ff101c7cb8f38fc1fd1db51616e9986d4d876c11175638c5545ef9ee4dc6e9fd6bf",
+          "sha256": "23e4a9a3a8c0d35260de58c07cab8528a7b3fcd2d458b24f8df6474b8329f50b",
+          "sha1": "cbad5f2b3e5721151d1b06e7a38de86c4fdad4a6",
+          "md5": "2a3f6e39f27e3c319b3e9507c3cbaf99"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseRuntimePublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "com.google.code.gson",
+          "module": "gson",
+          "version": {
+            "requires": "2.8.7"
+          }
+        },
+        {
+          "group": "com.squareup.okhttp3",
+          "module": "okhttp",
+          "version": {
+            "requires": "3.12.12"
+          }
+        },
+        {
+          "group": "com.squareup.okhttp3",
+          "module": "logging-interceptor",
+          "version": {
+            "requires": "3.12.12"
+          }
+        },
+        {
+          "group": "com.squareup.retrofit2",
+          "module": "retrofit",
+          "version": {
+            "requires": "2.4.0"
+          }
+        },
+        {
+          "group": "com.squareup.retrofit2",
+          "module": "converter-gson",
+          "version": {
+            "requires": "2.4.0"
+          }
+        },
+        {
+          "group": "io.socket",
+          "module": "socket.io-client",
+          "version": {
+            "requires": "1.0.1"
+          },
+          "excludes": [
+            {
+              "group": "org.json",
+              "module": "json"
+            }
+          ]
+        },
+        {
+          "group": "io.reactivex.rxjava2",
+          "module": "rxjava",
+          "version": {
+            "requires": "2.2.21"
+          }
+        },
+        {
+          "group": "io.reactivex.rxjava2",
+          "module": "rxkotlin",
+          "version": {
+            "requires": "2.4.0"
+          }
+        },
+        {
+          "group": "io.reactivex.rxjava2",
+          "module": "rxandroid",
+          "version": {
+            "requires": "2.1.1"
+          }
+        },
+        {
+          "group": "com.tinder.scarlet",
+          "module": "scarlet",
+          "version": {
+            "requires": "0.1.12"
+          }
+        },
+        {
+          "group": "com.tinder.scarlet",
+          "module": "websocket-okhttp",
+          "version": {
+            "requires": "0.1.12"
+          }
+        },
+        {
+          "group": "com.tinder.scarlet",
+          "module": "message-adapter-gson",
+          "version": {
+            "requires": "0.1.12"
+          }
+        },
+        {
+          "group": "com.tinder.scarlet",
+          "module": "stream-adapter-rxjava2",
+          "version": {
+            "requires": "0.1.12"
+          }
+        },
+        {
+          "group": "org.webrtc",
+          "module": "google-webrtc",
+          "version": {
+            "requires": "1.0.32006"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib-jdk8",
+          "version": {
+            "requires": "1.6.21"
+          }
+        },
+        {
+          "group": "androidx.appcompat",
+          "module": "appcompat",
+          "version": {
+            "requires": "1.3.1"
+          }
+        },
+        {
+          "group": "androidx.legacy",
+          "module": "legacy-support-v4",
+          "version": {
+            "requires": "1.0.0"
+          }
+        },
+        {
+          "group": "com.serenegiant",
+          "module": "common",
+          "version": {
+            "requires": "8.1.2"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "janus-2.3.0.aar",
+          "url": "janus-2.3.0.aar",
+          "size": 179344,
+          "sha512": "24adc9e0a53c96c548e92152b7d7ac4fd4d0a2554db215c5970c0baecc724ff101c7cb8f38fc1fd1db51616e9986d4d876c11175638c5545ef9ee4dc6e9fd6bf",
+          "sha256": "23e4a9a3a8c0d35260de58c07cab8528a7b3fcd2d458b24f8df6474b8329f50b",
+          "sha1": "cbad5f2b3e5721151d1b06e7a38de86c4fdad4a6",
+          "md5": "2a3f6e39f27e3c319b3e9507c3cbaf99"
+        }
+      ]
+    }
+  ]
+}
