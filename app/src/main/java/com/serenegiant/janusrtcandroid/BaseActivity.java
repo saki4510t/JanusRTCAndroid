@@ -25,12 +25,12 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import android.widget.Toast;
 
-import com.serenegiant.dialog.MessageDialogFragmentV4;
+import com.serenegiant.dialog.PermissionDescriptionDialogV4;
 import com.serenegiant.system.BuildCheck;
-import com.serenegiant.system.PermissionCheck;
+import com.serenegiant.system.PermissionUtils;
 
 public abstract class BaseActivity extends AppCompatActivity
-	implements MessageDialogFragmentV4.MessageDialogListener {
+	implements PermissionDescriptionDialogV4.DialogResultListener {
 	
 	private static final boolean DEBUG = true;	// set false on production
 	private static final String TAG = BaseActivity.class.getSimpleName();
@@ -56,7 +56,7 @@ public abstract class BaseActivity extends AppCompatActivity
 	 */
 	@SuppressLint("NewApi")
 	@Override
-	public void onMessageDialogResult(@NonNull final MessageDialogFragmentV4 dialog,
+	public void onDialogResult(@NonNull final PermissionDescriptionDialogV4 dialog,
 		final int requestCode, @NonNull final String[] permissions, final boolean result) {
 		
 		if (result) {
@@ -69,7 +69,7 @@ public abstract class BaseActivity extends AppCompatActivity
 		// メッセージダイアログでキャンセルされた時とAndroid6でない時は自前でチェックして#checkPermissionResultを呼び出す
 		for (final String permission : permissions) {
 			checkPermissionResult(requestCode, permission,
-				PermissionCheck.hasPermission(this, permission));
+				PermissionUtils.hasPermission(this, permission));
 		}
 	}
 	
@@ -136,8 +136,8 @@ public abstract class BaseActivity extends AppCompatActivity
 	 * @return true 外部ストレージへの書き込みパーミッションが有る
 	 */
 	protected boolean checkPermissionWriteExternalStorage() {
-		if (!PermissionCheck.hasWriteExternalStorage(this)) {
-			MessageDialogFragmentV4.showDialog(this, REQUEST_PERMISSION_WRITE_EXTERNAL_STORAGE,
+		if (!PermissionUtils.hasWriteExternalStorage(this)) {
+			PermissionDescriptionDialogV4.showDialog(this, REQUEST_PERMISSION_WRITE_EXTERNAL_STORAGE,
 				R.string.permission_title, ID_PERMISSION_REQUEST_EXT_STORAGE,
 				new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE});
 			return false;
@@ -152,8 +152,8 @@ public abstract class BaseActivity extends AppCompatActivity
 	 * @return true 録音のパーミッションが有る
 	 */
 	protected boolean checkPermissionAudio() {
-		if (!PermissionCheck.hasAudio(this)) {
-			MessageDialogFragmentV4.showDialog(this, REQUEST_PERMISSION_AUDIO_RECORDING,
+		if (!PermissionUtils.hasAudio(this)) {
+			PermissionDescriptionDialogV4.showDialog(this, REQUEST_PERMISSION_AUDIO_RECORDING,
 				R.string.permission_title, ID_PERMISSION_REQUEST_AUDIO,
 				new String[]{android.Manifest.permission.RECORD_AUDIO});
 			return false;
@@ -168,8 +168,8 @@ public abstract class BaseActivity extends AppCompatActivity
 	 * @return true カメラアクセスのパーミッションがある
 	 */
 	protected boolean checkPermissionCamera() {
-		if (!PermissionCheck.hasCamera(this)) {
-			MessageDialogFragmentV4.showDialog(this, REQUEST_PERMISSION_CAMERA,
+		if (!PermissionUtils.hasCamera(this)) {
+			PermissionDescriptionDialogV4.showDialog(this, REQUEST_PERMISSION_CAMERA,
 				R.string.permission_title, ID_PERMISSION_REQUEST_CAMERA,
 				new String[]{android.Manifest.permission.CAMERA});
 			return false;
@@ -184,8 +184,8 @@ public abstract class BaseActivity extends AppCompatActivity
 	 * @return true ネットワークアクセスのパーミッションが有る
 	 */
 	protected boolean checkPermissionNetwork() {
-		if (!PermissionCheck.hasNetwork(this)) {
-			MessageDialogFragmentV4.showDialog(this, REQUEST_PERMISSION_NETWORK,
+		if (!PermissionUtils.hasNetwork(this)) {
+			PermissionDescriptionDialogV4.showDialog(this, REQUEST_PERMISSION_NETWORK,
 				R.string.permission_title, ID_PERMISSION_REQUEST_NETWORK,
 				new String[]{android.Manifest.permission.INTERNET});
 			return false;
