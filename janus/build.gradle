@@ -1,4 +1,8 @@
-apply plugin: 'com.android.library'
+plugins {
+	id 'com.android.library'
+	id 'kotlin-android'
+	id 'kotlin-kapt'
+}
 
 android {
 	compileSdkVersion versionCompiler
@@ -27,6 +31,7 @@ android {
 		}
 	}
 
+	kotlinOptions.jvmTarget = "1.8"
 }
 
 dependencies {
@@ -67,25 +72,39 @@ dependencies {
 
 def repo = new File(rootDir, "repository")
 
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
-uploadArchives {
-	repositories {
-		mavenDeployer {
-            repository url: "file://${repo.absolutePath}"
-            pom.version = janusVersionNameString
-            pom.groupId = 'com.serenegiant'
-            pom.artifactId = 'janus'
-			pom.project {
-				inceptionYear '2018'
-				licenses {
-					license {
-						name 'The Apache Software License, Version 2.0'
-						url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-						distribution 'repo'
+afterEvaluate {
+	publishing {
+		repositories {
+			maven {
+				url = "file://${repo.absolutePath}"
+			}
+		}
+		publications {
+			release(MavenPublication) {
+				groupId = 'com.serenegiant'
+				artifactId = 'janus'
+				version = janusVersionNameString
+				from components.release
+				pom {
+					inceptionYear = '2018'
+					licenses {
+						license {
+							name = 'The WebRTC Software License'
+							url = 'https://webrtc.org/support/license'
+							distribution = 'repo'
+						}
+					}
+					developers {
+						developer {
+							id = 'saki4510t'
+							name = 't_saki'
+							email = 't_saki@serenegiant.com'
+						}
 					}
 				}
 			}
 		}
-    }
+	}
 }
