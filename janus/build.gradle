@@ -61,7 +61,6 @@ dependencies {
 	api "com.tinder.scarlet:stream-adapter-rxjava2:${scarletVersion}"
 
 	api "org.webrtc:google-webrtc:${webRTCVersion}"
-	api project(':autobanh-jar')
 
 	implementation "com.serenegiant:common:${commonLibVersion}"
 }
