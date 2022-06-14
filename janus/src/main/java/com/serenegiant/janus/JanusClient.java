@@ -13,7 +13,6 @@ package com.serenegiant.janus;
 
 import androidx.annotation.Nullable;
 
-import org.appspot.apprtc.RoomConnectionParameters;
 import org.webrtc.PeerConnectionFactory;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoSink;
