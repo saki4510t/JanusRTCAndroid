@@ -90,8 +90,6 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Interceptor;
@@ -106,6 +104,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 import static com.serenegiant.janus.Const.*;
+import static com.serenegiant.janus.Utils.*;
 
 /**
  * Janus-gatewayへアクセスするためのヘルパークラス
@@ -127,13 +126,6 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		CONNECTED,
 		CLOSED,
 		ERROR }
-
-	/**
-	 * Executor thread is started once in private ctor and is used for all
-	 * peer connection API calls to ensure new peer connection factory is
-	 * created on the same thread as previously destroyed factory.
-	 */
-	static final ExecutorService executor = Executors.newSingleThreadExecutor();
 
 	private final Object mSync = new Object();
 	private final WeakReference<Context> mWeakContext;
