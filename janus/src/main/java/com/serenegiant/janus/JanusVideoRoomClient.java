@@ -110,13 +110,13 @@ import static com.serenegiant.janus.Const.*;
 /**
  * Janus-gatewayへアクセスするためのヘルパークラス
  * FIXME 今はpublisherとsubscriberで別々のPeerConnectionを生成しているのを1つにする
- *       => 調べた限りではpublisherとsubscriberは別々のPeerConnectionにせざるをえな感じ
+ *       => 調べた限りではpublisherとsubscriberは別々のPeerConnectionにせざるをえない感じ
  *          ただし、1つのsubscriberで複数の相手からのストリーム(マルチストリーム)が
  *          できる感じ(今は1つの相手につき1つのsubscriberになっているけど)
  */
-public class JanusRTCClient implements VideoRoomClient {
+public class JanusVideoRoomClient implements VideoRoomClient {
 	private static final boolean DEBUG = false;	// set false on production
-	private static final String TAG = JanusRTCClient.class.getSimpleName();
+	private static final String TAG = JanusVideoRoomClient.class.getSimpleName();
 	
 	private static final PeerConnection.SdpSemantics SDP_SEMANTICS
 		= PeerConnection.SdpSemantics.UNIFIED_PLAN;
@@ -212,12 +212,12 @@ public class JanusRTCClient implements VideoRoomClient {
 	 * @param peerConnectionParameters
 	 * @param callback
 	 */
-	public JanusRTCClient(@NonNull final Context appContext,
-		@NonNull final String baseUrl,
-		@NonNull final EglBase eglBase,
-		@NonNull final PeerConnectionParameters peerConnectionParameters,
-		@NonNull final RoomConnectionParameters roomConnectionParameters,
-		@NonNull final JanusCallback callback) {
+	public JanusVideoRoomClient(@NonNull final Context appContext,
+								@NonNull final String baseUrl,
+								@NonNull final EglBase eglBase,
+								@NonNull final PeerConnectionParameters peerConnectionParameters,
+								@NonNull final RoomConnectionParameters roomConnectionParameters,
+								@NonNull final JanusCallback callback) {
 
 		this(appContext, eglBase,
 			peerConnectionParameters, roomConnectionParameters, callback);
@@ -231,11 +231,11 @@ public class JanusRTCClient implements VideoRoomClient {
 	 * @param roomConnectionParameters
 	 * @param callback
 	 */
-	public JanusRTCClient(@NonNull final Context appContext,
-		@NonNull final EglBase eglBase,
-		@NonNull final PeerConnectionParameters peerConnectionParameters,
-		@NonNull final RoomConnectionParameters roomConnectionParameters,
-		@NonNull final JanusCallback callback) {
+	public JanusVideoRoomClient(@NonNull final Context appContext,
+								@NonNull final EglBase eglBase,
+								@NonNull final PeerConnectionParameters peerConnectionParameters,
+								@NonNull final RoomConnectionParameters roomConnectionParameters,
+								@NonNull final JanusCallback callback) {
 
 		this.mWeakContext = new WeakReference<>(appContext);
 		this.rootEglBase = eglBase;
@@ -1297,7 +1297,7 @@ public class JanusRTCClient implements VideoRoomClient {
 						// パブリッシャーをVideoRoomプラグインにアタッチ
 						executor.execute(() -> {
 							longPoll();
-							mCallback.onConnectServer(JanusRTCClient.this);
+							mCallback.onConnectServer(JanusVideoRoomClient.this);
 						});
 					} else {
 						mSession = null;
@@ -1503,7 +1503,7 @@ public class JanusRTCClient implements VideoRoomClient {
 			@NonNull final MediaStream stream) {
 
 			if (DEBUG) Log.v(TAG, "onAddRemoteStream:" + plugin);
-			executor.execute(() -> JanusRTCClient.this.onAddRemoteStream(stream));
+			executor.execute(() -> JanusVideoRoomClient.this.onAddRemoteStream(stream));
 		}
 		
 		@Override
@@ -1563,7 +1563,7 @@ public class JanusRTCClient implements VideoRoomClient {
 
 			if (DEBUG) Log.v(TAG, "createSubscriber:" + plugin);
 			executor.execute(() -> {
-				JanusRTCClient.this.createSubscriber(info);
+				JanusVideoRoomClient.this.createSubscriber(info);
 			});
 		}
 		

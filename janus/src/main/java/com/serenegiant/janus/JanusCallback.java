@@ -44,17 +44,17 @@ public interface JanusCallback {
 	public Retrofit.Builder setupRetrofit(@NonNull final Retrofit.Builder builder);
 
 	/**
-	 * callback when JanusRTCClient connects janus-gateway server
+	 * callback when JanusVideoRoomClient connects janus-gateway server
 	 * @param client
 	 */
-	public void onConnectServer(@NonNull final JanusRTCClient client);
+	public void onConnectServer(@NonNull final JanusVideoRoomClient client);
 	
 	/**
 	 * get list of IceServer
 	 * @param client
 	 * @return
 	 */
-	public List<PeerConnection.IceServer> getIceServers(@NonNull final JanusRTCClient client);
+	public List<PeerConnection.IceServer> getIceServers(@NonNull final JanusVideoRoomClient client);
 
 	/**
 	 * Callback fired once the room's signaling parameters

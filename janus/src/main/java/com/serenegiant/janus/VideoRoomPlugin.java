@@ -200,7 +200,7 @@ import retrofit2.Response;
 	protected final VideoRoomAPI mVideoRoomAPI;
 	@NonNull
 	protected final VideoRoomCallback mCallback;
-	protected final ExecutorService executor = JanusRTCClient.executor;
+	protected final ExecutorService executor = JanusVideoRoomClient.executor;
 	protected final List<Call<?>> mCurrentCalls = new ArrayList<>();
 	private final boolean isLoopback;
 	private final boolean isVideoCallEnabled;

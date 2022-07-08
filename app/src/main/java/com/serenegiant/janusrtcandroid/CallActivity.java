@@ -34,11 +34,12 @@ import android.view.WindowManager.LayoutParams;
 import android.widget.Toast;
 
 import com.serenegiant.janus.JanusCallback;
-import com.serenegiant.janus.JanusRTCClient;
+import com.serenegiant.janus.JanusVideoRoomClient;
 
 import org.appspot.apprtc.AppRTCAudioManager;
 import org.appspot.apprtc.AppRTCAudioManager.AudioDevice;
 import org.appspot.apprtc.AppRTCAudioManager.AudioManagerEvents;
+
 import com.serenegiant.janus.VideoRoomClient;
 import com.serenegiant.janus.response.videoroom.PublisherInfo;
 
@@ -368,7 +369,7 @@ public class CallActivity extends BaseActivity
 				loopback, urlParameters,
 				userName, displayName);
 
-		janusClient = new JanusRTCClient(getApplicationContext(),
+		janusClient = new JanusVideoRoomClient(getApplicationContext(),
 			eglBase, peerConnectionParameters, roomConnectionParameters,
 			mJanusCallback);
 		janusClient.createPeerConnectionFactory(options);
@@ -815,7 +816,7 @@ public class CallActivity extends BaseActivity
 		}
 	
 		@Override
-		public void onConnectServer(@NonNull final JanusRTCClient client) {
+		public void onConnectServer(@NonNull final JanusVideoRoomClient client) {
 			if (DEBUG) Log.v(TAG, "onConnectServer:");
 			runOnUiThread(new Runnable() {
 				@Override
@@ -832,7 +833,7 @@ public class CallActivity extends BaseActivity
 		
 		@Override
 		public List<PeerConnection.IceServer> getIceServers(
-			@NonNull final JanusRTCClient client) {
+			@NonNull final JanusVideoRoomClient client) {
 
 			return new ArrayList<PeerConnection.IceServer>();
 		}
