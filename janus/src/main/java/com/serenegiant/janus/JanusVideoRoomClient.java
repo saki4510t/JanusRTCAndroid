@@ -838,7 +838,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 	 * Subscriberを生成
 	 * @param info
 	 */
-	private void createSubscriber(
+	protected void createSubscriber(
 		@NonNull final PublisherInfo info) {
 		
 		if (DEBUG) Log.v(TAG, "createSubscriber:");
