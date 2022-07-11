@@ -39,7 +39,7 @@ import androidx.annotation.NonNull;
 import io.reactivex.Flowable;
 
 /**
- * API interface of videoroom plugin on janus-gateway over http://https
+ * API interface of videoroom plugin on janus-gateway over websocket
  */
 public interface VideoRoomWSAPI {
 	/**
