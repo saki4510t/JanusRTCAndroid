@@ -891,7 +891,12 @@ public class CallActivity extends BaseActivity
 		public void onLeave(final PublisherInfo info, final int numUsers) {
 			if (DEBUG) Log.v(TAG, "onLeave:" + info + ",numUsers=" + numUsers);
 		}
-		
+
+		@Override
+		public boolean onNewPublisher(@NonNull final PublisherInfo info) {
+			return true;	// true: 受け入れる(通話する)
+		}
+
 		@Override
 		public void onRemoteDescription(final SessionDescription sdp) {
 			if (DEBUG) Log.v(TAG, "onRemoteDescription:");

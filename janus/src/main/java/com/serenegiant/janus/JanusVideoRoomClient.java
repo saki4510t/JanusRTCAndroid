@@ -1555,7 +1555,9 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 
 			if (DEBUG) Log.v(TAG, "createSubscriber:" + plugin);
 			executor.execute(() -> {
-				JanusVideoRoomClient.this.createSubscriber(info);
+				if (mCallback.onNewPublisher(info)) {
+					JanusVideoRoomClient.this.createSubscriber(info);
+				}
 			});
 		}
 		
