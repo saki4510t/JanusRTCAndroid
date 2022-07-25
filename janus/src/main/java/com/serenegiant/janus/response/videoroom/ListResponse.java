@@ -7,11 +7,11 @@ import androidx.annotation.NonNull;
 /**
  * listリクエストの結果
  */
-public class ListResponse {
+public class ListResponse<T> {
 	public final String videoroom;
-	public final RoomInfo[] list;
+	public final T[] list;
 
-	public ListResponse(final String videoroom, final RoomInfo[] list) {
+	public ListResponse(final String videoroom, final T[] list) {
 		this.videoroom = videoroom;
 		this.list = list;
 	}
