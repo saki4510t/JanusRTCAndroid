@@ -50,16 +50,16 @@ dependencies {
 	api "com.squareup.okhttp3:logging-interceptor:${okHttpVersion}"
 	api "com.squareup.retrofit2:retrofit:${retrofit2Version}"
 	api "com.squareup.retrofit2:converter-gson:${retrofit2Version}"
-	api "com.squareup.retrofit2:adapter-rxjava2:${retrofit2Version}"
+	api "com.squareup.retrofit2:adapter-rxjava3:${retrofit2Version}"
 
 	api ("io.socket:socket.io-client:${socketIOClientJavaVersion}") {
 	  // excluding org.json which is provided by Android
 		exclude group: 'org.json', module: 'json'
 	}
 
-	api "io.reactivex.rxjava2:rxjava:${rxjavaVersion}"
-	api "io.reactivex.rxjava2:rxkotlin:${rxkotlinVersion}"
-	api "io.reactivex.rxjava2:rxandroid:${rxandroidVersion}"
+	api "io.reactivex.rxjava3:rxjava:${rxjavaVersion}"
+	api "io.reactivex.rxjava3:rxkotlin:${rxkotlinVersion}"
+	api "io.reactivex.rxjava3:rxandroid:${rxandroidVersion}"
 
 	api "com.tinder.scarlet:scarlet:${scarletVersion}"
 	api "com.tinder.scarlet:websocket-okhttp:${scarletVersion}"
