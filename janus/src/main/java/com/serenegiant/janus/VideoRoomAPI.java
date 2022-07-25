@@ -27,10 +27,13 @@ import com.serenegiant.janus.request.Hangup;
 import com.serenegiant.janus.request.Message;
 import com.serenegiant.janus.request.Trickle;
 import com.serenegiant.janus.request.TrickleCompleted;
+import com.serenegiant.janus.request.videoroom.List;
+import com.serenegiant.janus.response.videoroom.ListResponse;
 import com.serenegiant.janus.response.videoroom.RoomEvent;
 import com.serenegiant.janus.response.PluginInfo;
 import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
+import com.serenegiant.janus.response.videoroom.RoomInfo;
 
 import java.math.BigInteger;
 
@@ -111,6 +114,13 @@ public interface VideoRoomAPI /*extends JanusAPI*/ {
 //--------------------------------------------------------------------------------
 // ここから下がvideoroomプラグインのエンドポイント定義
 //--------------------------------------------------------------------------------
+	@GET("{api}/{session_id}/{plugin_id}")
+	public Call<ListResponse<RoomInfo>> getRoomList(
+		@Path("api") final String api,
+		@Path("session_id") final BigInteger sessionId,
+		@Path("plugin_id") final BigInteger pluginId,
+		@Body final List list);
+
 	@POST("{api}/{session_id}/{plugin_id}")
 	public Call<RoomEvent> join(
 		@Path("api") final String api,
