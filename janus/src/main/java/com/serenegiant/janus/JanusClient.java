@@ -11,6 +11,7 @@ package com.serenegiant.janus;
  *
 */
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import org.webrtc.PeerConnectionFactory;
@@ -23,7 +24,15 @@ import java.util.List;
  * com.serenegiant.janus.JanusClient is the interface representing an AppRTC client.
  */
 public interface JanusClient {
-	
+
+	public interface ErrorCallback {
+		public void onError(@NonNull final Throwable t);
+	}
+
+	public interface ListCallback<T> extends ErrorCallback {
+		public void onSuccess(final T result);
+	}
+
 	/**
 	 * request to create PeerConnectionFactory
 	 * @param options
