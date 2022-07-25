@@ -27,6 +27,16 @@ class Utils {
 	private static final boolean DEBUG = false;
 	private static final String TAG = Utils.class.getSimpleName();
 
+	public interface BuilderCallback {
+		@NonNull
+		public OkHttpClient.Builder setupOkHttp(@NonNull final OkHttpClient.Builder builder,
+			final boolean isLongPoll,
+			final long connectionTimeout, final long readTimeoutMs, final long writeTimeoutMs);
+
+		@NonNull
+		public Retrofit.Builder setupRetrofit(@NonNull final Retrofit.Builder builder);
+	}
+
 	private Utils() {
 		// インスタンス化をエラーとするためにデフォルトコンストラクタをprivateにする
 	}
@@ -49,7 +59,7 @@ class Utils {
 	public static synchronized OkHttpClient setupHttpClient(
 		final boolean isLongPoll,
 		final long readTimeoutMs, final long writeTimeoutMs,
-		@NonNull final JanusCallback callback) {
+		@NonNull final BuilderCallback callback) {
 
 		if (DEBUG) Log.v(TAG, "setupHttpClient:");
 
@@ -115,7 +125,7 @@ class Utils {
 	public static Retrofit setupRetrofit(
 		@NonNull final OkHttpClient client,
 		@NonNull final String baseUrl,
-		@NonNull final JanusCallback callback) {
+		@NonNull final BuilderCallback callback) {
 
 		if (DEBUG) Log.v(TAG, "setupRetrofit:" + baseUrl);
 		// JSONのパーサーとしてGsonを使う

@@ -31,18 +31,8 @@ import org.webrtc.SessionDescription;
 
 import java.util.List;
 
-import okhttp3.OkHttpClient;
-import retrofit2.Retrofit;
 
-public interface JanusCallback {
-	@NonNull
-	public OkHttpClient.Builder setupOkHttp(@NonNull final OkHttpClient.Builder builder,
-		final boolean isLongPoll,
-		final long connectionTimeout, final long readTimeoutMs, final long writeTimeoutMs);
-
-	@NonNull
-	public Retrofit.Builder setupRetrofit(@NonNull final Retrofit.Builder builder);
-
+public interface JanusCallback extends Utils.BuilderCallback {
 	/**
 	 * callback when JanusVideoRoomClient connects janus-gateway server
 	 * @param client
