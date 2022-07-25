@@ -50,6 +50,7 @@ dependencies {
 	api "com.squareup.okhttp3:logging-interceptor:${okHttpVersion}"
 	api "com.squareup.retrofit2:retrofit:${retrofit2Version}"
 	api "com.squareup.retrofit2:converter-gson:${retrofit2Version}"
+	api "com.squareup.retrofit2:adapter-rxjava2:${retrofit2Version}"
 
 	api ("io.socket:socket.io-client:${socketIOClientJavaVersion}") {
 	  // excluding org.json which is provided by Android
