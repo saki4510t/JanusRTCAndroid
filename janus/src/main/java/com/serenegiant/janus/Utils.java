@@ -39,6 +39,26 @@ class Utils {
 		public Retrofit.Builder setupRetrofit(@NonNull final Retrofit.Builder builder);
 	}
 
+	public static final BuilderCallback DEFAULT_BUILDER_CALLBACK = new BuilderCallback() {
+		@NonNull
+		public OkHttpClient.Builder setupOkHttp(
+			@NonNull final OkHttpClient.Builder builder,
+			final boolean isLongPoll,
+			final long connectionTimeout,
+			final long readTimeoutMs, final long writeTimeoutMs) {
+
+			if (DEBUG) Log.v(TAG, "setupOkHttp:");
+			return builder;
+		}
+
+		@NonNull
+		public Retrofit.Builder setupRetrofit(@NonNull final Retrofit.Builder builder) {
+
+			if (DEBUG) Log.v(TAG, "setupRetrofit:");
+			return builder;
+		}
+	};
+
 	private Utils() {
 		// インスタンス化をエラーとするためにデフォルトコンストラクタをprivateにする
 	}
