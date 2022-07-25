@@ -28,8 +28,6 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.internal.bind.DateTypeAdapter;
 import com.serenegiant.janus.request.CreateSession;
 import com.serenegiant.janus.request.DestroySession;
 import com.serenegiant.janus.response.videoroom.RoomEvent;
@@ -90,18 +88,11 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
-import okhttp3.Interceptor;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import okhttp3.ResponseBody;
-import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 import static com.serenegiant.janus.Const.*;
 import static com.serenegiant.janus.Utils.*;
@@ -1213,12 +1204,12 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		if (DEBUG) Log.v(TAG, "connectToRoomInternal:");
 		// 通常のRESTアクセス用APIインターフェースを生成
 		mJanus = setupRetrofit(
-			setupHttpClient(false, HTTP_READ_TIMEOUT_MS, HTTP_WRITE_TIMEOUT_MS),
-			roomConnectionParameters.roomUrl).create(VideoRoomAPI.class);
+			setupHttpClient(false, HTTP_READ_TIMEOUT_MS, HTTP_WRITE_TIMEOUT_MS, mCallback),
+			roomConnectionParameters.roomUrl, mCallback).create(VideoRoomAPI.class);
 		// long poll用APIインターフェースを生成
 		mLongPoll = setupRetrofit(
-			setupHttpClient(true, HTTP_READ_TIMEOUT_MS_LONG_POLL, HTTP_WRITE_TIMEOUT_MS),
-			roomConnectionParameters.roomUrl).create(LongPoll.class);
+			setupHttpClient(true, HTTP_READ_TIMEOUT_MS_LONG_POLL, HTTP_WRITE_TIMEOUT_MS, mCallback),
+			roomConnectionParameters.roomUrl, mCallback).create(LongPoll.class);
 		executor.execute(() -> {
 			requestServerInfo();
 		});
@@ -1762,97 +1753,6 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		default:
 			break;
 		}
-	}
-
-//================================================================================
-	/**
-	 * keep first OkHttpClient as singleton
-	 */
-	private static OkHttpClient sOkHttpClient;
-	/**
-	 * Janus-gatewayサーバーとの通信用のOkHttpClientインスタンスの初期化処理
-	 * @return
-	 */
-	private synchronized OkHttpClient setupHttpClient(
-		final boolean isLongPoll,
-		final long readTimeoutMs, final long writeTimeoutMs) {
-	
-		if (DEBUG) Log.v(TAG, "setupHttpClient:");
-
-		OkHttpClient.Builder builder;
-		if (sOkHttpClient == null) {
-		 	builder = new OkHttpClient.Builder();
-		} else {
-			builder = sOkHttpClient.newBuilder();
-		}
-		builder
-			.connectTimeout(HTTP_CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)	// 接続タイムアウト
-			.readTimeout(readTimeoutMs, TimeUnit.MILLISECONDS)		// 読み込みタイムアウト
-			.writeTimeout(writeTimeoutMs, TimeUnit.MILLISECONDS);	// 書き込みタイムアウト
-		builder = mCallback.setupOkHttp(builder, isLongPoll,
-			HTTP_CONNECT_TIMEOUT_MS, readTimeoutMs, writeTimeoutMs);
-		final List<Interceptor> interceptors = builder.interceptors();
-		builder
-			.addInterceptor(new Interceptor() {
-				@NonNull
-				@Override
-				public okhttp3.Response intercept(@NonNull Chain chain) throws IOException {
-	
-					final Request original = chain.request();
-					// header設定
-					final Request request = original.newBuilder()
-						.header("Accept", "application/json")
-						.method(original.method(), original.body())
-						.build();
-	
-					okhttp3.Response response = chain.proceed(request);
-					return response;
-				}
-			});
-		// ログ出力設定
-		if (DEBUG) {
-			boolean hasLogging = false;
-			for (final Interceptor interceptor: interceptors) {
-				if (interceptor instanceof HttpLoggingInterceptor) {
-					hasLogging = true;
-					break;
-				}
-			}
-			if (!hasLogging) {
-				final HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-				logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-				builder.addInterceptor(logging);
-			}
-		}
-		
-		final OkHttpClient result = builder.build();
-		if (sOkHttpClient == null) {
-			sOkHttpClient = result;
-		}
-		return result;
-	}
-	
-	/**
-	 * Janus-gatewayサーバーとの通信用のRetrofitインスタンスの初期化処理
-	 * @param client
-	 * @param baseUrl
-	 * @return
-	 */
-	private Retrofit setupRetrofit(@NonNull final OkHttpClient client,
-		@NonNull final String baseUrl) {
-
-		if (DEBUG) Log.v(TAG, "setupRetrofit:" + baseUrl);
-		// JSONのパーサーとしてGsonを使う
-		final Gson gson = new GsonBuilder()
-//			.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)	// IDENTITY
-			.registerTypeAdapter(Date.class, new DateTypeAdapter())
-			.create();
-		return mCallback.setupRetrofit(
-			new Retrofit.Builder()
-				.baseUrl(baseUrl)
-				.addConverterFactory(GsonConverterFactory.create(gson))
-				.client(client)
-			).build();
 	}
 
 }
