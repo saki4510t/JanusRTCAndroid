@@ -204,12 +204,13 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 	 * @param peerConnectionParameters
 	 * @param callback
 	 */
-	public JanusVideoRoomClient(@NonNull final Context appContext,
-								@NonNull final String baseUrl,
-								@NonNull final EglBase eglBase,
-								@NonNull final PeerConnectionParameters peerConnectionParameters,
-								@NonNull final RoomConnectionParameters roomConnectionParameters,
-								@NonNull final JanusCallback callback) {
+	public JanusVideoRoomClient(
+		@NonNull final Context appContext,
+		@NonNull final String baseUrl,
+		@NonNull final EglBase eglBase,
+		@NonNull final PeerConnectionParameters peerConnectionParameters,
+		@NonNull final RoomConnectionParameters roomConnectionParameters,
+		@NonNull final JanusCallback callback) {
 
 		this(appContext, eglBase,
 			peerConnectionParameters, roomConnectionParameters, callback);
@@ -223,11 +224,12 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 	 * @param roomConnectionParameters
 	 * @param callback
 	 */
-	public JanusVideoRoomClient(@NonNull final Context appContext,
-								@NonNull final EglBase eglBase,
-								@NonNull final PeerConnectionParameters peerConnectionParameters,
-								@NonNull final RoomConnectionParameters roomConnectionParameters,
-								@NonNull final JanusCallback callback) {
+	public JanusVideoRoomClient(
+		@NonNull final Context appContext,
+		@NonNull final EglBase eglBase,
+		@NonNull final PeerConnectionParameters peerConnectionParameters,
+		@NonNull final RoomConnectionParameters roomConnectionParameters,
+		@NonNull final JanusCallback callback) {
 
 		this.mWeakContext = new WeakReference<>(appContext);
 		this.rootEglBase = eglBase;
