@@ -11,9 +11,20 @@ package com.serenegiant.janus;
  *
 */
 
+import com.serenegiant.janus.response.videoroom.RoomInfo;
+
 import org.appspot.apprtc.RoomConnectionParameters;
 
+import java.util.List;
+
+import androidx.annotation.NonNull;
+
 public interface VideoRoomClient extends JanusClient {
+	/**
+	 * request list of available room
+	 */
+	public void requestRoomList(@NonNull final ListCallback<List<RoomInfo>> callback);
+
 	/**
 	 * Asynchronously connect to an Janus-gateway room URL using supplied connection
 	 * parameters. Once connection is established onConnectedToRoom()

@@ -34,6 +34,7 @@ import com.serenegiant.janus.response.videoroom.RoomEvent;
 import com.serenegiant.janus.response.videoroom.PublisherInfo;
 import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
+import com.serenegiant.janus.response.videoroom.RoomInfo;
 
 import org.appspot.apprtc.AppRTCConst;
 import org.appspot.apprtc.PeerConnectionParameters;
@@ -89,6 +90,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.reactivex.rxjava3.core.Observable;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -395,6 +397,20 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 			if (remoteVideoTrack != null) {
 				remoteVideoTrack.setEnabled(renderVideo);
 			}
+		});
+	}
+
+	/**
+	 * request list of available room
+	 * @param callback
+	 */
+	@Override
+	public void requestRoomList(@NonNull final ListCallback<List<RoomInfo>> callback) {
+		if (DEBUG) Log.v(TAG, "list:");
+		executor.execute(() -> {
+			listRoomInternal(
+				roomConnectionParameters.roomUrl,
+				roomConnectionParameters.apiName, callback);
 		});
 	}
 
@@ -1195,6 +1211,17 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		} catch (final Exception e) {
 			// ignore, will be already released.
 		}
+	}
+
+	private void listRoomInternal(
+		@NonNull final String roomUrl,
+		@NonNull final String apiName,
+		@NonNull final ListCallback<List<RoomInfo>> callback) {
+		if (DEBUG) Log.v(TAG, "listRoomInternal:");
+//		final VideoRoomAPI api = setupRetrofit(
+//			setupHttpClient(false, HTTP_READ_TIMEOUT_MS, HTTP_WRITE_TIMEOUT_MS, DEFAULT_BUILDER_CALLBACK),
+//			roomUrl, DEFAULT_BUILDER_CALLBACK).create(VideoRoomAPI.class);
+		// FIXME 未実装
 	}
 
 	/**
