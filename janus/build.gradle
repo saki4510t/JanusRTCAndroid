@@ -45,27 +45,27 @@ dependencies {
 //	implementation "androidx.legacy:legacy-support-v4:${androidXLegacyV4}"
 	implementation "androidx.annotation:annotation:${androidXAnnotation}"
 
-	api "com.google.code.gson:gson:${gsonVersion}"
-	api "com.squareup.okhttp3:okhttp:${okHttpVersion}"
+	implementation "com.google.code.gson:gson:${gsonVersion}"
+	implementation "com.squareup.okhttp3:okhttp:${okHttpVersion}"
 	testImplementation "com.squareup.okhttp3:mockwebserver:${okHttpVersion}"
-	api "com.squareup.okhttp3:logging-interceptor:${okHttpVersion}"
-	api "com.squareup.retrofit2:retrofit:${retrofit2Version}"
-	api "com.squareup.retrofit2:converter-gson:${retrofit2Version}"
-	api "com.squareup.retrofit2:adapter-rxjava3:${retrofit2Version}"
+	implementation "com.squareup.okhttp3:logging-interceptor:${okHttpVersion}"
+	implementation "com.squareup.retrofit2:retrofit:${retrofit2Version}"
+	implementation "com.squareup.retrofit2:converter-gson:${retrofit2Version}"
+	implementation "com.squareup.retrofit2:adapter-rxjava3:${retrofit2Version}"
 
-	api ("io.socket:socket.io-client:${socketIOClientJavaVersion}") {
+	implementation ("io.socket:socket.io-client:${socketIOClientJavaVersion}") {
 	  // excluding org.json which is provided by Android
 		exclude group: 'org.json', module: 'json'
 	}
 
-	api "io.reactivex.rxjava3:rxjava:${rxjavaVersion}"
-	api "io.reactivex.rxjava3:rxkotlin:${rxkotlinVersion}"
-	api "io.reactivex.rxjava3:rxandroid:${rxandroidVersion}"
+	implementation "io.reactivex.rxjava3:rxjava:${rxjavaVersion}"
+	implementation "io.reactivex.rxjava3:rxkotlin:${rxkotlinVersion}"
+	implementation "io.reactivex.rxjava3:rxandroid:${rxandroidVersion}"
 
-	api "com.tinder.scarlet:scarlet:${scarletVersion}"
-	api "com.tinder.scarlet:websocket-okhttp:${scarletVersion}"
-	api "com.tinder.scarlet:message-adapter-gson:${scarletVersion}"
-	api "com.tinder.scarlet:stream-adapter-rxjava2:${scarletVersion}"
+	implementation "com.tinder.scarlet:scarlet:${scarletVersion}"
+	implementation "com.tinder.scarlet:websocket-okhttp:${scarletVersion}"
+	implementation "com.tinder.scarlet:message-adapter-gson:${scarletVersion}"
+	implementation "com.tinder.scarlet:stream-adapter-rxjava2:${scarletVersion}"
 
 	implementation "com.serenegiant:common:${commonLibVersion}"
 

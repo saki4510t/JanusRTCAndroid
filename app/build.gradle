@@ -47,6 +47,8 @@ dependencies {
 	implementation "androidx.recyclerview:recyclerview:${androidXRecyclerview}"
 	implementation "androidx.constraintlayout:constraintlayout:${constraintLibVersion}"
 
+	implementation "com.squareup.retrofit2:retrofit:${retrofit2Version}"
+
 	implementation "com.serenegiant:common:${commonLibVersion}"
 
 	implementation project(':libwebrtc')
