@@ -26,6 +26,9 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 import com.serenegiant.janus.request.Attach;
+import com.serenegiant.janus.request.videoroom.ConfigPublisher;
+import com.serenegiant.janus.request.videoroom.ConfigSubscriber;
+import com.serenegiant.janus.response.videoroom.Configured;
 import com.serenegiant.janus.request.videoroom.Offer;
 import com.serenegiant.janus.request.Detach;
 import com.serenegiant.janus.request.videoroom.Join;
@@ -181,7 +184,7 @@ import retrofit2.Response;
 	@NonNull
 	private final PeerConnectionParameters peerConnectionParameters;
 	@NonNull
-	private final RoomConnectionParameters roomConnectionParameters;
+	protected final RoomConnectionParameters roomConnectionParameters;
 	private PeerConnection peerConnection;
 	/** Enable org.appspot.apprtc.RtcEventLog. */
 	@Nullable
@@ -469,7 +472,7 @@ import retrofit2.Response;
 			reportError(e);
 		}
 	}
-	
+
 	/**
 	 * detach from VideoRoom plugin
 	 */
@@ -1267,6 +1270,7 @@ import retrofit2.Response;
 			return null;
 		}
 
+		@Override
 		protected boolean handlePluginEvent(@NonNull final String transaction,
 			@NonNull final RoomEvent room) {
 			
@@ -1274,7 +1278,35 @@ import retrofit2.Response;
 			checkPublishers(room);
 			return result;
 		}
-	
+
+		/**
+		 * publisher用のconfigure API呼び出しを実効
+		 * @param config
+		 */
+		public boolean configure(@NonNull final ConfigPublisher config) {
+			if (DEBUG) Log.v(TAG, "configure:");
+			cancelCall();
+			final Call<Configured> call = mVideoRoomAPI.configure(
+				roomConnectionParameters.apiName,
+				mSession.id(), mPlugin.id(),
+				config);
+			addCall(call);
+			boolean result = false;
+			try {
+				final Response<Configured> response = call.execute();
+				if (DEBUG) Log.v(TAG, "sendAnswerSdpInternal:response=" + response
+					+ "\n" + response.body());
+				result = "ok".equals(response.body().configured);
+				removeCall(call);
+			} catch (final Exception e) {
+				if (DEBUG) Log.w(TAG, e);
+				cancelCall();
+				reportError(e);
+			}
+			if (DEBUG) Log.d(TAG, "configure:finished.");
+			return result;
+		}
+
 		/**
 		 * リモート側のPublisherをチェックして増減があれば接続/切断する
 		 * @param room
@@ -1358,6 +1390,33 @@ import retrofit2.Response;
 			if (sdp.type == SessionDescription.Type.OFFER) {
 				createAnswer();
 			}
+		}
+
+		/**
+		 * Subscriber用のconfigure API呼び出し
+		 * @param config
+		 * @return true: 呼び出し成功
+		 */
+		public boolean configure(@NonNull final ConfigSubscriber config) {
+			if (DEBUG) Log.v(TAG, "configure:");
+			cancelCall();
+			final Call<Configured> call = mVideoRoomAPI.configure(
+				roomConnectionParameters.apiName,
+				mSession.id(), mPlugin.id(),
+				config);
+			addCall(call);
+			boolean result = false;
+			try {
+				final Response<Configured> response = call.execute();
+				result = "ok".equals(response.body().configured);
+				removeCall(call);
+			} catch (final IOException e) {
+				if (DEBUG) Log.w(TAG, e);
+				cancelCall();
+				reportError(e);
+			}
+			if (DEBUG) Log.d(TAG, "configure:finished.");
+			return result;
 		}
 
 	}

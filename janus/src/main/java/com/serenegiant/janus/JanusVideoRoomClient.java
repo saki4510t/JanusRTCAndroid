@@ -30,6 +30,8 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.serenegiant.janus.request.CreateSession;
 import com.serenegiant.janus.request.DestroySession;
+import com.serenegiant.janus.request.videoroom.ConfigPublisher;
+import com.serenegiant.janus.request.videoroom.ConfigSubscriber;
 import com.serenegiant.janus.response.videoroom.RoomEvent;
 import com.serenegiant.janus.response.videoroom.PublisherInfo;
 import com.serenegiant.janus.response.ServerInfo;
@@ -90,7 +92,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
-import io.reactivex.rxjava3.core.Observable;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -433,6 +434,34 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 				disconnectFromRoomInternal();
 			});
 		}
+	}
+
+	@Override
+	public boolean configure(@NonNull final ConfigPublisher config) {
+		if (mConnectionState == ConnectionState.CONNECTED) {
+			synchronized (mAttachedPlugins) {
+				for (final VideoRoomPlugin plugin: mAttachedPlugins.values()) {
+					if (plugin instanceof VideoRoomPlugin.Publisher) {
+						return ((VideoRoomPlugin.Publisher) plugin).configure(config);
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public boolean configure(@NonNull final ConfigSubscriber config) {
+		if (mConnectionState == ConnectionState.CONNECTED) {
+			synchronized (mAttachedPlugins) {
+				for (final VideoRoomPlugin plugin: mAttachedPlugins.values()) {
+					if (plugin instanceof VideoRoomPlugin.Subscriber) {
+						return ((VideoRoomPlugin.Subscriber) plugin).configure(config);
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 //================================================================================
@@ -1502,7 +1531,6 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 			
 			if (DEBUG) Log.v(TAG, "onLeave:" + plugin + ",leave=" + pluginId);
 
-			
 			executor.execute(() -> leavePlugin(pluginId, numUsers));
 		}
 		

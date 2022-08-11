@@ -27,6 +27,9 @@ import com.serenegiant.janus.request.Hangup;
 import com.serenegiant.janus.request.Message;
 import com.serenegiant.janus.request.Trickle;
 import com.serenegiant.janus.request.TrickleCompleted;
+import com.serenegiant.janus.request.videoroom.ConfigPublisher;
+import com.serenegiant.janus.request.videoroom.ConfigSubscriber;
+import com.serenegiant.janus.response.videoroom.Configured;
 import com.serenegiant.janus.request.videoroom.List;
 import com.serenegiant.janus.response.videoroom.ListResponse;
 import com.serenegiant.janus.response.videoroom.RoomEvent;
@@ -162,5 +165,19 @@ public interface VideoRoomAPI /*extends JanusAPI*/ {
 		@Path("session_id") final BigInteger sessionId,
 		@Path("plugin_id") final BigInteger pluginId,
 		@Body final Hangup hangup);
-	
+
+	@POST("{api}/{session_id}/{plugin_id}")
+	public Call<Configured> configure(
+		@Path("api") final String api,
+		@Path("session_id") final BigInteger sessionId,
+		@Path("plugin_id") final BigInteger pluginId,
+		@Body final ConfigPublisher config);
+
+	@POST("{api}/{session_id}/{plugin_id}")
+	public Call<Configured> configure(
+		@Path("api") final String api,
+		@Path("session_id") final BigInteger sessionId,
+		@Path("plugin_id") final BigInteger pluginId,
+		@Body final ConfigSubscriber config);
+
 }

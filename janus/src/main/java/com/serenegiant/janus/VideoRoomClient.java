@@ -11,6 +11,8 @@ package com.serenegiant.janus;
  *
 */
 
+import com.serenegiant.janus.request.videoroom.ConfigPublisher;
+import com.serenegiant.janus.request.videoroom.ConfigSubscriber;
 import com.serenegiant.janus.response.videoroom.RoomInfo;
 
 import org.appspot.apprtc.RoomConnectionParameters;
@@ -36,4 +38,18 @@ public interface VideoRoomClient extends JanusClient {
 	 * Disconnect from room.
 	 */
 	public void disconnectFromRoom();
+
+	/**
+	 * config publisher
+	 * @param config
+	 * @return
+	 */
+	public boolean configure(@NonNull final ConfigPublisher config);
+
+	/**
+	 * config subscriber
+	 * @param config
+	 * @return
+	 */
+	public boolean configure(@NonNull final ConfigSubscriber config);
 }
