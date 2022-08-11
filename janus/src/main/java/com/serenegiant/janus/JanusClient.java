@@ -1,7 +1,7 @@
 package com.serenegiant.janus;
 /*
  *  Copyright 2013 The WebRTC Project Authors. All rights reserved.
- *  Modified 2018 by saki t_saki@serenegiant.com
+ *  Modified 2018 - 2022 by saki t_saki@serenegiant.com
  *
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed under the License is distributed on an "AS IS" BASIS,
