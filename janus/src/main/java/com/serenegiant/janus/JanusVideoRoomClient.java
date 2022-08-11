@@ -738,8 +738,6 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		rtcConfig.continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY;
 		// Use ECDSA encryption.
 		rtcConfig.keyType = PeerConnection.KeyType.ECDSA;
-		// Enable DTLS for normal calls and disable for loopback calls.
-		rtcConfig.enableDtlsSrtp = !peerConnectionParameters.loopback;
 		rtcConfig.sdpSemantics = SDP_SEMANTICS;
 
 		final List<String> mediaStreamLabels = Collections.singletonList("ARDAMS");
@@ -883,8 +881,6 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		rtcConfig.continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY;
 		// Use ECDSA encryption.
 		rtcConfig.keyType = PeerConnection.KeyType.ECDSA;
-		// Enable DTLS for normal calls and disable for loopback calls.
-		rtcConfig.enableDtlsSrtp = !peerConnectionParameters.loopback;
 		rtcConfig.sdpSemantics = SDP_SEMANTICS;
 		
 		final VideoRoomPlugin.Subscriber subscriber = new VideoRoomPlugin.Subscriber(

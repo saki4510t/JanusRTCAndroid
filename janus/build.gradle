@@ -66,9 +66,9 @@ dependencies {
 	api "com.tinder.scarlet:message-adapter-gson:${scarletVersion}"
 	api "com.tinder.scarlet:stream-adapter-rxjava2:${scarletVersion}"
 
-	api "org.webrtc:google-webrtc:${webRTCVersion}"
-
 	implementation "com.serenegiant:common:${commonLibVersion}"
+
+	implementation project(':libwebrtc')
 }
 
 def repo = new File(rootDir, "repository")

@@ -57,7 +57,7 @@ ext {
 	rxandroidVersion = '3.0.0'
 	scarletVersion = '0.1.12'
 	socketIOClientJavaVersion = '1.0.1'
-	webRTCVersion = '1.0.32006'
+	libwebrtcVersion = '2022-08-02T04_04_41'
 
 	commonLibVersion= '8.2.1'
 
