@@ -19,8 +19,6 @@ package com.serenegiant.janus.request.videoroom;
  *
 */
 
-import java.math.BigInteger;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -32,7 +30,7 @@ public class ConfigSubscriber {
 
 	public final String request;	// "configure",
 	@Nullable
-	public final BigInteger mid;	// <mid of the m-line to refer to for this configure request; optional>,
+	public final Long mid;	// <mid of the m-line to refer to for this configure request; optional>,
 	@Nullable
 	public final Boolean send;		// <true|false, depending on whether the mindex media should be relayed or not; optional>,
 	@Nullable
@@ -56,7 +54,7 @@ public class ConfigSubscriber {
 	@Nullable
 	public final Integer restart;		// <trigger an ICE restart; optional>
 
-	public ConfigSubscriber(final String request, @Nullable final BigInteger mid, @Nullable final Boolean send, @Nullable final Integer substream, @Nullable final Integer temporal, @Nullable final Integer fallback, @Nullable final Integer spatial_layer, @Nullable final Integer temporal_layer, @Nullable final Integer audio_level_average, @Nullable final Integer audio_active_packets, @Nullable final Integer min_delay, @Nullable final Integer max_delay, @Nullable final Integer restart) {
+	public ConfigSubscriber(final String request, @Nullable final Long mid, @Nullable final Boolean send, @Nullable final Integer substream, @Nullable final Integer temporal, @Nullable final Integer fallback, @Nullable final Integer spatial_layer, @Nullable final Integer temporal_layer, @Nullable final Integer audio_level_average, @Nullable final Integer audio_active_packets, @Nullable final Integer min_delay, @Nullable final Integer max_delay, @Nullable final Integer restart) {
 		this.request = "configure";
 		this.mid = mid;
 		this.send = send;

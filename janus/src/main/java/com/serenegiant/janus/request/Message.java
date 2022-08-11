@@ -26,8 +26,6 @@ import com.serenegiant.janus.Plugin;
 import com.serenegiant.janus.Room;
 import com.serenegiant.janus.TransactionManager;
 
-import java.math.BigInteger;
-
 /**
  * プラグインメッセージ送信用のヘルパークラス
  */
@@ -36,10 +34,8 @@ public class Message {
 	public final String janus;
 	@NonNull
 	public final String transaction;
-	@NonNull
-	public final BigInteger session_id;
-	@NonNull
-	public final BigInteger handle_id;
+	public final long session_id;
+	public final long handle_id;
 	
 	public final Object body;
 	public final Object jsep;

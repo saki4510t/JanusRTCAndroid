@@ -19,8 +19,6 @@ package com.serenegiant.janus.response;
  *
 */
 
-import java.math.BigInteger;
-
 import androidx.annotation.NonNull;
 
 public class Session {
@@ -36,15 +34,15 @@ public class Session {
 	}
 	
 	public static class Data {
-		public final BigInteger id;
+		public final Long id;
 		
-		public Data(final BigInteger id) {
+		public Data(final Long id) {
 			this.id = id;
 		}
 	}
 	
-	public BigInteger id() {
-		return data != null ? data.id : null;
+	public long id() {
+		return data != null ? data.id : 0;
 	}
 
 	@NonNull

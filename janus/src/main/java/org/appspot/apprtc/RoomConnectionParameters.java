@@ -22,7 +22,7 @@ public class RoomConnectionParameters {
 	@NonNull
 	public final String apiName;
 	/** ルームID */
-	public final int roomId;
+	public final long roomId;
 	public final boolean loopback;
 	public final String urlParameters;
 	@Nullable
@@ -32,7 +32,7 @@ public class RoomConnectionParameters {
 	
 	public RoomConnectionParameters(
 		@Nullable final String roomUrl, @NonNull final String apiName,
-		final int roomId, final boolean loopback, final String urlParameters,
+		final long roomId, final boolean loopback, final String urlParameters,
 		@Nullable final String userName, @Nullable final String displayName) {
 		this.roomUrl = roomUrl;
 		this.apiName = apiName;
@@ -45,7 +45,7 @@ public class RoomConnectionParameters {
 	
 	public RoomConnectionParameters(
 		@Nullable final String roomUrl, @NonNull final String apiName,
-		final int roomId, boolean loopback) {
+		final long roomId, boolean loopback) {
 		this(roomUrl, apiName, roomId,
 			loopback, null,
 			null, null);

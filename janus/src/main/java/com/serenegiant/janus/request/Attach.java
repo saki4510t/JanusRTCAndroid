@@ -25,15 +25,12 @@ import androidx.annotation.Nullable;
 import com.serenegiant.janus.TransactionManager;
 import com.serenegiant.janus.response.Session;
 
-import java.math.BigInteger;
-
 public class Attach {
 	@NonNull
 	public final String janus;
 	@NonNull
 	public final String transaction;
-	@NonNull
-	public final BigInteger session_id;
+	public final long session_id;
 	@NonNull
 	public final String plugin;
 	

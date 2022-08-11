@@ -21,8 +21,6 @@ package com.serenegiant.janus;
 
 import com.serenegiant.janus.response.videoroom.RoomEvent;
 
-import java.math.BigInteger;
-
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.GET;
@@ -35,10 +33,10 @@ public interface LongPoll {
 	@GET("{api}/{session_id}")
 	public Call<ResponseBody> getEvent(
 		@Path("api") final String api,
-		@Path("session_id") final BigInteger sessionId);
+		@Path("session_id") final long sessionId);
 
 	@GET("{api}/{session_id}")
 	public Call<RoomEvent> getRoomEvent(
 		@Path("api") final String api,
-		@Path("session_id") final BigInteger sessionId);
+		@Path("session_id") final long sessionId);
 }

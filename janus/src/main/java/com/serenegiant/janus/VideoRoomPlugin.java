@@ -61,7 +61,6 @@ import org.webrtc.SdpObserver;
 import org.webrtc.SessionDescription;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,7 +75,7 @@ import retrofit2.Response;
 /*package*/ abstract class VideoRoomPlugin extends JanusPlugin
 	implements PeerConnection.Observer {
 
-	private static final boolean DEBUG = false;	// set false on production
+	private static final boolean DEBUG = true;	// set false on production
 	
 	/**
 	 * callback interface for JanusPlugin
@@ -101,7 +100,7 @@ import retrofit2.Response;
 		 * @param pluginId
 		 */
 		public void onLeave(@NonNull final VideoRoomPlugin plugin,
-			@NonNull final BigInteger pluginId, final int numUsers);
+			final long pluginId, final int numUsers);
 		
 		/**
 		 * callback when MediaStream is added to PeerConnection
@@ -364,10 +363,9 @@ import retrofit2.Response;
 	/**
 	 * feed IDを取得する
 	 * パブリッシャーの時はnull, サブスクライバーの時はデータを取得するパブリッサシャーのIDを返す
-	 * XXX Stringにした方がいいのかも
 	 * @return
 	 */
-	protected abstract BigInteger getFeedId();
+	protected abstract long getFeedId();
 
 	/**
 	 * attach to VideoRoom plugin
@@ -949,7 +947,7 @@ import retrofit2.Response;
 
 		if (DEBUG) Log.v(TAG, "handlePluginEvent:");
 		// XXX このsenderはPublisherとして接続したときのVideoRoomプラグインのidらしい
-		final BigInteger sender = room.sender;
+		final long sender = room.sender;
 		final String eventType = (room.plugindata != null) && (room.plugindata.data != null)
 			? room.plugindata.data.videoroom : null;
 		// FIXME plugindata.pluginが"janus.plugin.videoroom"かどうかのチェックをしたほうが良いかも
@@ -1266,8 +1264,8 @@ import retrofit2.Response;
 		}
 
 		@Override
-		protected BigInteger getFeedId() {
-			return null;
+		protected long getFeedId() {
+			return 0;
 		}
 
 		@Override
@@ -1378,7 +1376,7 @@ import retrofit2.Response;
 			return "subscriber";
 		}
 
-		protected BigInteger getFeedId() {
+		protected long getFeedId() {
 			return info.id;
 		}
 

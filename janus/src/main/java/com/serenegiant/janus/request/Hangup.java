@@ -20,20 +20,16 @@ package com.serenegiant.janus.request;
 */
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.serenegiant.janus.TransactionManager;
 import com.serenegiant.janus.response.Session;
-
-import java.math.BigInteger;
 
 public class Hangup {
 	@NonNull
 	public final String janus;
 	@NonNull
 	public final String transaction;
-	@NonNull
-	public final BigInteger session_id;
+	public final long session_id;
 	
 	public Hangup(@NonNull final Session session,
 		@NonNull final TransactionManager.TransactionCallback callback) {

@@ -24,7 +24,6 @@ import com.serenegiant.janus.response.StreamInfo;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 
 /**
@@ -35,14 +34,14 @@ public class Join {
 	@NonNull
 	public final String request;
 	/** ルームID */
-	public final int room;	// <unique ID of the room to join>...だけどroom設定だと<unique numeric ID>なので数字じゃないとだめ
+	public final long room;	// <unique ID of the room to join>...だけどroom設定だと<unique numeric ID>なので数字じゃないとだめ
 	/** 参加者の種類文字列 */
 	@NonNull
 	public final String ptype;
 	/** サブスクライバーのみ */
 	@Nullable
 	public String username;
-	/** パブリッシャーのみ, XXX String? BigInteger? */
+	/** パブリッシャーのみ */
 	@Nullable
 	public String id;		// <unique ID to register for the publisher; optional, will be chosen by the plugin if missing>,
 	/** パブリッシャーのみ */
@@ -50,10 +49,10 @@ public class Join {
 	public String display;	// <display name for the publisher; optional>
 	/** サブスクライバーのみ */
 	@Nullable
-	public BigInteger feed;	// <unique ID of the publisher to subscribe to; mandatory>
+	public Long feed;	// <unique ID of the publisher to subscribe to; mandatory>
 	/** サブスクライバーのみ */
 	@Nullable
-	public BigInteger private_id;	// もしかするとStringかも // <unique ID of the publisher that originated this request; optional, unless mandated by the room configuration>,
+	public Long private_id;	// もしかするとStringかも // <unique ID of the publisher that originated this request; optional, unless mandated by the room configuration>,
 	/** サブスクライバーのみ */
 	public StreamInfo[] streams;
 	/** パブリッシャーのみ */
@@ -65,23 +64,23 @@ public class Join {
 	 * @param room
 	 * @param pType
 	 */
-	public Join(final int room, @NonNull final String pType) {
+	public Join(final long room, @NonNull final String pType) {
 		this(room, pType, null, null, null, null, null);
 	}
 
-	public Join(final int room, @NonNull final String pType,
+	public Join(final long room, @NonNull final String pType,
 		@Nullable final String username,
 		@Nullable final String display,
-		@Nullable final BigInteger feed) {
+		@Nullable final Long feed) {
 
 		this(room, pType, username, display, feed, null, null);
 	}
 
-	public Join(final int room, @NonNull final String pType,
+	public Join(final long room, @NonNull final String pType,
 		@Nullable final String username,
 		@Nullable final String display,
-		@Nullable final BigInteger feed,
-		@Nullable final BigInteger private_id,
+		@Nullable final Long feed,
+		@Nullable final Long private_id,
 		@Nullable final String token) {
 
 		this.request = "join";
@@ -103,8 +102,8 @@ public class Join {
 			", ptype='" + ptype + '\'' +
 			", username='" + username + '\'' +
 			", display='" + display + '\'' +
-			", feed='" + feed + '\'' +
-			", private_id='" + private_id + '\'' +
+			", feed=" + feed +
+			", private_id=" + private_id +
 			", token='" + token + '\'' +
 			", streams=" + Arrays.toString(streams) + '\'' +
 			'}';

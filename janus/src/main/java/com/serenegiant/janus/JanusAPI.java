@@ -27,8 +27,6 @@ import com.serenegiant.janus.response.PluginInfo;
 import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
 
-import java.math.BigInteger;
-
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -70,7 +68,7 @@ public interface JanusAPI {
 	@POST("{api}/{session_id}")
 	public Call<PluginInfo> attachPlugin(
 		@Path("api") final String api,
-		@Path("session_id") final BigInteger sessionId,
+		@Path("session_id") final long sessionId,
 		@Body final Attach attach);
 
 	/**
@@ -85,8 +83,8 @@ public interface JanusAPI {
 	@POST("{api}/{session_id}/{plugin_id}")
 	public Call<Void> detachPlugin(
 		@Path("api") final String api,
-		@Path("session_id") final BigInteger sessionId,
-		@Path("plugin_id") final BigInteger pluginId,
+		@Path("session_id") final long sessionId,
+		@Path("plugin_id") final long pluginId,
 		@Body final Detach detach);
 
 	/**
@@ -100,6 +98,6 @@ public interface JanusAPI {
 	@POST("{api}/{session_id}")
 	public Call<Void> destroySession(
 		@Path("api") final String api,
-		@Path("session_id") final BigInteger sessionId,
+		@Path("session_id") final long sessionId,
 		@Body final DestroySession destroy);
 }

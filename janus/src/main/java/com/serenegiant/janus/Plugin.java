@@ -22,8 +22,6 @@ package com.serenegiant.janus;
 import com.serenegiant.janus.response.PluginInfo;
 import com.serenegiant.janus.response.Session;
 
-import java.math.BigInteger;
-
 import androidx.annotation.NonNull;
 
 public class Plugin {
@@ -58,7 +56,7 @@ public class Plugin {
 	 * セッションIDを取得
 	 * @return
 	 */
-	public BigInteger sessionId() {
+	public long sessionId() {
 		return session.id();
 	}
 
@@ -66,7 +64,7 @@ public class Plugin {
 	 * プラグインIDを取得
 	 * @return
 	 */
-	public BigInteger pluginId() {
+	public long pluginId() {
 		return info.id();
 	}
 }

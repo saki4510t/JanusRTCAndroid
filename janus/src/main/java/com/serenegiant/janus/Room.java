@@ -26,7 +26,6 @@ import com.serenegiant.janus.response.PluginInfo;
 import com.serenegiant.janus.response.videoroom.PublisherInfo;
 import com.serenegiant.janus.response.Session;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -41,7 +40,7 @@ public class Room extends Plugin {
 	 * EventRoom.plugindata.data.idの値
 	 * publisherとしての自id
 	 */
-	public BigInteger publisherId;
+	public Long publisherId;
 	
 	/**
 	 * holds list of connected remote publisher
@@ -97,7 +96,7 @@ public class Room extends Plugin {
 	 */
 	@NonNull
 	public List<PublisherInfo> removePublisher(
-		@NonNull final BigInteger id) {
+		@NonNull final Long id) {
 		
 		synchronized (this.publishers) {
 			PublisherInfo found = null;
@@ -119,7 +118,7 @@ public class Room extends Plugin {
 	 * @param id
 	 * @param talking
 	 */
-	public void updatePublisher(@NonNull final BigInteger id, final boolean talking) {
+	public void updatePublisher(@NonNull final Long id, final boolean talking) {
 		synchronized (this.publishers) {
 			PublisherInfo found = null;
 			for (PublisherInfo info: publishers) {

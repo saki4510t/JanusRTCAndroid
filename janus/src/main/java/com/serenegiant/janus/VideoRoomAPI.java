@@ -38,8 +38,6 @@ import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
 import com.serenegiant.janus.response.videoroom.RoomInfo;
 
-import java.math.BigInteger;
-
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -82,7 +80,7 @@ public interface VideoRoomAPI /*extends JanusAPI*/ {
 	@POST("{api}/{session_id}")
 	public Call<PluginInfo> attachPlugin(
 		@Path("api") final String api,
-		@Path("session_id") final BigInteger sessionId,
+		@Path("session_id") final long sessionId,
 		@Body final Attach attach);
 
 	/**
@@ -97,8 +95,8 @@ public interface VideoRoomAPI /*extends JanusAPI*/ {
 	@POST("{api}/{session_id}/{plugin_id}")
 	public Call<Void> detachPlugin(
 		@Path("api") final String api,
-		@Path("session_id") final BigInteger sessionId,
-		@Path("plugin_id") final BigInteger pluginId,
+		@Path("session_id") final long sessionId,
+		@Path("plugin_id") final long pluginId,
 		@Body final Detach detach);
 
 	/**
@@ -111,7 +109,7 @@ public interface VideoRoomAPI /*extends JanusAPI*/ {
 	@POST("{api}/{session_id}")
 	public Call<Void> destroySession(
 		@Path("api") final String api,
-		@Path("session_id") final BigInteger sessionId,
+		@Path("session_id") final long sessionId,
 		@Body final DestroySession destroy);
 
 //--------------------------------------------------------------------------------
@@ -120,64 +118,64 @@ public interface VideoRoomAPI /*extends JanusAPI*/ {
 	@GET("{api}/{session_id}/{plugin_id}")
 	public Call<ListResponse<RoomInfo>> getRoomList(
 		@Path("api") final String api,
-		@Path("session_id") final BigInteger sessionId,
-		@Path("plugin_id") final BigInteger pluginId,
+		@Path("session_id") final long sessionId,
+		@Path("plugin_id") final long pluginId,
 		@Body final List list);
 
 	@POST("{api}/{session_id}/{plugin_id}")
 	public Call<RoomEvent> join(
 		@Path("api") final String api,
-		@Path("session_id") final BigInteger sessionId,
-		@Path("plugin_id") final BigInteger pluginId,
+		@Path("session_id") final long sessionId,
+		@Path("plugin_id") final long pluginId,
 		@Body final Message message);
 
 	@POST("{api}/{session_id}/{plugin_id}")
 	public Call<RoomEvent> offer(
 		@Path("api") final String api,
-		@Path("session_id") final BigInteger sessionId,
-		@Path("plugin_id") final BigInteger pluginId,
+		@Path("session_id") final long sessionId,
+		@Path("plugin_id") final long pluginId,
 		@Body final Message message);
 
 	@POST("{api}/{session_id}/{plugin_id}")
 	public Call<RoomEvent> trickle(
 		@Path("api") final String api,
-		@Path("session_id") final BigInteger sessionId,
-		@Path("plugin_id") final BigInteger pluginId,
+		@Path("session_id") final long sessionId,
+		@Path("plugin_id") final long pluginId,
 		@Body final Trickle trickle);
 	
 	@POST("{api}/{session_id}/{plugin_id}")
 	public Call<RoomEvent> trickleCompleted(
 		@Path("api") final String api,
-		@Path("session_id") final BigInteger sessionId,
-		@Path("plugin_id") final BigInteger pluginId,
+		@Path("session_id") final long sessionId,
+		@Path("plugin_id") final long pluginId,
 		@Body final TrickleCompleted trickle);
 
 	@POST("{api}/{session_id}/{plugin_id}")
 	public Call<ResponseBody> send(
 		@Path("api") final String api,
-		@Path("session_id") final BigInteger sessionId,
-		@Path("plugin_id") final BigInteger pluginId,
+		@Path("session_id") final long sessionId,
+		@Path("plugin_id") final long pluginId,
 		@Body final Message message);
 	
 	@POST("{api}/{session_id}/{plugin_id}")
 	public Call<Void> hangup(
 		@Path("api") final String api,
-		@Path("session_id") final BigInteger sessionId,
-		@Path("plugin_id") final BigInteger pluginId,
+		@Path("session_id") final long sessionId,
+		@Path("plugin_id") final long pluginId,
 		@Body final Hangup hangup);
 
 	@POST("{api}/{session_id}/{plugin_id}")
 	public Call<Configured> configure(
 		@Path("api") final String api,
-		@Path("session_id") final BigInteger sessionId,
-		@Path("plugin_id") final BigInteger pluginId,
+		@Path("session_id") final long sessionId,
+		@Path("plugin_id") final long pluginId,
 		@Body final ConfigPublisher config);
 
 	@POST("{api}/{session_id}/{plugin_id}")
 	public Call<Configured> configure(
 		@Path("api") final String api,
-		@Path("session_id") final BigInteger sessionId,
-		@Path("plugin_id") final BigInteger pluginId,
+		@Path("session_id") final long sessionId,
+		@Path("plugin_id") final long pluginId,
 		@Body final ConfigSubscriber config);
 
 }

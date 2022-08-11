@@ -25,17 +25,13 @@ import androidx.annotation.Nullable;
 import com.serenegiant.janus.Room;
 import com.serenegiant.janus.TransactionManager;
 
-import java.math.BigInteger;
-
 public class TrickleCompleted {
 	@NonNull
 	public final String janus;
 	@NonNull
 	public final String transaction;
-	@NonNull
-	public final BigInteger session_id;
-	@NonNull
-	public final BigInteger handle_id;
+	public final long session_id;
+	public final long handle_id;
 	@NonNull
 	public final Candidate candidate;
 

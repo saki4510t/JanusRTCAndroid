@@ -19,19 +19,17 @@ package com.serenegiant.janus.response.videoroom;
  *
 */
 
-import java.math.BigInteger;
-
 import androidx.annotation.NonNull;
 
 public class PublisherInfo {
 	/** パブリッシャーのID, XXX これはStringの方がいいのかも */
-	public final BigInteger id;
+	public final Long id;
 	public final String display;
 	public final String audio_codec;
 	public final String video_codec;
 	public boolean talking;
 	
-	public PublisherInfo(final BigInteger id,
+	public PublisherInfo(final Long id,
 		final String display,
 		final String audio_codec, final String video_codec,
 		final boolean talking) {

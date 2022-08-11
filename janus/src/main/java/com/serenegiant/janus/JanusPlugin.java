@@ -22,8 +22,6 @@ package com.serenegiant.janus;
 import com.serenegiant.janus.response.PluginInfo;
 import com.serenegiant.janus.response.Session;
 
-import java.math.BigInteger;
-
 import androidx.annotation.NonNull;
 
 /*package*/ abstract class JanusPlugin {
@@ -55,7 +53,7 @@ import androidx.annotation.NonNull;
 	 * セッションIDを取得
 	 * @return
 	 */
-	BigInteger sessionId() {
+	long sessionId() {
 		return mSession.id();
 	}
 
@@ -63,8 +61,8 @@ import androidx.annotation.NonNull;
 	 * プラグインIDを取得
 	 * @return
 	 */
-	BigInteger id() {
-		return mPlugin != null ? mPlugin.id() : null;
+	long id() {
+		return mPlugin != null ? mPlugin.id() : 0;
 	}
 
 	/**

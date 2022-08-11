@@ -26,10 +26,11 @@ import androidx.annotation.NonNull;
  * サブスクライバーでのデータ取得を再開する
  */
 public class Start {
+	@NonNull
 	public final String request;
-	public final int room;
+	public final long room;
 	
-	public Start(final int room) {
+	public Start(final long room) {
 		this.request = "start";
 		this.room = room;
 	}

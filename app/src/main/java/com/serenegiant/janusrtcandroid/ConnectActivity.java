@@ -113,7 +113,7 @@ public class ConnectActivity extends BaseActivity {
 			int runTimeMs = intent.getIntExtra(CallActivity.EXTRA_RUNTIME, 0);
 			boolean useValuesFromIntent =
 				intent.getBooleanExtra(CallActivity.EXTRA_USE_VALUES_FROM_INTENT, false);
-			final int room = sharedPref.getInt(keyprefRoom, 0);
+			final long room = sharedPref.getLong(keyprefRoom, 0);
 			connectToRoom(room, true, loopback, useValuesFromIntent, runTimeMs);
 		}
 	}
@@ -204,6 +204,7 @@ public class ConnectActivity extends BaseActivity {
 	
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
 		if (requestCode == CONNECTION_REQUEST && commandLineRun) {
 			Log.d(TAG, "Return: " + resultCode);
 			setResult(resultCode);
@@ -269,7 +270,7 @@ public class ConnectActivity extends BaseActivity {
 	}
 	
 	@SuppressWarnings("StringSplitter")
-	private void connectToRoom(int roomId, boolean commandLineRun, boolean loopback,
+	private void connectToRoom(long roomId, boolean commandLineRun, boolean loopback,
 							   boolean useValuesFromIntent, int runTimeMs) {
 		
 		if (!checkPermissionNetwork()) return;
@@ -280,7 +281,7 @@ public class ConnectActivity extends BaseActivity {
 		
 		// roomId is random for loopback.
 		if (loopback) {
-			roomId = (new Random()).nextInt(100000000);
+			roomId = (new Random()).nextLong();
 		}
 		
 		String roomUrl = sharedPref.getString(
@@ -568,7 +569,7 @@ public class ConnectActivity extends BaseActivity {
 			@Override
 			public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 				try {
-					final int roomId = Integer.parseInt(((TextView) view).getText().toString());
+					final long roomId = Long.parseLong(((TextView) view).getText().toString());
 					connectToRoom(roomId, false, false, false, 0);
 				} catch (final Exception e) {
 					Toast.makeText(ConnectActivity.this,
@@ -592,7 +593,7 @@ public class ConnectActivity extends BaseActivity {
 		@Override
 		public void onClick(View view) {
 			try {
-				final int roomId = Integer.parseInt(roomEditText.getText().toString());
+				final long roomId = Long.parseLong(roomEditText.getText().toString());
 				connectToRoom(roomId, false, false, false, 0);
 			} catch (final Exception e) {
 				Toast.makeText(ConnectActivity.this,

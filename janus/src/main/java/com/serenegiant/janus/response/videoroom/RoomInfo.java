@@ -19,15 +19,13 @@ package com.serenegiant.janus.response.videoroom;
  *
 */
 
-import java.math.BigInteger;
-
 import androidx.annotation.NonNull;
 
 /**
  * listリクエストの結果
  */
 public class RoomInfo {
-	public final BigInteger room;			// <unique numeric ID>,
+	public final Long room;					// <unique numeric ID>,
 	public final String description;		// "<Name of the room>",
 	public final boolean pin_required;		// <true|false, whether a PIN is required to join this room>,
 	public final boolean is_private;		// <true|false, whether this room is 'private' (as in hidden) or not>,
@@ -55,7 +53,7 @@ public class RoomInfo {
 	public final boolean playoutdelay_ext;	// <true|false, whether the playout-delay extension must be negotiated or not for new publishers>,
 	public final boolean transport_wide_cc_ext; // <true|false, whether the transport wide cc extension must be negotiated or not for new publishers>
 
-	public RoomInfo(final BigInteger room, final String description, final boolean pin_required, final boolean is_private, final int max_publishers, final int bitrate, final boolean bitrate_cap, final int fir_freq, final boolean require_pvtid, final boolean require_e2ee, final boolean notify_joining, final String audiocodec, final String videocodec, final boolean opus_fec, final boolean opus_dtx, final boolean video_svc, final boolean record, final String rec_dir, final boolean lock_record, final int num_participants, final boolean audiolevel_ext, final boolean audiolevel_event, final int audio_active_packets, final int audio_level_average, final boolean videoorient_ext, final boolean playoutdelay_ext, final boolean transport_wide_cc_ext) {
+	public RoomInfo(final Long room, final String description, final boolean pin_required, final boolean is_private, final int max_publishers, final int bitrate, final boolean bitrate_cap, final int fir_freq, final boolean require_pvtid, final boolean require_e2ee, final boolean notify_joining, final String audiocodec, final String videocodec, final boolean opus_fec, final boolean opus_dtx, final boolean video_svc, final boolean record, final String rec_dir, final boolean lock_record, final int num_participants, final boolean audiolevel_ext, final boolean audiolevel_event, final int audio_active_packets, final int audio_level_average, final boolean videoorient_ext, final boolean playoutdelay_ext, final boolean transport_wide_cc_ext) {
 		this.room = room;
 		this.description = description;
 		this.pin_required = pin_required;

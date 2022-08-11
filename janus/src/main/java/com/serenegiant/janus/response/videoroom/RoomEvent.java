@@ -22,21 +22,21 @@ package com.serenegiant.janus.response.videoroom;
 import com.serenegiant.janus.request.JsepSdp;
 import com.serenegiant.janus.response.StreamInfo;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 
 import androidx.annotation.NonNull;
 
 public class RoomEvent {
 	public final String janus;
-	public final BigInteger sender;
+	public final Long sender;
 	public final String transaction;
 	public final PluginData plugindata;
 	public final JsepSdp jsep;
 	
-	public RoomEvent(final String janus, final BigInteger sender,
-					 final String transaction,
-					 final PluginData plugindata, final JsepSdp jsep) {
+	public RoomEvent(
+		final String janus, final long sender,
+		final String transaction,
+		final PluginData plugindata, final JsepSdp jsep) {
 		
 		this.janus = janus;
 		this.sender = sender;
@@ -67,31 +67,31 @@ public class RoomEvent {
 	public static class Data {
 		public final String videoroom;
 		/** ルームID */
-		public final int room;
+		public final Long room;
 		public final String description;
 		public final boolean configured;
 		public final Object started;
 		public final String audio_codec;
 		public final String video_codec;
-		public final BigInteger unpublished;
-		public final BigInteger leaving;
+		public final Long unpublished;
+		public final Long leaving;
 		/** これは参加者のID, XXX これはStringの方がいいかも */
-		public final BigInteger id;
+		public final Long id;
 		/** これはルームconfigで指定したID, XXX これはStringの方がいいかも */
-		public final BigInteger private_id;
+		public final Long private_id;
 		public PublisherInfo[] publishers;
 		public final String paused;
 		public final String switched;
 		public final String changes;
 		public final StreamInfo[] streams;
 		
-		public Data(final String videoroom, final int room,
+		public Data(final String videoroom, final long room,
 			final String description,
 			final boolean configured, final Object started,
 			final String audio_codec, final String video_codec,
-			final BigInteger unpublished,
-			final BigInteger leaving,
-			final BigInteger id, final BigInteger private_id,
+			final Long unpublished,
+			final Long leaving,
+			final Long id, final Long private_id,
 			final PublisherInfo[] publishers,
 			final String paused,
 			final String switched,
@@ -145,7 +145,7 @@ public class RoomEvent {
 	public String toString() {
 		return "RoomEvent{" +
 			"janus='" + janus + '\'' +
-			", sender='" + sender + '\'' +
+			", sender=" + sender +
 			", transaction='" + transaction + '\'' +
 			", plugindata=" + plugindata +
 			", jsep=" + jsep +

@@ -299,7 +299,7 @@ public class CallActivity extends BaseActivity
 		}
 
 		// Get Intent parameters.
-		final int roomId = intent.getIntExtra(EXTRA_ROOMID, 0);
+		final long roomId = intent.getLongExtra(EXTRA_ROOMID, 0);
 		if (DEBUG) Log.d(TAG, "Room ID: " + roomId);
 		if (roomId == 0) {
 			logAndToast(getString(R.string.missing_url));

@@ -79,7 +79,6 @@ import org.webrtc.audio.JavaAudioDeviceModule;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -183,7 +182,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 	@NonNull
 	private final List<Call<?>> mCurrentCalls = new ArrayList<>();
 	@NonNull
-	private final Map<BigInteger, VideoRoomPlugin> mAttachedPlugins
+	private final Map<Long, VideoRoomPlugin> mAttachedPlugins
 		= new ConcurrentHashMap<>();
 	private ConnectionState mConnectionState;
 	private ServerInfo mServerInfo;
@@ -1164,14 +1163,14 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 	}
 
 //--------------------------------------------------------------------------------
-	private void addPlugin(@NonNull final BigInteger key, @NonNull final VideoRoomPlugin plugin) {
+	private void addPlugin(final long key, @NonNull final VideoRoomPlugin plugin) {
 		synchronized (mAttachedPlugins) {
 			mAttachedPlugins.put(key, plugin);
 		}
 	}
 
 	private void removePlugin(@NonNull final VideoRoomPlugin plugin) {
-		final BigInteger key = plugin.id();
+		final long key = plugin.id();
 		
 		executor.execute(() -> {
 			synchronized (mAttachedPlugins) {
@@ -1180,25 +1179,25 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		});
 	}
 
-	private VideoRoomPlugin getPlugin(@Nullable final BigInteger key) {
+	private VideoRoomPlugin getPlugin(final long key) {
 		synchronized (mAttachedPlugins) {
-			if ((key != null) && mAttachedPlugins.containsKey(key)) {
+			if (mAttachedPlugins.containsKey(key)) {
 				return mAttachedPlugins.get(key);
 			}
 		}
 		return null;
 	}
 	
-	private void leavePlugin(@NonNull BigInteger leavePlugin, final int numUsers) {
+	private void leavePlugin(final long leavePlugin, final int numUsers) {
 		if (DEBUG) Log.v(TAG, "leavePlugin:" + leavePlugin);
 		VideoRoomPlugin found = null;
 	
 		synchronized (mAttachedPlugins) {
 			// feederIdが一致するSubscriberを探す
-			for (Map.Entry<BigInteger, VideoRoomPlugin> entry: mAttachedPlugins.entrySet()) {
+			for (Map.Entry<Long, VideoRoomPlugin> entry: mAttachedPlugins.entrySet()) {
 				final VideoRoomPlugin plugin = entry.getValue();
 				if (plugin instanceof VideoRoomPlugin.Subscriber) {
-					if (leavePlugin.equals(plugin.getFeedId())) {
+					if (leavePlugin == plugin.getFeedId()) {
 						found = plugin;
 						break;
 					}
@@ -1362,7 +1361,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		cancelCall();
 		mConnectionState = ConnectionState.CLOSED;
 		synchronized (mAttachedPlugins) {
-			for (final Map.Entry<BigInteger, VideoRoomPlugin> entry:
+			for (final Map.Entry<Long, VideoRoomPlugin> entry:
 				mAttachedPlugins.entrySet()) {
 
 				entry.getValue().detach();
@@ -1527,7 +1526,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		
 		@Override
 		public void onLeave(@NonNull final VideoRoomPlugin plugin,
-			@NonNull final BigInteger pluginId, final int numUsers) {
+			final long pluginId, final int numUsers) {
 			
 			if (DEBUG) Log.v(TAG, "onLeave:" + plugin + ",leave=" + pluginId);
 
@@ -1713,7 +1712,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 			try {
 				final JSONObject body = new JSONObject(responseBody.string());
 				final String transaction = body.optString("transaction");
-				final BigInteger sender = BigInteger.valueOf(body.optLong("sender"));
+				final long sender = body.optLong("sender");
 				if (!TextUtils.isEmpty(transaction)) {
 					// トランザクションコールバックでの処理を試みる
 					// WebRTCイベントはトランザクションがない
