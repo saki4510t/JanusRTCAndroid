@@ -21,7 +21,7 @@ public class RoomConnectionParameters {
 	public final String roomUrl;
 	@NonNull
 	public final String apiName;
-	/** ルームID、XXX StringかBigIntegerにした方がいい？ */
+	/** ルームID */
 	public final int roomId;
 	public final boolean loopback;
 	public final String urlParameters;

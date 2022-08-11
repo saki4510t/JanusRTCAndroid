@@ -34,8 +34,8 @@ import java.util.Arrays;
 public class Join {
 	@NonNull
 	public final String request;
-	/** ルームID, XXX StringかBigIntegerにした方がいい？ */
-	public final int room;	// <unique ID of the room to join>,
+	/** ルームID */
+	public final int room;	// <unique ID of the room to join>...だけどroom設定だと<unique numeric ID>なので数字じゃないとだめ
 	/** 参加者の種類文字列 */
 	@NonNull
 	public final String ptype;

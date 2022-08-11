@@ -27,7 +27,6 @@ import androidx.annotation.Nullable;
 /**
  * VideoRoomプラグイン用メッセージボディー
  * サブスクライバーのconfigureリクエスト用
- * XXX 要確認 基本的にオプションなので設定しない項目はnullを渡せばいい？
  */
 public class ConfigSubscriber {
 

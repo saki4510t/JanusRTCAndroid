@@ -28,7 +28,6 @@ import androidx.annotation.Nullable;
  * VideoRoomプラグイン用メッセージボディー
  * パブリッシャーのconfigureリクエスト用
  * パブリッシャーに対して発行するpublishリクエストとconfigureリクエストはほぼ同じ
- * XXX 要確認 基本的にオプションなので設定しない項目はnullを渡せばいい？
  */
 public class ConfigPublisher {
 	@NonNull

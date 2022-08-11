@@ -66,7 +66,7 @@ public class RoomEvent {
 	
 	public static class Data {
 		public final String videoroom;
-		/** ルームID、XXX BigIntegerにした方がいい？ */
+		/** ルームID */
 		public final int room;
 		public final String description;
 		public final boolean configured;
