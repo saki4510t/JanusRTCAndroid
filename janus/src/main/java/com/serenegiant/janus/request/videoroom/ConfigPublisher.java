@@ -61,6 +61,39 @@ public class ConfigPublisher {
 		this.request = "configure";
 	}
 
+	/**
+	 * constructor to adjust bitrate
+	 * @param bitrate
+	 */
+	public ConfigPublisher(final int bitrate) {
+		this();
+		this.bitrate = bitrate;
+	}
+
+	/**
+	 * constructor to change display name
+	 * @param display
+	 */
+	public ConfigPublisher(@NonNull final String display) {
+		this();
+		this.display = display;
+	}
+
+	/**
+	 * constructor
+	 * @param bitrate
+	 * @param keyframe
+	 * @param record
+	 * @param filename
+	 * @param display
+	 * @param audio_active_packets
+	 * @param audio_level_average
+	 * @param mid
+	 * @param send
+	 * @param min_delay
+	 * @param max_delay
+	 * @param descriptions
+	 */
 	public ConfigPublisher(@Nullable final Integer bitrate, @Nullable final Boolean keyframe, @Nullable final Boolean record, @Nullable final String filename, @Nullable final String display, @Nullable final Integer audio_active_packets, @Nullable final Integer audio_level_average, @Nullable final String mid, @Nullable final Boolean send, @Nullable final Integer min_delay, @Nullable final Integer max_delay, @Nullable final StreamDescription[] descriptions) {
 		this();
 		this.bitrate = bitrate;
