@@ -25,6 +25,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.serenegiant.janus.request.Attach;
 import com.serenegiant.janus.request.videoroom.ConfigPublisher;
 import com.serenegiant.janus.request.videoroom.ConfigSubscriber;
@@ -86,7 +87,8 @@ import retrofit2.Response;
 		 * @param plugin
 		 * @param room
 		 */
-		public void onJoin(@NonNull final VideoRoomPlugin plugin, final RoomEvent room);
+		public void onJoin(@NonNull final VideoRoomPlugin plugin,
+			@NonNull final RoomEvent room);
 		
 		/**
 		 * callback when other publisher enter to the same room
@@ -124,7 +126,7 @@ import retrofit2.Response;
 		 * @param remoteCandidate
 		 */
 		public void onRemoteIceCandidate(@NonNull final VideoRoomPlugin plugin,
-			final IceCandidate remoteCandidate);
+			@NonNull final IceCandidate remoteCandidate);
 		/**
 		 * Callback fired once connection is established (IceConnectionState is
 		 * CONNECTED).
@@ -141,7 +143,7 @@ import retrofit2.Response;
 		 * Callback fired once local SDP is created and set.
 		 */
 		public void onLocalDescription(@NonNull final VideoRoomPlugin plugin,
-			final SessionDescription sdp);
+			@NonNull final SessionDescription sdp);
 		
 		public void createSubscriber(@NonNull final VideoRoomPlugin plugin,
 			@NonNull final PublisherInfo info);
@@ -153,7 +155,7 @@ import retrofit2.Response;
 		 * @param sdp
 		 */
 		public void onRemoteDescription(@NonNull final VideoRoomPlugin plugin,
-			final SessionDescription sdp);
+			@NonNull final SessionDescription sdp);
 
 		/**
 		 * PeerConnectionの統計情報を取得できたときのコールバック
@@ -161,7 +163,7 @@ import retrofit2.Response;
 		 * @param report
 		 */
 		public void onPeerConnectionStatsReady(@NonNull final VideoRoomPlugin plugin,
-			final RTCStatsReport report);
+			@NonNull final RTCStatsReport report);
 
 		public void onError(@NonNull final VideoRoomPlugin plugin,
 			@NonNull final Throwable t);
@@ -214,7 +216,9 @@ import retrofit2.Response;
 	protected boolean isInitiator;
 	protected boolean isError;
 	private final boolean preferIsac;
-	
+	@NonNull
+	private final Gson mGson = new Gson();
+
 	/**
 	 * constructor
 	 * @param session
@@ -859,11 +863,14 @@ import retrofit2.Response;
 		}
 	}
 
+	@NonNull
 	private final RTCStatsCollectorCallback mRTCStatsCollectorCallback
 		= new RTCStatsCollectorCallback() {
 		@Override
 		public void onStatsDelivered(final RTCStatsReport rtcStatsReport) {
-			mCallback.onPeerConnectionStatsReady(VideoRoomPlugin.this, rtcStatsReport);
+			if (rtcStatsReport != null) {
+				mCallback.onPeerConnectionStatsReady(VideoRoomPlugin.this, rtcStatsReport);
+			}
 		}
 	};
 
@@ -872,6 +879,7 @@ import retrofit2.Response;
 	/**
 	 * TransactionManagerからのコールバックインターフェースの実装
 	 */
+	@NonNull
 	protected final TransactionManager.TransactionCallback
 		mTransactionCallback = new TransactionManager.TransactionCallback() {
 	
@@ -895,9 +903,10 @@ import retrofit2.Response;
 	 * @return
 	 */
 	protected boolean onReceived(@NonNull final String transaction,
-		final JSONObject body) {
+		@NonNull final JSONObject body) {
 
 		if (DEBUG) Log.v(TAG, "onReceived:");
+		@Nullable
 		final String janus = body.optString("janus");
 		boolean handled = false;
 		if (!TextUtils.isEmpty(janus)) {
@@ -910,11 +919,13 @@ import retrofit2.Response;
 				// do nothing
 				return true;
 			case "event":
-			{
-				// プラグインイベント
-				final Gson gson = new Gson();
-				final RoomEvent event = gson.fromJson(body.toString(), RoomEvent.class);
-				handled = handlePluginEvent(transaction, event);
+			{	// プラグインイベント
+				try {
+					final RoomEvent event = mGson.fromJson(body.toString(), RoomEvent.class);
+					handled = handlePluginEvent(transaction, event);
+				} catch (final JsonSyntaxException e) {
+					reportError(new RuntimeException("wrong plugin event\n" + body));
+				}
 				break;
 			}
 			case "media":

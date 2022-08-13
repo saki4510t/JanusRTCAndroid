@@ -271,7 +271,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 	 */
 	@Override
 	public void createPeerConnectionFactory(
-		@Nullable final PeerConnectionFactory.Options options) {
+		@NonNull final PeerConnectionFactory.Options options) {
 
 		if (DEBUG) Log.v(TAG, "createPeerConnectionFactory:");
 		if (factory != null) {
@@ -287,9 +287,10 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 	 * @param videoCapturer
 	 */
 	@Override
-	public void createPeerConnection(final VideoSink localRender,
-		final List<VideoSink> remoteRenders,
-		final VideoCapturer videoCapturer) {
+	public void createPeerConnection(
+		@NonNull final VideoSink localRender,
+		@NonNull final List<VideoSink> remoteRenders,
+		@Nullable final VideoCapturer videoCapturer) {
 
 		if (DEBUG) Log.v(TAG, "createPeerConnection:");
 		this.localRender = localRender;
@@ -336,7 +337,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 	
 	private TimerTask mTimerTask;
 	@Override
-	public void enableStatsEvents(boolean enable, int periodMs) {
+	public void enableStatsEvents(final boolean enable, final int periodMs) {
 		if (DEBUG) Log.v(TAG, "enableStatsEvents:");
 		if (enable) {
 			cancelTimerTask();
@@ -415,7 +416,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 	}
 
 	@Override
-	public void connectToRoom(final RoomConnectionParameters connectionParameters) {
+	public void connectToRoom(@NonNull final RoomConnectionParameters connectionParameters) {
 		if (DEBUG) Log.v(TAG, "connectToRoom:");
 		executor.execute(() -> {
 			connectToRoomInternal();
@@ -465,7 +466,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 
 //================================================================================
 	private void createPeerConnectionFactoryInternal(
-		@Nullable final PeerConnectionFactory.Options options) {
+		@NonNull final PeerConnectionFactory.Options options) {
 	
 		if (DEBUG) Log.v(TAG, "createPeerConnectionFactoryInternal:");
 		isError = false;
@@ -1229,7 +1230,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 			executor.execute(() -> {
 				if (mConnectionState != ConnectionState.ERROR) {
 					mConnectionState = ConnectionState.ERROR;
-					mCallback.onChannelError(t.getMessage());
+					mCallback.onChannelError(t);
 				}
 			});
 		} catch (final Exception e) {
@@ -1503,7 +1504,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 
 		@Override
 		public void onJoin(@NonNull final VideoRoomPlugin plugin,
-			final RoomEvent room) {
+			@NonNull final RoomEvent room) {
 
 			if (DEBUG) Log.v(TAG, "onJoin:" + plugin);
 			if (plugin instanceof VideoRoomPlugin.Publisher) {
@@ -1550,7 +1551,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		
 		@Override
 		public void onRemoteIceCandidate(@NonNull final VideoRoomPlugin plugin,
-			final IceCandidate candidate) {
+			@NonNull final IceCandidate candidate) {
 
 			if (DEBUG) Log.v(TAG, "onRemoteIceCandidate:" + plugin
 				+ "\n" + candidate);
@@ -1577,7 +1578,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		
 		@Override
 		public void onLocalDescription(@NonNull final VideoRoomPlugin plugin,
-			final SessionDescription sdp) {
+			@NonNull final SessionDescription sdp) {
 
 			if (DEBUG) Log.v(TAG, "onLocalDescription:" + plugin);
 //			final long delta = System.currentTimeMillis() - callStartedTimeMs;
@@ -1606,7 +1607,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		
 		@Override
 		public void onRemoteDescription(@NonNull final VideoRoomPlugin plugin,
-			final SessionDescription sdp) {
+			@NonNull final SessionDescription sdp) {
 			
 			if (DEBUG) Log.v(TAG, "onRemoteDescription:" + plugin
 				+ "\n" + sdp);
@@ -1616,7 +1617,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		
 		@Override
 		public void onPeerConnectionStatsReady(@NonNull final VideoRoomPlugin plugin,
-			final RTCStatsReport report) {
+			@NonNull final RTCStatsReport report) {
 			executor.execute(() -> mCallback.onPeerConnectionStatsReady(
 					plugin instanceof VideoRoomPlugin.Publisher, report)
 			);
@@ -1710,7 +1711,9 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		final ResponseBody responseBody = response.body();
 		if (response.isSuccessful() && (responseBody != null)) {
 			try {
+				@NonNull
 				final JSONObject body = new JSONObject(responseBody.string());
+				@Nullable
 				final String transaction = body.optString("transaction");
 				final long sender = body.optLong("sender");
 				if (!TextUtils.isEmpty(transaction)) {
@@ -1720,6 +1723,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 						return;	// 処理済みの時はここで終了
 					}
 				}
+				@Nullable
 				final VideoRoomPlugin plugin = getPlugin(sender);
 				if (plugin != null) {
 					if (DEBUG) Log.v(TAG, "handlePluginEvent: try handle message on plugin specified by sender");

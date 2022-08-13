@@ -30,7 +30,7 @@ public interface JanusClient {
 	}
 
 	public interface ListCallback<T> extends ErrorCallback {
-		public void onSuccess(final T result);
+		public void onSuccess(@NonNull final T result);
 	}
 
 	/**
@@ -38,7 +38,7 @@ public interface JanusClient {
 	 * @param options
 	 */
 	public void createPeerConnectionFactory(
-		@Nullable final PeerConnectionFactory.Options options);
+		@NonNull final PeerConnectionFactory.Options options);
 	
 	/**
 	 * create PeerConnection
@@ -46,9 +46,10 @@ public interface JanusClient {
 	 * @param remoteRenders
 	 * @param videoCapturer
 	 */
-	public void createPeerConnection(final VideoSink localRender,
-		final List<VideoSink> remoteRenders,
-		final VideoCapturer videoCapturer);
+	public void createPeerConnection(
+		@NonNull final VideoSink localRender,
+		@NonNull final List<VideoSink> remoteRenders,
+		@Nullable final VideoCapturer videoCapturer);
 	
 	/**
 	 * temporary disable video transmitting/receiving

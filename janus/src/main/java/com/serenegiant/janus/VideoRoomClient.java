@@ -32,7 +32,7 @@ public interface VideoRoomClient extends JanusClient {
 	 * parameters. Once connection is established onConnectedToRoom()
 	 * callback with room parameters is invoked.
 	 */
-	public void connectToRoom(final RoomConnectionParameters connectionParameters);
+	public void connectToRoom(@NonNull final RoomConnectionParameters connectionParameters);
 
 	/**
 	 * Disconnect from room.

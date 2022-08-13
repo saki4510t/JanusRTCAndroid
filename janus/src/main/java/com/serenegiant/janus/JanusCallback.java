@@ -44,6 +44,7 @@ public interface JanusCallback extends Utils.BuilderCallback {
 	 * @param client
 	 * @return
 	 */
+	@NonNull
 	public List<PeerConnection.IceServer> getIceServers(@NonNull final JanusVideoRoomClient client);
 
 	/**
@@ -55,17 +56,17 @@ public interface JanusCallback extends Utils.BuilderCallback {
 	/**
 	 * Callback fired once remote SDP is received.
 	 */
-	public void onRemoteDescription(final SessionDescription sdp);
+	public void onRemoteDescription(@NonNull final SessionDescription sdp);
 	
 	/**
 	 * Callback fired once remote Ice candidate is received.
 	 */
-	public void onRemoteIceCandidate(final IceCandidate candidate);
+	public void onRemoteIceCandidate(@NonNull final IceCandidate candidate);
 	
 	/**
 	 * Callback fired once remote Ice candidate removals are received.
 	 */
-	public void onRemoteIceCandidatesRemoved(final IceCandidate[] candidates);
+	public void onRemoteIceCandidatesRemoved(@NonNull final IceCandidate[] candidates);
 
 	/**
 	 * Callback fired once connection is established (IceConnectionState is
@@ -83,14 +84,14 @@ public interface JanusCallback extends Utils.BuilderCallback {
 	 * Callback fired when someone enter to the same room
  	 * @param info
 	 */
-	public void onEnter(final PublisherInfo info);
+	public void onEnter(@NonNull final PublisherInfo info);
 	
 	/**
 	 * Callback fired when someone leaved from the same room
 	 * @param info
 	 * @param numUsers
 	 */
-	public void onLeave(final PublisherInfo info, final int numUsers);
+	public void onLeave(@NonNull final PublisherInfo info, final int numUsers);
 
 	/**
 	 * 新しいパブリッシャーが見つかったときのコールバック
@@ -126,7 +127,8 @@ public interface JanusCallback extends Utils.BuilderCallback {
 
 	/**
 	 * Callback fired once channel error happened.
+	 * @param t
 	 */
-	public void onChannelError(final String description);
+	public void onChannelError(@NonNull final Throwable t);
 
 }

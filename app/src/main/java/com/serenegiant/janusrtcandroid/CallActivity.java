@@ -561,13 +561,13 @@ public class CallActivity extends BaseActivity
 	}
 
 	@Override
-	public void onVideoScalingSwitch(ScalingType scalingType) {
+	public void onVideoScalingSwitch(final ScalingType scalingType) {
 		if (DEBUG) Log.v(TAG, "onVideoScalingSwitch:" + scalingType);
 		fullscreenRenderer.setScalingType(scalingType);
 	}
 
 	@Override
-	public void onCaptureFormatChange(int width, int height, int framerate) {
+	public void onCaptureFormatChange(final int width, final int height, final int framerate) {
 		if (DEBUG) Log.v(TAG, "onCaptureFormatChange:");
 		if (janusClient != null) {
 			janusClient.changeCaptureFormat(width, height, framerate);
@@ -830,7 +830,8 @@ public class CallActivity extends BaseActivity
 				}
 			});
 		}
-		
+
+		@NonNull
 		@Override
 		public List<PeerConnection.IceServer> getIceServers(
 			@NonNull final JanusVideoRoomClient client) {
@@ -883,12 +884,12 @@ public class CallActivity extends BaseActivity
 		}
 		
 		@Override
-		public void onEnter(final PublisherInfo info) {
+		public void onEnter(@NonNull final PublisherInfo info) {
 			if (DEBUG) Log.v(TAG, "onEnter:" + info);
 		}
 		
 		@Override
-		public void onLeave(final PublisherInfo info, final int numUsers) {
+		public void onLeave(@NonNull final PublisherInfo info, final int numUsers) {
 			if (DEBUG) Log.v(TAG, "onLeave:" + info + ",numUsers=" + numUsers);
 		}
 
@@ -898,7 +899,7 @@ public class CallActivity extends BaseActivity
 		}
 
 		@Override
-		public void onRemoteDescription(final SessionDescription sdp) {
+		public void onRemoteDescription(@NonNull final SessionDescription sdp) {
 			if (DEBUG) Log.v(TAG, "onRemoteDescription:");
 			final long delta = System.currentTimeMillis() - callStartedTimeMs;
 			runOnUiThread(new Runnable() {
@@ -914,7 +915,7 @@ public class CallActivity extends BaseActivity
 		}
 	
 		@Override
-		public void onRemoteIceCandidate(final IceCandidate candidate) {
+		public void onRemoteIceCandidate(@NonNull final IceCandidate candidate) {
 			if (DEBUG) Log.v(TAG, "onRemoteIceCandidate:");
 			runOnUiThread(new Runnable() {
 				@Override
@@ -927,7 +928,7 @@ public class CallActivity extends BaseActivity
 		}
 	
 		@Override
-		public void onRemoteIceCandidatesRemoved(final IceCandidate[] candidates) {
+		public void onRemoteIceCandidatesRemoved(@NonNull final IceCandidate[] candidates) {
 			if (DEBUG) Log.v(TAG, "onRemoteIceCandidatesRemoved:");
 			runOnUiThread(new Runnable() {
 				@Override
@@ -958,13 +959,13 @@ public class CallActivity extends BaseActivity
 		
 		@Override
 		public void onPeerConnectionStatsReady(final boolean isPublisher,
-			final RTCStatsReport report) {
+			@NonNull final RTCStatsReport report) {
 			Log.d(TAG, "onPeerConnectionStatsReady:isPublisher=" + isPublisher + ",stat=" + report);
 		}
 
 		@Override
-		public void onChannelError(final String description) {
-			reportError(description);
+		public void onChannelError(@NonNull final Throwable t) {
+			reportError(t.getMessage());
 		}
 
 	};

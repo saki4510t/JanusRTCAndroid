@@ -58,8 +58,13 @@ class Utils {
 		public Retrofit.Builder setupRetrofit(@NonNull final Retrofit.Builder builder);
 	}
 
+	/**
+	 * default implementation of BuilderCallback
+	 * do nothing additional
+	 */
 	public static final BuilderCallback DEFAULT_BUILDER_CALLBACK = new BuilderCallback() {
 		@NonNull
+		@Override
 		public OkHttpClient.Builder setupOkHttp(
 			@NonNull final OkHttpClient.Builder builder,
 			final boolean isLongPoll,
@@ -69,8 +74,8 @@ class Utils {
 			if (DEBUG) Log.v(TAG, "setupOkHttp:");
 			return builder;
 		}
-
 		@NonNull
+		@Override
 		public Retrofit.Builder setupRetrofit(@NonNull final Retrofit.Builder builder) {
 
 			if (DEBUG) Log.v(TAG, "setupRetrofit:");
