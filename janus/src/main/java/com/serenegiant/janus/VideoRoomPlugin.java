@@ -886,12 +886,14 @@ import retrofit2.Response;
 		/**
 		 * usually this is called from from long poll
 		 * 実際の処理は上位クラスの#onReceivedへ移譲
+		 * @param transaction
 		 * @param body
 		 * @return
 		 */
 		@Override
-		public boolean onReceived(@NonNull final String transaction,
-			 final JSONObject body) {
+		public boolean onReceived(
+			@NonNull final String transaction,
+			@NonNull final JSONObject body) {
 
 			return VideoRoomPlugin.this.onReceived(transaction, body);
 		}
@@ -899,10 +901,12 @@ import retrofit2.Response;
 	
 	/**
 	 * TransactionManagerからのコールバックの実際の処理
+	 * @param transaction
 	 * @param body
 	 * @return
 	 */
-	protected boolean onReceived(@NonNull final String transaction,
+	protected boolean onReceived(
+		@NonNull final String transaction,
 		@NonNull final JSONObject body) {
 
 		if (DEBUG) Log.v(TAG, "onReceived:");

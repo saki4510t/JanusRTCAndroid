@@ -1637,8 +1637,9 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 	private final TransactionManager.TransactionCallback mTransactionCallback
 		= new TransactionManager.TransactionCallback() {
 		@Override
-		public boolean onReceived(@NonNull final String transaction,
-			final JSONObject json) {
+		public boolean onReceived(
+			@NonNull final String transaction,
+			@NonNull final JSONObject json) {
 
 			if (DEBUG) Log.v(TAG, "onReceived:" + json);
 			return false;

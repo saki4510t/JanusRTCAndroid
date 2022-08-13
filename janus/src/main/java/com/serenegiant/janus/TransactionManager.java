@@ -44,7 +44,8 @@ public class TransactionManager {
 		 * @param length length of random string
 		 * @return
 		 */
-		public String get(int length) {
+		@NonNull
+		public String get(final int length) {
 			final StringBuilder sb = new StringBuilder(length);
 			for (int i = 0; i < length; i++) {
 				sb.append(str.charAt(rnd.nextInt(str.length())));
@@ -56,13 +57,15 @@ public class TransactionManager {
 	/**
 	 * statically hold RandomString instance to generate random strings for transaction id
 	 */
+	@NonNull
 	private static final RandomString mRandomString = new RandomString();
 	
 	/**
 	 * hold transaction id - TransactionCallback pair(s)
 	 */
+	@NonNull
 	private static final Map<String, TransactionCallback>
-		sTransactions = new HashMap<String, TransactionCallback>();
+		sTransactions = new HashMap<>();
 	
 	/**
 	 * get transaction and assign it to specific callback
@@ -70,7 +73,10 @@ public class TransactionManager {
 	 * @param callback
 	 * @return
 	 */
-	public static String get(int length, @Nullable final TransactionCallback callback) {
+	@NonNull
+	public static String get(
+		final int length, @Nullable final TransactionCallback callback) {
+
 		final String transaction = mRandomString.get(length);
 		if (callback != null) {
 			synchronized (sTransactions) {
@@ -90,8 +96,9 @@ public class TransactionManager {
 		 * @param body
 		 * @return true: handled, if return true, assignment will be removed.
 		 */
-		public boolean onReceived(@NonNull final String transaction,
-								  final JSONObject body);
+		public boolean onReceived(
+			@NonNull final String transaction,
+			@NonNull final JSONObject body);
 	}
 	
 	/**
@@ -119,7 +126,7 @@ public class TransactionManager {
 	 * remove specific transaction
  	 * @param transaction
 	 */
-	public static void removeTransaction(final String transaction) {
+	public static void removeTransaction(@NonNull final String transaction) {
 		synchronized (sTransactions) {
 			sTransactions.remove(transaction);
 		}
