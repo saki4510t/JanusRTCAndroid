@@ -40,6 +40,7 @@ public class Room extends Plugin {
 	 * EventRoom.plugindata.data.idの値
 	 * publisherとしての自id
 	 */
+	@Nullable
 	public Long publisherId;
 	
 	/**
@@ -95,18 +96,17 @@ public class Room extends Plugin {
 	 * @return
 	 */
 	@NonNull
-	public List<PublisherInfo> removePublisher(
-		@NonNull final Long id) {
-		
+	public List<PublisherInfo> removePublisher(final long id) {
 		synchronized (this.publishers) {
 			PublisherInfo found = null;
 			for (PublisherInfo info: publishers) {
-				if (id.equals(info.id)) {
+				if (id == info.id) {
 					found = info;
 					break;
 				}
 			}
 			if (found != null) {
+				// 見つかったPublisherを取り除く
 				publishers.remove(found);
 			}
 			return new ArrayList<>(this.publishers);
@@ -118,11 +118,11 @@ public class Room extends Plugin {
 	 * @param id
 	 * @param talking
 	 */
-	public void updatePublisher(@NonNull final Long id, final boolean talking) {
+	public void updatePublisher(final long id, final boolean talking) {
 		synchronized (this.publishers) {
 			PublisherInfo found = null;
 			for (PublisherInfo info: publishers) {
-				if (id.equals(info.id)) {
+				if (id == info.id) {
 					found = info;
 					break;
 				}
