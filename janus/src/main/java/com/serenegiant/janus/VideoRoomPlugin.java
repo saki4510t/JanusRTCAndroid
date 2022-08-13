@@ -377,11 +377,11 @@ import retrofit2.Response;
 	@Override
 	public void attach() {
 		if (DEBUG) Log.v(TAG, "attach:");
-		final Attach attach = new Attach(mSession,
+		final Attach attach = new Attach(getSession(),
 			"janus.plugin.videoroom",
 			null);
 		final Call<PluginInfo> call = mVideoRoomAPI.attachPlugin(
-			roomConnectionParameters.apiName, mSession.id(), attach);
+			roomConnectionParameters.apiName, sessionId(), attach);
 		addCall(call);
 		call.enqueue(new Callback<PluginInfo>() {
 			@Override
@@ -390,11 +390,11 @@ import retrofit2.Response;
 
 				if (response.isSuccessful() && (response.body() != null)) {
 					removeCall(call);
-					final PluginInfo plugin = response.body();
-					if ("success".equals(plugin.janus)) {
+					final PluginInfo info = response.body();
+					if ("success".equals(info.janus)) {
 						synchronized (mSync) {
-							mPlugin = plugin;
-							mRoom = new Room(mSession, mPlugin);
+							setInfo(info);
+							mRoom = new Room(getSession(), info);
 							mRoomState = RoomState.ATTACHED;
 						}
 						// プラグインにアタッチできた＼(^o^)／
@@ -448,7 +448,7 @@ import retrofit2.Response;
 			mTransactionCallback);
 		if (DEBUG) Log.v(TAG, "join:" + message);
 		final Call<RoomEvent> call = mVideoRoomAPI.join(roomConnectionParameters.apiName,
-			mSession.id(), mPlugin.id(), message);
+			sessionId(), pluginId(), message);
 		addCall(call);
 		try {
 			final Response<RoomEvent> response = call.execute();
@@ -482,7 +482,7 @@ import retrofit2.Response;
 	public void detach() {
 		if ((mRoomState == RoomState.CONNECTED)
 			|| (mRoomState == RoomState.ATTACHED)
-			|| (mPlugin != null)
+			|| attached()
 			|| (peerConnection != null)) {
 
 			mRoomState = RoomState.CLOSED;
@@ -490,8 +490,8 @@ import retrofit2.Response;
 			cancelCall();
 			final Call<Void> call = mVideoRoomAPI.detachPlugin(
 				roomConnectionParameters.apiName,
-				mSession.id(), mPlugin.id(),
-				new Detach(mSession, mTransactionCallback));
+				sessionId(), pluginId(),
+				new Detach(getSession(), mTransactionCallback));
 			addCall(call);
 			try {
 				call.execute();
@@ -502,7 +502,7 @@ import retrofit2.Response;
 			if (DEBUG) Log.d(TAG, "Closing peer connection.");
 			synchronized (mSync) {
 				mRoom = null;
-				mPlugin = null;
+				setInfo(null);
 			}
 			if (dataChannel != null) {
 				dataChannel.dispose();
@@ -536,8 +536,8 @@ import retrofit2.Response;
 		}
 		final Call<RoomEvent> call = mVideoRoomAPI.offer(
 			roomConnectionParameters.apiName,
-			mSession.id(),
-			mPlugin.id(),
+			sessionId(),
+			pluginId(),
 			new Message(roomCopy,
 				new Offer(true, true),
 				new JsepSdp("offer", sdp.description),
@@ -594,8 +594,8 @@ import retrofit2.Response;
 		}
 		final Call<ResponseBody> call = mVideoRoomAPI.send(
 			roomConnectionParameters.apiName,
-			mSession.id(),
-			mPlugin.id(),
+			sessionId(),
+			pluginId(),
 			new Message(roomCopy,
 				new Start(roomConnectionParameters.roomId),
 				new JsepSdp("answer", sdp.description),
@@ -615,7 +615,7 @@ import retrofit2.Response;
 
 	public void sendLocalIceCandidate(final IceCandidate candidate, final boolean isLoopback) {
 		if (DEBUG) Log.v(TAG, "sendLocalIceCandidate:");
-		if ((mSession == null) || (mPlugin == null)) return;
+		if (!attached()) return;
 
 		final Room roomCopy;
 		synchronized (mSync) {
@@ -629,15 +629,15 @@ import retrofit2.Response;
 		if (candidate != null) {
 			call = mVideoRoomAPI.trickle(
 				roomConnectionParameters.apiName,
-				mSession.id(),
-				mPlugin.id(),
+				sessionId(),
+				pluginId(),
 				new Trickle(roomCopy, candidate, mTransactionCallback)
 			);
 		} else {
 			call = mVideoRoomAPI.trickleCompleted(
 				roomConnectionParameters.apiName,
-				mSession.id(),
-				mPlugin.id(),
+				sessionId(),
+				pluginId(),
 				new TrickleCompleted(roomCopy, mTransactionCallback)
 			);
 		}
@@ -1297,7 +1297,7 @@ import retrofit2.Response;
 			cancelCall();
 			final Call<Configured> call = mVideoRoomAPI.configure(
 				roomConnectionParameters.apiName,
-				mSession.id(), mPlugin.id(),
+				sessionId(), pluginId(),
 				config);
 			addCall(call);
 			boolean result = false;
@@ -1411,7 +1411,7 @@ import retrofit2.Response;
 			cancelCall();
 			final Call<Configured> call = mVideoRoomAPI.configure(
 				roomConnectionParameters.apiName,
-				mSession.id(), mPlugin.id(),
+				sessionId(), pluginId(),
 				config);
 			addCall(call);
 			boolean result = false;

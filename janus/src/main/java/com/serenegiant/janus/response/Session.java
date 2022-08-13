@@ -42,7 +42,7 @@ public class Session {
 	}
 	
 	public long id() {
-		return data != null ? data.id : 0;
+		return data != null ? data.id : 0L;
 	}
 
 	@NonNull

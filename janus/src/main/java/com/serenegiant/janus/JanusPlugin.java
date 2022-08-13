@@ -23,6 +23,7 @@ import com.serenegiant.janus.response.PluginInfo;
 import com.serenegiant.janus.response.Session;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /*package*/ abstract class JanusPlugin {
 	private static final boolean DEBUG = false;	// set false on production
@@ -42,11 +43,26 @@ import androidx.annotation.NonNull;
 	}
 
 	@NonNull
-	protected final Session mSession;
-	protected PluginInfo mPlugin;
+	private final Session mSession;
+	@Nullable
+	private PluginInfo mInfo;
 
 	protected JanusPlugin(@NonNull final Session session) {
 		mSession = session;
+	}
+
+	@NonNull
+	Session getSession() {
+		return mSession;
+	}
+
+	@Nullable
+	PluginInfo getInfo() {
+		return mInfo;
+	}
+
+	void setInfo(@Nullable PluginInfo info) {
+		mInfo = info;
 	}
 
 	/**
@@ -61,8 +77,16 @@ import androidx.annotation.NonNull;
 	 * プラグインIDを取得
 	 * @return
 	 */
-	long id() {
-		return mPlugin != null ? mPlugin.id() : 0;
+	long pluginId() {
+		return mInfo != null ? mInfo.id() : 0L;
+	}
+
+	/**
+	 * プラグインと接続中かどうか
+	 * @return
+	 */
+	boolean attached() {
+		return (mInfo != null);
 	}
 
 	/**

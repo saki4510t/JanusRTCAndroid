@@ -1171,8 +1171,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 	}
 
 	private void removePlugin(@NonNull final VideoRoomPlugin plugin) {
-		final long key = plugin.id();
-		
+		final long key = plugin.pluginId();
 		executor.execute(() -> {
 			synchronized (mAttachedPlugins) {
 				mAttachedPlugins.remove(key);
@@ -1489,7 +1488,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		public void onAttach(@NonNull final JanusPlugin plugin) {
 			if (DEBUG) Log.v(TAG, "onAttach:" + plugin);
 			if (plugin instanceof VideoRoomPlugin) {
-				addPlugin(plugin.id(), (VideoRoomPlugin) plugin);
+				addPlugin(plugin.pluginId(), (VideoRoomPlugin) plugin);
 			}
 		}
 
