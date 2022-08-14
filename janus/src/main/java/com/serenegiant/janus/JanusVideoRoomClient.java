@@ -774,7 +774,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		final VideoRoomPlugin.Publisher publisher
 			= new VideoRoomPlugin.Publisher(
 				mJanus, mSession,
-			mVideoRoomCallback,
+				mVideoRoomCallback,
 				peerConnectionParameters,
 				roomConnectionParameters,
 				sdpMediaConstraints,
