@@ -43,7 +43,6 @@ public class PeerConnectionParameters {
 	public final boolean disableBuiltInNS;
 	public final boolean disableWebRtcAGCAndHPF;
 	public final boolean enableRtcEventLog;
-	public final boolean useLegacyAudioDevice;
 	public final DataChannelParameters dataChannelParameters;
 	
 	public PeerConnectionParameters(boolean videoCallEnabled, boolean loopback, boolean tracing,
@@ -53,7 +52,7 @@ public class PeerConnectionParameters {
 		boolean noAudioProcessing, boolean aecDump, boolean saveInputAudioToFile,
 		boolean useOpenSLES, boolean disableBuiltInAEC, boolean disableBuiltInAGC,
 		boolean disableBuiltInNS, boolean disableWebRtcAGCAndHPF, boolean enableRtcEventLog,
-		boolean useLegacyAudioDevice, DataChannelParameters dataChannelParameters) {
+		DataChannelParameters dataChannelParameters) {
 
 		this.videoCallEnabled = videoCallEnabled;
 		this.loopback = loopback;
@@ -78,7 +77,6 @@ public class PeerConnectionParameters {
 		this.disableBuiltInNS = disableBuiltInNS;
 		this.disableWebRtcAGCAndHPF = disableWebRtcAGCAndHPF;
 		this.enableRtcEventLog = enableRtcEventLog;
-		this.useLegacyAudioDevice = useLegacyAudioDevice;
 		this.dataChannelParameters = dataChannelParameters;
 	}
 

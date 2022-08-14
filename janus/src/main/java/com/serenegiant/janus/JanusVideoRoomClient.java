@@ -492,10 +492,9 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 				Log.e(TAG, "Recording of input audio is not supported for OpenSL ES");
 			}
 		}
-		
-		final AudioDeviceModule adm = peerConnectionParameters.useLegacyAudioDevice
-			? createJavaAudioDevice() // LegacyAudioDeviceModuleは廃止になってしまった createLegacyAudioDevice()
-			: createJavaAudioDevice();
+
+		// LegacyAudioDeviceModuleは廃止になってしまった createLegacyAudioDevice()
+		final AudioDeviceModule adm = createJavaAudioDevice();
 		
 		// Create peer connection factory.
 		if (options != null && DEBUG) {
