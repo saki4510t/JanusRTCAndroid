@@ -76,7 +76,7 @@ import retrofit2.Response;
 /*package*/ abstract class VideoRoomPlugin extends JanusPlugin
 	implements PeerConnection.Observer {
 
-	private static final boolean DEBUG = true;	// set false on production
+	private static final boolean DEBUG = false;	// set false on production
 	
 	/**
 	 * callback interface for JanusPlugin
