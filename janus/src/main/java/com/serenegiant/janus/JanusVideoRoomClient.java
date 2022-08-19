@@ -108,6 +108,7 @@ import static com.serenegiant.janus.Utils.*;
  *          ただし、1つのsubscriberで複数の相手からのストリーム(マルチストリーム)が
  *          できる感じ(今は1つの相手につき1つのsubscriberになっているけど)
  * FIXME 動的にレイアウトを変更するかListView/RecyclerViewに入れるなどしてもう少し多い相手との通話できるようにする
+ * FIXME RxJavaを使うように変える
  */
 public class JanusVideoRoomClient implements VideoRoomClient {
 	private static final boolean DEBUG = false;	// set false on production

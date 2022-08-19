@@ -35,6 +35,7 @@ import retrofit2.http.Path;
 
 /**
  * API interface of janus-gateway over http://https
+ * FIXME RxJavaを使うように変える
  */
 public interface JanusAPI {
 	/**
