@@ -40,6 +40,7 @@ import org.appspot.apprtc.AppRTCAudioManager;
 import org.appspot.apprtc.AppRTCAudioManager.AudioDevice;
 import org.appspot.apprtc.AppRTCAudioManager.AudioManagerEvents;
 
+import com.serenegiant.janus.ProxyVideoSink;
 import com.serenegiant.janus.VideoRoomClient;
 import com.serenegiant.janus.response.videoroom.PublisherInfo;
 
@@ -64,7 +65,6 @@ import org.webrtc.SessionDescription;
 import org.webrtc.SurfaceViewRenderer;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoFileRenderer;
-import org.webrtc.VideoFrame;
 import org.webrtc.VideoSink;
 
 import java.io.IOException;
@@ -151,33 +151,20 @@ public class CallActivity extends BaseActivity
 	// Peer connection statistics callback period in ms.
 	private static final int STAT_CALLBACK_PERIOD = 1000;
 
-	private static class ProxyVideoSink implements VideoSink {
-		private VideoSink target;
-
-		@Override
-		synchronized public void onFrame(final VideoFrame frame) {
-			if (target == null) {
-				if (DEBUG) Logging.d(TAG, "ProxyVideoSink: Dropping frame in proxy because target is null.");
-				return;
-			}
-
-			target.onFrame(frame);
-		}
-
-		synchronized public void setTarget(final VideoSink target) {
-			if (DEBUG) Logging.d(TAG, "ProxyVideoSink#setTarget:" + target);
-			this.target = target;
-		}
-	}
-
-	private final ProxyVideoSink remoteProxyRenderer = new ProxyVideoSink();
+	@NonNull
+	private final ProxyVideoSink remoteProxyRenderer1 = new ProxyVideoSink();
+	@NonNull
+	private final ProxyVideoSink remoteProxyRenderer2 = new ProxyVideoSink();
+	@NonNull
 	private final ProxyVideoSink localProxyVideoSink = new ProxyVideoSink();
 	@Nullable
 	private VideoRoomClient janusClient;
 	@Nullable
 	private AppRTCAudioManager audioManager = null;
 	@Nullable
-	private SurfaceViewRenderer pipRenderer;
+	private SurfaceViewRenderer pipRenderer1;
+	@Nullable
+	private SurfaceViewRenderer pipRenderer2;
 	@Nullable
 	private SurfaceViewRenderer fullscreenRenderer;
 	@Nullable
