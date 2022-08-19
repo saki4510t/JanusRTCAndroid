@@ -19,10 +19,6 @@ package com.serenegiant.janus;
  *
 */
 
-import com.serenegiant.janus.request.Attach;
-import com.serenegiant.janus.request.CreateSession;
-import com.serenegiant.janus.request.DestroySession;
-import com.serenegiant.janus.request.Detach;
 import com.serenegiant.janus.request.Hangup;
 import com.serenegiant.janus.request.Message;
 import com.serenegiant.janus.request.Trickle;
@@ -35,9 +31,6 @@ import com.serenegiant.janus.request.videoroom.List;
 import com.serenegiant.janus.response.videoroom.Kicked;
 import com.serenegiant.janus.response.videoroom.ListResponse;
 import com.serenegiant.janus.response.videoroom.RoomEvent;
-import com.serenegiant.janus.response.PluginInfo;
-import com.serenegiant.janus.response.ServerInfo;
-import com.serenegiant.janus.response.Session;
 import com.serenegiant.janus.response.videoroom.RoomInfo;
 
 import okhttp3.ResponseBody;
@@ -49,74 +42,8 @@ import retrofit2.http.Path;
 
 /**
  * API interface of videoroom plugin on janus-gateway over http://https
- * retrofit2でエンドポイント定義のインターフェースを継承していいのかどうかわからないので
- * Janusインターフェースを継承せずに直接ここで定義
  */
-public interface VideoRoomAPI /*extends JanusAPI*/ {
-	/**
-	 * janus-gatewayサーバーの情報を取得
-	 * @param api
-	 * @return
-	 */
-	@GET("{api}/info")
-	public Call<ServerInfo> getInfo(@Path("api") final String api);
-
-	/**
-	 * セッションを作成
-	 * @param api
-	 * @param create
-	 * @return
-	 */
-	@POST("{api}")
-	public Call<Session> createSession(
-		@Path("api") final String api,
-		@Body final CreateSession create);
-
-	/**
-	 * 指定したプラグインへ接続
-	 * @param api
-	 * @param sessionId
-	 * @param attach
-	 * @return
-	 */
-	@POST("{api}/{session_id}")
-	public Call<PluginInfo> attachPlugin(
-		@Path("api") final String api,
-		@Path("session_id") final long sessionId,
-		@Body final Attach attach);
-
-	/**
-	 * 指定したプラグインから切断
-	 * これ自体はプラグインエンドポイントだけど#attachPluginの対なのでセッションエンドポイントとしてここに入れておく
-	 * @param api
-	 * @param sessionId
-	 * @param pluginId
-	 * @param detach
-	 * @return
-	 */
-	@POST("{api}/{session_id}/{plugin_id}")
-	public Call<Void> detachPlugin(
-		@Path("api") final String api,
-		@Path("session_id") final long sessionId,
-		@Path("plugin_id") final long pluginId,
-		@Body final Detach detach);
-
-	/**
-	 * セッションを破棄
-	 * @param api
-	 * @param sessionId
-	 * @param destroy
-	 * @return
-	 */
-	@POST("{api}/{session_id}")
-	public Call<Void> destroySession(
-		@Path("api") final String api,
-		@Path("session_id") final long sessionId,
-		@Body final DestroySession destroy);
-
-//--------------------------------------------------------------------------------
-// ここから下がvideoroomプラグインのエンドポイント定義
-//--------------------------------------------------------------------------------
+public interface VideoRoomAPI extends JanusAPI {
 	@GET("{api}/{session_id}/{plugin_id}")
 	public Call<ListResponse<RoomInfo>> getRoomList(
 		@Path("api") final String api,
