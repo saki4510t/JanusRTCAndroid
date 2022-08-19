@@ -96,6 +96,8 @@ public interface JanusCallback extends Utils.BuilderCallback {
 	/**
 	 * 新しいパブリッシャーが見つかったときのコールバック
 	 * 返り値によってそのパブリッシャーを受け入れる(通話する)かどうかを判断する
+	 * このメソッドがfalseを返した場合subscriberが生成されないので
+	 * onEnterもonLeaveも呼び出されない
 	 * @param info
 	 * @return true: 受け入れる, false: 受け入れない
 	 */

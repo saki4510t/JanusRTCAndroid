@@ -24,15 +24,26 @@ public class RoomConnectionParameters {
 	/** ルームID */
 	public final long roomId;
 	public final boolean loopback;
+	@Nullable
 	public final String urlParameters;
 	@Nullable
 	public final String userName;
 	@Nullable
 	public final String displayName;
-	
+
+	/**
+	 * コンストラクタ
+	 * @param roomUrl
+	 * @param apiName
+	 * @param roomId
+	 * @param loopback
+	 * @param urlParameters
+	 * @param userName nullまたは空文字列ならBuild.MODELを使う
+	 * @param displayName  nullまたは空文字列ならBuild.MODELを使う
+	 */
 	public RoomConnectionParameters(
 		@Nullable final String roomUrl, @NonNull final String apiName,
-		final long roomId, final boolean loopback, final String urlParameters,
+		final long roomId, final boolean loopback, @Nullable final String urlParameters,
 		@Nullable final String userName, @Nullable final String displayName) {
 		this.roomUrl = roomUrl;
 		this.apiName = apiName;
@@ -42,7 +53,16 @@ public class RoomConnectionParameters {
 		this.userName = userName;
 		this.displayName = displayName;
 	}
-	
+
+	/**
+	 * コンストラクタ
+	 * urlParameters, userName, displayNameはnullなので
+	 * userNameとdisplayNameはBuild.MODELを使う
+	 * @param roomUrl
+	 * @param apiName
+	 * @param roomId
+	 * @param loopback
+	 */
 	public RoomConnectionParameters(
 		@Nullable final String roomUrl, @NonNull final String apiName,
 		final long roomId, boolean loopback) {
