@@ -18,8 +18,6 @@ import org.webrtc.PeerConnectionFactory;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoSink;
 
-import java.util.List;
-
 /**
  * com.serenegiant.janus.JanusClient is the interface representing an AppRTC client.
  */
@@ -43,12 +41,10 @@ public interface JanusClient {
 	/**
 	 * create PeerConnection
 	 * @param localRender
-	 * @param remoteRenders
 	 * @param videoCapturer
 	 */
 	public void createPeerConnection(
 		@NonNull final VideoSink localRender,
-		@NonNull final List<VideoSink> remoteRenders,
 		@Nullable final VideoCapturer videoCapturer);
 	
 	/**

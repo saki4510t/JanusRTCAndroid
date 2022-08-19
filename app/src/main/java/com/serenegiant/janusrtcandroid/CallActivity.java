@@ -69,6 +69,7 @@ import org.webrtc.VideoSink;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -184,13 +185,12 @@ public class CallActivity extends BaseActivity
 	private boolean screenCaptureEnabled = false;
 	private static Intent mediaProjectionPermissionResultData;
 	private static int mediaProjectionPermissionResultCode;
-	// True if local view is in the fullscreen renderer.
-	private boolean isSwappedFeeds;
-
+	private int currentFullIx;	// 0: 自分, 1: リモート1, 2: リモート2
 	// Controls
 	private CallFragment callFragment;
 	private HudFragment hudFragment;
 	private CpuMonitor cpuMonitor;
+	private int mNumUsers;
 
 	@Override
 	// TODO(bugs.webrtc.org/8580): LayoutParams.FLAG_TURN_SCREEN_ON and
@@ -209,18 +209,26 @@ public class CallActivity extends BaseActivity
 		setContentView(R.layout.activity_call);
 
 		iceConnected = false;
+		currentFullIx = -1;
 
 		// Create UI controls.
-		pipRenderer = findViewById(R.id.pip_video_view);
+		pipRenderer1 = findViewById(R.id.pip_video_view1);
+		pipRenderer2 = findViewById(R.id.pip_video_view2);
 		fullscreenRenderer = findViewById(R.id.fullscreen_video_view);
 		callFragment = new CallFragment();
 		hudFragment = new HudFragment();
 
 		// Swap feeds on pip view click.
-		pipRenderer.setOnClickListener(new View.OnClickListener() {
+		pipRenderer1.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-				setSwappedFeeds(!isSwappedFeeds);
+				setSwappedFeeds(1);
+			}
+		});
+		pipRenderer2.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				setSwappedFeeds(2);
 			}
 		});
 
@@ -232,37 +240,44 @@ public class CallActivity extends BaseActivity
 			}
 		});
 
-		remoteRenderers.add(remoteProxyRenderer);
+		remoteRenderers.add(remoteProxyRenderer1);
+		remoteRenderers.add(remoteProxyRenderer2);
 
 		final Intent intent = getIntent();
 		final EglBase eglBase = EglBase.create();
 
 		// Create video renderers.
-		pipRenderer.init(eglBase.getEglBaseContext(), null);
-		pipRenderer.setScalingType(ScalingType.SCALE_ASPECT_FIT);
+		pipRenderer1.init(eglBase.getEglBaseContext(), null);
+		pipRenderer1.setScalingType(ScalingType.SCALE_ASPECT_FIT);
+		pipRenderer2.init(eglBase.getEglBaseContext(), null);
+		pipRenderer2.setScalingType(ScalingType.SCALE_ASPECT_FIT);
 		final String saveRemoteVideoToFile = intent.getStringExtra(EXTRA_SAVE_REMOTE_VIDEO_TO_FILE);
 
-		// When saveRemoteVideoToFile is set we save the video from the remote to a file.
-		if (saveRemoteVideoToFile != null) {
-			int videoOutWidth = intent.getIntExtra(EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_WIDTH, 0);
-			int videoOutHeight = intent.getIntExtra(EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_HEIGHT, 0);
-			try {
-				videoFileRenderer = new VideoFileRenderer(
-					saveRemoteVideoToFile, videoOutWidth, videoOutHeight, eglBase.getEglBaseContext());
-				remoteRenderers.add(videoFileRenderer);
-			} catch (IOException e) {
-				throw new RuntimeException(
-					"Failed to open video file for output: " + saveRemoteVideoToFile, e);
-			}
-		}
+		// FIXME リモート毎に割り振らないといけないのでここではセットしない
+		//       必要ならgetRemoteVideoSinkで割り振る
+//		// When saveRemoteVideoToFile is set we save the video from the remote to a file.
+//		if (saveRemoteVideoToFile != null) {
+//			int videoOutWidth = intent.getIntExtra(EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_WIDTH, 0);
+//			int videoOutHeight = intent.getIntExtra(EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_HEIGHT, 0);
+//			try {
+//				videoFileRenderer = new VideoFileRenderer(
+//					saveRemoteVideoToFile, videoOutWidth, videoOutHeight, eglBase.getEglBaseContext());
+//				remoteRenderers.add(videoFileRenderer);
+//			} catch (IOException e) {
+//				throw new RuntimeException(
+//					"Failed to open video file for output: " + saveRemoteVideoToFile, e);
+//			}
+//		}
 		fullscreenRenderer.init(eglBase.getEglBaseContext(), null);
 		fullscreenRenderer.setScalingType(ScalingType.SCALE_ASPECT_FILL);
 
-		pipRenderer.setZOrderMediaOverlay(true);
-		pipRenderer.setEnableHardwareScaler(true /* enabled */);
+		pipRenderer1.setZOrderMediaOverlay(true);
+		pipRenderer1.setEnableHardwareScaler(true /* enabled */);
+		pipRenderer2.setZOrderMediaOverlay(true);
+		pipRenderer2.setEnableHardwareScaler(true /* enabled */);
 		fullscreenRenderer.setEnableHardwareScaler(false /* enabled */);
 		// Start with local feed in fullscreen and swap it to the pip when the call is connected.
-		setSwappedFeeds(true /* isSwappedFeeds */);
+		setSwappedFeeds(0);
 
 		// Check for mandatory permissions.
 		for (final String permission : MANDATORY_PERMISSIONS) {
@@ -629,7 +644,7 @@ public class CallActivity extends BaseActivity
 		}
 		// Enable statistics callback.
 		janusClient.enableStatsEvents(true, STAT_CALLBACK_PERIOD);
-		setSwappedFeeds(false /* isSwappedFeeds */);
+		setSwappedFeeds(1);
 	}
 
 	// This method is called when the audio manager reports audio device change,
@@ -645,11 +660,16 @@ public class CallActivity extends BaseActivity
 	private void disconnect() {
 		if (DEBUG) Log.v(TAG, "disconnect:");
 		activityRunning = false;
-		remoteProxyRenderer.setTarget(null);
+		remoteProxyRenderer1.setTarget(null);
+		remoteProxyRenderer2.setTarget(null);
 		localProxyVideoSink.setTarget(null);
-		if (pipRenderer != null) {
-			pipRenderer.release();
-			pipRenderer = null;
+		if (pipRenderer1 != null) {
+			pipRenderer1.release();
+			pipRenderer1 = null;
+		}
+		if (pipRenderer2 != null) {
+			pipRenderer2.release();
+			pipRenderer2 = null;
 		}
 		if (videoFileRenderer != null) {
 			videoFileRenderer.release();
@@ -753,13 +773,43 @@ public class CallActivity extends BaseActivity
 		return videoCapturer;
 	}
 
-	private void setSwappedFeeds(boolean isSwappedFeeds) {
-		if (DEBUG) Log.v(TAG, "setSwappedFeeds:" + isSwappedFeeds);
-		this.isSwappedFeeds = isSwappedFeeds;
-		localProxyVideoSink.setTarget(isSwappedFeeds ? fullscreenRenderer : pipRenderer);
-		remoteProxyRenderer.setTarget(isSwappedFeeds ? pipRenderer : fullscreenRenderer);
-		fullscreenRenderer.setMirror(isSwappedFeeds);
-		pipRenderer.setMirror(!isSwappedFeeds);
+	/**
+	 * 映像表示を切り替え
+	 * @param feedIx メイン表示 0: 自分, 1: リモート1, 2: リモート2
+	 */
+	private void setSwappedFeeds(final int feedIx) {
+		if (DEBUG) Log.v(TAG, "setSwappedFeeds:" + feedIx);
+
+		if (currentFullIx != feedIx) {
+			currentFullIx = feedIx;
+			switch (feedIx) {
+			case 1:
+				localProxyVideoSink.setTarget(pipRenderer1);
+				remoteProxyRenderer1.setTarget(fullscreenRenderer);
+				remoteProxyRenderer2.setTarget(pipRenderer2);
+				fullscreenRenderer.setMirror(false);
+				pipRenderer1.setMirror(true);
+				pipRenderer2.setMirror(false);
+				break;
+			case 2:
+				localProxyVideoSink.setTarget(pipRenderer2);
+				remoteProxyRenderer1.setTarget(pipRenderer1);
+				remoteProxyRenderer2.setTarget(fullscreenRenderer);
+				fullscreenRenderer.setMirror(true);
+				pipRenderer1.setMirror(false);
+				pipRenderer2.setMirror(true);
+				break;
+			case 0:
+				localProxyVideoSink.setTarget(fullscreenRenderer);
+				remoteProxyRenderer1.setTarget(pipRenderer1);
+				remoteProxyRenderer2.setTarget(pipRenderer2);
+				fullscreenRenderer.setMirror(true);
+				pipRenderer1.setMirror(false);
+				pipRenderer2.setMirror(false);
+			default:
+				break;
+			}
+		}
 	}
 
 	// -----Implementation of com.serenegiant.janus.JanusClient.AppRTCSignalingEvents ---------------
@@ -810,7 +860,7 @@ public class CallActivity extends BaseActivity
 						videoCapturer = createVideoCapturer();
 					}
 					client.createPeerConnection(
-						localProxyVideoSink, remoteRenderers, videoCapturer);
+						localProxyVideoSink, videoCapturer);
 				}
 			});
 		}
@@ -868,18 +918,32 @@ public class CallActivity extends BaseActivity
 		}
 		
 		@Override
+		public boolean onNewPublisher(@NonNull final PublisherInfo info) {
+			return true;	// true: 受け入れる(通話する)
+		}
+
+		@Override
 		public void onEnter(@NonNull final PublisherInfo info) {
 			if (DEBUG) Log.v(TAG, "onEnter:" + info);
+			mNumUsers++;
 		}
 		
 		@Override
 		public void onLeave(@NonNull final PublisherInfo info, final int numUsers) {
-			if (DEBUG) Log.v(TAG, "onLeave:" + info + ",numUsers=" + numUsers);
+			mNumUsers--;
+			if (DEBUG) Log.v(TAG, "onLeave:" + info + ",numUsers=" + numUsers + "/" + mNumUsers);
 		}
 
-		@Override
-		public boolean onNewPublisher(@NonNull final PublisherInfo info) {
-			return true;	// true: 受け入れる(通話する)
+		@NonNull
+		public List<VideoSink> getRemoteVideoSink(@NonNull final PublisherInfo info) {
+			if (DEBUG) Log.v(TAG, "getRemoteVideoSink:" + info);
+			if (mNumUsers <= remoteRenderers.size()) {
+				if (DEBUG) Log.v(TAG, "getRemoteVideoSink:add remote video sink");
+				return remoteRenderers.subList(mNumUsers - 1, mNumUsers);
+			} else {
+				if (DEBUG) Log.v(TAG, "getRemoteVideoSink:out of range");
+				return Collections.emptyList();
+			}
 		}
 
 		@Override

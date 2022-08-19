@@ -84,6 +84,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -101,10 +102,12 @@ import static com.serenegiant.janus.Utils.*;
 
 /**
  * Janus-gatewayへアクセスするためのヘルパークラス
+ * とりあえず自分を含めて3人での通話に対応
  * FIXME 今はpublisherとsubscriberで別々のPeerConnectionを生成しているのを1つにする
  *       => 調べた限りではpublisherとsubscriberは別々のPeerConnectionにせざるをえない感じ
  *          ただし、1つのsubscriberで複数の相手からのストリーム(マルチストリーム)が
  *          できる感じ(今は1つの相手につき1つのsubscriberになっているけど)
+ * FIXME 動的にレイアウトを変更するかListView/RecyclerViewに入れるなどしてもう少し多い相手との通話できるようにする
  */
 public class JanusVideoRoomClient implements VideoRoomClient {
 	private static final boolean DEBUG = false;	// set false on production
@@ -172,12 +175,10 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 	private AudioTrack localAudioTrack;
 	private MediaStream mLocalStream;
 
-	// リモート映像・音声
-	@Nullable
-	private List<VideoSink> remoteSinks;
-	@Nullable
-	private VideoTrack remoteVideoTrack;
-	private MediaStream mRemoteStream;
+	/**
+	 * リモート映像・音声のpluginのfeedIdとVideoSinkHolderのマップ
+	 */
+	private final Map<Long, VideoSinkHolder> remoteVideoSinkMap = new HashMap<>();
 //--------------------------------------------------------------------------------
 
 	private VideoRoomAPI mJanus;
@@ -286,18 +287,15 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 	/**
 	 * Publisher用のPeerConnectionを生成する
 	 * @param localRender
-	 * @param remoteRenders
 	 * @param videoCapturer
 	 */
 	@Override
 	public void createPeerConnection(
 		@NonNull final VideoSink localRender,
-		@NonNull final List<VideoSink> remoteRenders,
 		@Nullable final VideoCapturer videoCapturer) {
 
 		if (DEBUG) Log.v(TAG, "createPeerConnection:");
 		this.localRender = localRender;
-		this.remoteSinks = remoteRenders;
 		this.videoCapturer = videoCapturer;
 		executor.execute(() -> {
 			try {
@@ -398,8 +396,8 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 			if (localVideoTrack != null) {
 				localVideoTrack.setEnabled(renderVideo);
 			}
-			if (remoteVideoTrack != null) {
-				remoteVideoTrack.setEnabled(renderVideo);
+			for (VideoSinkHolder holder: remoteVideoSinkMap.values()) {
+				holder.setEnabled(renderVideo);
 			}
 		});
 	}
@@ -683,7 +681,6 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 
 	private boolean isVideoCallEnabled() {
 		return peerConnectionParameters.videoCallEnabled
-			&& (remoteSinks != null)
 			&& (videoCapturer != null);
 	}
 
@@ -940,14 +937,24 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 			if (isVideoCallEnabled()) {
 				// We can add the renderers right away because we don't need to wait for an
 				// answer to get the remote track.
-				remoteVideoTrack = getRemoteVideoTrack(peerConnection);
+				final VideoTrack remoteVideoTrack = getRemoteVideoTrack(peerConnection);
 				if (remoteVideoTrack != null) {
-					remoteVideoTrack.setEnabled(renderVideo);
-					for (final VideoSink remoteSink : remoteSinks) {
-						remoteVideoTrack.addSink(remoteSink);
+					synchronized (remoteVideoSinkMap) {
+						VideoSinkHolder holder = getHolder(info.id);
+						if (holder == null) {
+							final List<VideoSink> remoteVideoSinks = mCallback.getRemoteVideoSink(info);
+							if (!remoteVideoSinks.isEmpty()) {
+								remoteVideoTrack.setEnabled(renderVideo);
+								Log.i(TAG, "createSubscriber: create VideoSinkHolder");
+								holder = new VideoSinkHolder(info.id, remoteVideoTrack, remoteVideoSinks);
+								remoteVideoSinkMap.put(info.id, holder);
+							} else if (DEBUG) {
+								Log.v(TAG, "createSubscriber:remote video sinks are empty");
+							}
+						} else {
+							Log.w(TAG, "createSubscriber: unexpectedly video sink holder is already exists!");
+						}
 					}
-				} else {
-					Log.w(TAG, "createSubscriber: remoteVideoTrack is null");
 				}
 			}
 		} else {
@@ -1104,24 +1111,52 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		return mWeakContext.get();
 	}
 
-	private void onAddRemoteStream(final MediaStream remoteStream) {
-		if (DEBUG) Log.v(TAG, "onAddRemoteStream:remoteVideoTrack=" + remoteVideoTrack);
+	private void onAddRemoteStream(
+		@NonNull final PublisherInfo info,
+		@NonNull final MediaStream remoteStream) {
+
+		if (DEBUG) Log.v(TAG, "onAddRemoteStream:" + getHolder(info.id));
 		if (isVideoCallEnabled()
 			&& (remoteStream != null) && !remoteStream.videoTracks.isEmpty()) {
 
-			if (remoteVideoTrack == null) {
-				mRemoteStream = remoteStream;
-				final VideoTrack videoTrack = remoteStream.videoTracks.get(0);
-				if (videoTrack != null) {
-					for (VideoSink remoteSink : remoteSinks) {
-						if (DEBUG) Log.v(TAG, "onAddRemoteStream:add " + remoteSink);
-						videoTrack.addSink(remoteSink);
+			final VideoTrack remoteVideoTrack = remoteStream.videoTracks.get(0);
+			VideoSinkHolder holder;
+			synchronized (remoteVideoSinkMap) {
+				holder = getHolder(info.id);
+				if (holder == null) {
+					if (remoteVideoTrack != null) {
+						final List<VideoSink> remoteVideoSinks = mCallback.getRemoteVideoSink(info);
+						if (!remoteVideoSinks.isEmpty()) {
+							remoteVideoTrack.setEnabled(renderVideo);
+							if (DEBUG) Log.v(TAG, "onAddRemoteStream:create VideoSinkHolder");
+							holder = new VideoSinkHolder(info.id, remoteVideoTrack, remoteVideoSinks);
+							remoteVideoSinkMap.put(info.id, holder);
+						} else if (DEBUG) {
+							Log.v(TAG, "onAddRemoteStream:remote video sinks are empty");
+						}
 					}
-					videoTrack.setEnabled(renderVideo);
-					remoteVideoTrack = videoTrack;
 				}
-			} else if (DEBUG) Log.v(TAG, "onAddRemoteStream:already add remote renderers");
+			}
+			if (holder != null) {
+				holder.setMediaStream(remoteStream);
+			}
 		}
+	}
+
+	private void onRemoveRemoteStream(
+		@NonNull final PublisherInfo info,
+		@NonNull final MediaStream remoteStream) {
+
+		if (DEBUG) Log.v(TAG, "onAddRemoteStream:" + getHolder(info.id));
+		synchronized (remoteVideoSinkMap) {
+			final VideoSinkHolder removed = remoteVideoSinkMap.remove(info.id);
+			if (DEBUG) Log.v(TAG, "onAddRemoteStream:removed=" + removed);
+		}
+	}
+
+	@Nullable
+	private VideoSinkHolder getHolder(final long feedId) {
+		return remoteVideoSinkMap.containsKey(feedId) ? remoteVideoSinkMap.get(feedId) : null;
 	}
 
 	/**
@@ -1397,7 +1432,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		TransactionManager.clearTransactions();
 		mJanus = null;
 		mLocalStream = null;
-		mRemoteStream = null;
+		remoteVideoSinkMap.clear();
 		cancelTimerTask();
 		statsTimer.cancel();
 		if (DEBUG) Log.d(TAG, "Closing audio source.");
@@ -1427,7 +1462,6 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 			saveRecordedAudioToFile = null;
 		}
 		localRender = null;
-		remoteSinks = null;
 		if (factory != null && peerConnectionParameters.aecDump) {
 			factory.stopAecDump();
 		}
@@ -1540,7 +1574,10 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 			@NonNull final MediaStream stream) {
 
 			if (DEBUG) Log.v(TAG, "onAddRemoteStream:" + plugin);
-			executor.execute(() -> JanusVideoRoomClient.this.onAddRemoteStream(stream));
+			if (plugin instanceof VideoRoomPlugin.Subscriber) {
+				executor.execute(() -> JanusVideoRoomClient.this.onAddRemoteStream(
+					((VideoRoomPlugin.Subscriber) plugin).info, stream));
+			}
 		}
 		
 		@Override
@@ -1548,6 +1585,10 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 			@NonNull final MediaStream stream) {
 		
 			if (DEBUG) Log.v(TAG, "onRemoveStream:" + plugin);
+			if (plugin instanceof VideoRoomPlugin.Subscriber) {
+				executor.execute(() -> JanusVideoRoomClient.this.onRemoveRemoteStream(
+					((VideoRoomPlugin.Subscriber) plugin).info, stream));
+			}
 		}
 		
 		@Override

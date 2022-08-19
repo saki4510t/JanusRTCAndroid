@@ -28,6 +28,7 @@ import org.webrtc.IceCandidate;
 import org.webrtc.PeerConnection;
 import org.webrtc.RTCStatsReport;
 import org.webrtc.SessionDescription;
+import org.webrtc.VideoSink;
 
 import java.util.List;
 
@@ -89,6 +90,16 @@ public interface JanusCallback extends Utils.BuilderCallback {
 	 * @return true: 受け入れる, false: 受け入れない
 	 */
 	public boolean onNewPublisher(@NonNull final PublisherInfo info);
+
+	/**
+	 * #onNewPublisherがtrueを返し該当パブリッシャーが映像トラックを持っている時に呼ばれる。
+	 * 描画用のVideoSinkのListを返す。
+	 * 空なら描画されない(後からは追加できない)
+	 * @param info
+	 * @return
+	 */
+	@NonNull
+	public List<VideoSink> getRemoteVideoSink(@NonNull final PublisherInfo info);
 
 	/**
 	 * Callback fired when someone enter to the same room
