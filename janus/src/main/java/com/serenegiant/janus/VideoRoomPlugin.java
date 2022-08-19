@@ -29,6 +29,7 @@ import com.google.gson.JsonSyntaxException;
 import com.serenegiant.janus.request.Attach;
 import com.serenegiant.janus.request.videoroom.ConfigPublisher;
 import com.serenegiant.janus.request.videoroom.ConfigSubscriber;
+import com.serenegiant.janus.request.videoroom.Kick;
 import com.serenegiant.janus.response.videoroom.Configured;
 import com.serenegiant.janus.request.videoroom.Offer;
 import com.serenegiant.janus.request.Detach;
@@ -38,6 +39,7 @@ import com.serenegiant.janus.request.Message;
 import com.serenegiant.janus.request.videoroom.Start;
 import com.serenegiant.janus.request.Trickle;
 import com.serenegiant.janus.request.TrickleCompleted;
+import com.serenegiant.janus.response.videoroom.Kicked;
 import com.serenegiant.janus.response.videoroom.RoomEvent;
 import com.serenegiant.janus.response.PluginInfo;
 import com.serenegiant.janus.response.videoroom.PublisherInfo;
@@ -676,6 +678,28 @@ import retrofit2.Response;
 			detach();
 			reportError(e);
 		}
+	}
+
+	public boolean kick(@NonNull final Kick kick) {
+		if (DEBUG) Log.v(TAG, "kick:");
+		cancelCall();
+		final Call<Kicked> call = mVideoRoomAPI.kick(
+			roomConnectionParameters.apiName,
+			sessionId(), pluginId(),
+			kick);
+		addCall(call);
+		boolean result = false;
+		try {
+			final Response<Kicked> response = call.execute();
+			result = "success".equals(response.body().videoroom);
+			removeCall(call);
+		} catch (final IOException e) {
+			if (DEBUG) Log.w(TAG, e);
+			cancelCall();
+			reportError(e);
+		}
+		if (DEBUG) Log.d(TAG, "kick:finished.");
+		return result;
 	}
 
 //--------------------------------------------------------------------------------

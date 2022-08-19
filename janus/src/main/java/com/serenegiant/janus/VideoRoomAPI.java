@@ -29,8 +29,10 @@ import com.serenegiant.janus.request.Trickle;
 import com.serenegiant.janus.request.TrickleCompleted;
 import com.serenegiant.janus.request.videoroom.ConfigPublisher;
 import com.serenegiant.janus.request.videoroom.ConfigSubscriber;
+import com.serenegiant.janus.request.videoroom.Kick;
 import com.serenegiant.janus.response.videoroom.Configured;
 import com.serenegiant.janus.request.videoroom.List;
+import com.serenegiant.janus.response.videoroom.Kicked;
 import com.serenegiant.janus.response.videoroom.ListResponse;
 import com.serenegiant.janus.response.videoroom.RoomEvent;
 import com.serenegiant.janus.response.PluginInfo;
@@ -177,5 +179,12 @@ public interface VideoRoomAPI /*extends JanusAPI*/ {
 		@Path("session_id") final long sessionId,
 		@Path("plugin_id") final long pluginId,
 		@Body final ConfigSubscriber config);
+
+	@POST("{api}/{session_id}/{plugin_id}")
+	public Call<Kicked> kick(
+		@Path("api") final String api,
+		@Path("session_id") final long sessionId,
+		@Path("plugin_id") final long pluginId,
+		@Body final Kick kick);
 
 }
