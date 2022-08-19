@@ -146,6 +146,16 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 	 */
 	@Nullable
 	private RecordedAudioToFileController saveRecordedAudioToFile = null;
+	// ローカル映像・音声
+	private int videoWidth;
+	private int videoHeight;
+	private int videoFps;
+	/** enableAudio is set to true if audio should be sent. */
+	private boolean enableAudio = true;
+	/**
+	 * enableVideo is set to true if video should be rendered and sent.
+	 */
+	private boolean renderVideo = true;
 	@Nullable
 	private VideoSink localRender;
 	@Nullable
@@ -157,24 +167,17 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 	@Nullable
 	private VideoSource videoSource;
 	@Nullable
-	private List<VideoSink> remoteSinks;
-	@Nullable
-	private VideoTrack remoteVideoTrack;
-	@Nullable
 	private AudioSource audioSource;
 	@Nullable
 	private AudioTrack localAudioTrack;
-	private int videoWidth;
-	private int videoHeight;
-	private int videoFps;
 	private MediaStream mLocalStream;
+
+	// リモート映像・音声
+	@Nullable
+	private List<VideoSink> remoteSinks;
+	@Nullable
+	private VideoTrack remoteVideoTrack;
 	private MediaStream mRemoteStream;
-	/** enableAudio is set to true if audio should be sent. */
-	private boolean enableAudio = true;
-	/**
-	 * enableVideo is set to true if video should be rendered and sent.
-	 */
-	private boolean renderVideo = true;
 //--------------------------------------------------------------------------------
 
 	private VideoRoomAPI mJanus;
