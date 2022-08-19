@@ -58,9 +58,10 @@ dependencies {
 		exclude group: 'org.json', module: 'json'
 	}
 
-	implementation "io.reactivex.rxjava3:rxjava:${rxjavaVersion}"
-	implementation "io.reactivex.rxjava3:rxkotlin:${rxkotlinVersion}"
-	implementation "io.reactivex.rxjava3:rxandroid:${rxandroidVersion}"
+	implementation "io.reactivex.rxjava3:rxjava:${rxJava3Version}"
+	implementation "io.reactivex.rxjava3:rxkotlin:${rxKotlin3Version}"
+	implementation "io.reactivex.rxjava3:rxandroid:${rxJava3AndroidVersion}"
+	implementation "com.github.akarnokd:rxjava3-retrofit-adapter:${rxJava3AdaptorVersion}"
 
 	implementation "com.tinder.scarlet:scarlet:${scarletVersion}"
 	implementation "com.tinder.scarlet:websocket-okhttp:${scarletVersion}"
