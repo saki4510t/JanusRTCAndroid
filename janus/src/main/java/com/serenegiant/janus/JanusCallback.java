@@ -81,6 +81,16 @@ public interface JanusCallback extends Utils.BuilderCallback {
 	public void onIceDisconnected();
 	
 	/**
+	 * 新しいパブリッシャーが見つかったときのコールバック
+	 * 返り値によってそのパブリッシャーを受け入れる(通話する)かどうかを判断する
+	 * このメソッドがfalseを返した場合subscriberが生成されないので
+	 * onEnterもonLeaveも呼び出されない
+	 * @param info
+	 * @return true: 受け入れる, false: 受け入れない
+	 */
+	public boolean onNewPublisher(@NonNull final PublisherInfo info);
+
+	/**
 	 * Callback fired when someone enter to the same room
  	 * @param info
 	 */
@@ -92,16 +102,6 @@ public interface JanusCallback extends Utils.BuilderCallback {
 	 * @param numUsers
 	 */
 	public void onLeave(@NonNull final PublisherInfo info, final int numUsers);
-
-	/**
-	 * 新しいパブリッシャーが見つかったときのコールバック
-	 * 返り値によってそのパブリッシャーを受け入れる(通話する)かどうかを判断する
-	 * このメソッドがfalseを返した場合subscriberが生成されないので
-	 * onEnterもonLeaveも呼び出されない
-	 * @param info
-	 * @return true: 受け入れる, false: 受け入れない
-	 */
-	public boolean onNewPublisher(@NonNull final PublisherInfo info);
 
 	/**
 	 * Callback fired once channel is closed (hangup event occurred).
