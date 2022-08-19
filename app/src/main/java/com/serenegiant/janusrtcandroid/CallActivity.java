@@ -991,13 +991,16 @@ public class CallActivity extends BaseActivity
 		@Override
 		public void onChannelClose() {
 			if (DEBUG) Log.v(TAG, "onChannelClose:");
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					logAndToast("Remote end hung up; dropping PeerConnection");
-					disconnect();
-				}
-			});
+			if (mNumUsers <= 0) {
+				// パブリッシャーが全員退室したときは自分も退室する
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						logAndToast("Remote end hung up; dropping PeerConnection");
+						disconnect();
+					}
+				});
+			}
 		}
 		
 		@Override
