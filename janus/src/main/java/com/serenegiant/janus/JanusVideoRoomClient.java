@@ -495,7 +495,6 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 			}
 		}
 
-		// LegacyAudioDeviceModuleは廃止になってしまった createLegacyAudioDevice()
 		final AudioDeviceModule adm = createJavaAudioDevice();
 		
 		// Create peer connection factory.
@@ -529,87 +528,6 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		if (DEBUG) Log.d(TAG, "Peer connection factory created.");
 	}
 
-// LegacyAudioDeviceModuleは廃止になってしまった
-//	@SuppressWarnings("deprecation")
-//	private AudioDeviceModule createLegacyAudioDevice() {
-//		if (DEBUG) Log.v(TAG, "createLegacyAudioDevice:");
-//		// Enable/disable OpenSL ES playback.
-//		if (!peerConnectionParameters.useOpenSLES) {
-//			if (DEBUG) Log.d(TAG, "Disable OpenSL ES audio even if device supports it");
-//			WebRtcAudioManager.setBlacklistDeviceForOpenSLESUsage(true /* enable */);
-//		} else {
-//			if (DEBUG) Log.d(TAG, "Allow OpenSL ES audio if device supports it");
-//			WebRtcAudioManager.setBlacklistDeviceForOpenSLESUsage(false);
-//		}
-//
-//		if (peerConnectionParameters.disableBuiltInAEC) {
-//			if (DEBUG) Log.d(TAG, "Disable built-in AEC even if device supports it");
-//			WebRtcAudioUtils.setWebRtcBasedAcousticEchoCanceler(true);
-//		} else {
-//			if (DEBUG) Log.d(TAG, "Enable built-in AEC if device supports it");
-//			WebRtcAudioUtils.setWebRtcBasedAcousticEchoCanceler(false);
-//		}
-//
-//		if (peerConnectionParameters.disableBuiltInNS) {
-//			if (DEBUG) Log.d(TAG, "Disable built-in NS even if device supports it");
-//			WebRtcAudioUtils.setWebRtcBasedNoiseSuppressor(true);
-//		} else {
-//			if (DEBUG) Log.d(TAG, "Enable built-in NS if device supports it");
-//			WebRtcAudioUtils.setWebRtcBasedNoiseSuppressor(false);
-//		}
-//
-//		WebRtcAudioRecord.setOnAudioSamplesReady(saveRecordedAudioToFile);
-//
-//		// Set audio record error callbacks.
-//		WebRtcAudioRecord.setErrorCallback(new WebRtcAudioRecord.WebRtcAudioRecordErrorCallback() {
-//			@Override
-//			public void onWebRtcAudioRecordInitError(final String errorMessage) {
-//				Log.e(TAG, "onWebRtcAudioRecordInitError: " + errorMessage);
-//				reportError(new RuntimeException(errorMessage));
-//			}
-//
-//			@Override
-//			public void onWebRtcAudioRecordStartError(
-//				final WebRtcAudioRecord.AudioRecordStartErrorCode errorCode,
-//					final String errorMessage) {
-//
-//				Log.e(TAG, "onWebRtcAudioRecordStartError: " + errorCode + ". " + errorMessage);
-//				reportError(new RuntimeException(errorMessage));
-//			}
-//
-//			@Override
-//			public void onWebRtcAudioRecordError(final String errorMessage) {
-//				Log.e(TAG, "onWebRtcAudioRecordError: " + errorMessage);
-//				reportError(new RuntimeException(errorMessage));
-//			}
-//		});
-//
-//		WebRtcAudioTrack.setErrorCallback(new WebRtcAudioTrack.ErrorCallback() {
-//			@Override
-//			public void onWebRtcAudioTrackInitError(final String errorMessage) {
-//				Log.e(TAG, "onWebRtcAudioTrackInitError: " + errorMessage);
-//				reportError(new RuntimeException(errorMessage));
-//			}
-//
-//			@Override
-//			public void onWebRtcAudioTrackStartError(
-//				final WebRtcAudioTrack.AudioTrackStartErrorCode errorCode,
-//					final String errorMessage) {
-//
-//				Log.e(TAG, "onWebRtcAudioTrackStartError: " + errorCode + ". " + errorMessage);
-//				reportError(new RuntimeException(errorMessage));
-//			}
-//
-//			@Override
-//			public void onWebRtcAudioTrackError(final String errorMessage) {
-//				Log.e(TAG, "onWebRtcAudioTrackError: " + errorMessage);
-//				reportError(new RuntimeException(errorMessage));
-//			}
-//		});
-//
-//		return new LegacyAudioDeviceModule();
-//	}
-	
 	private AudioDeviceModule createJavaAudioDevice() {
 		if (DEBUG) Log.v(TAG, "createJavaAudioDevice:");
 		// Enable/disable OpenSL ES playback.
@@ -1445,7 +1363,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		if (videoCapturer != null) {
 			try {
 				videoCapturer.stopCapture();
-			} catch (InterruptedException e) {
+			} catch (final InterruptedException e) {
 				throw new RuntimeException(e);
 			}
 			videoCapturerStopped = true;
