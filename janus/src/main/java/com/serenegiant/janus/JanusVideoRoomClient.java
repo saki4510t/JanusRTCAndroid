@@ -1466,10 +1466,6 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		if (factory != null && peerConnectionParameters.aecDump) {
 			factory.stopAecDump();
 		}
-		if (videoSource != null) {
-			videoSource.dispose();
-			videoSource = null;
-		}
 		if (surfaceTextureHelper != null) {
 			try {
 				surfaceTextureHelper.dispose();
