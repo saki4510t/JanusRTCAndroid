@@ -63,7 +63,7 @@ ext {
 
 	commonLibVersion= '8.2.1'
 
-	versionCodeNum = 55
+	versionCodeNum = 56
 	versionNameString = '1.7.3'
-	janusVersionNameString = '2.6.0'
+	janusVersionNameString = '2.6.1'
 }
