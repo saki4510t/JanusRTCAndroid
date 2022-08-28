@@ -1471,7 +1471,11 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 			videoSource = null;
 		}
 		if (surfaceTextureHelper != null) {
-			surfaceTextureHelper.dispose();
+			try {
+				surfaceTextureHelper.dispose();
+			} catch (final Exception e) {
+				if (DEBUG) Log.w(TAG, e);
+			}
 			surfaceTextureHelper = null;
 	    }
 		if (DEBUG) Log.d(TAG, "Closing peer connection factory.");
