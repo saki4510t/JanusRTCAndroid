@@ -38,7 +38,6 @@ import com.serenegiant.janus.request.Message;
 import com.serenegiant.janus.request.videoroom.Start;
 import com.serenegiant.janus.request.Trickle;
 import com.serenegiant.janus.request.TrickleCompleted;
-import com.serenegiant.janus.response.videoroom.Kicked;
 import com.serenegiant.janus.response.videoroom.RoomEvent;
 import com.serenegiant.janus.response.PluginInfo;
 import com.serenegiant.janus.response.videoroom.PublisherInfo;
@@ -682,16 +681,30 @@ import retrofit2.Response;
 	public boolean kick(@NonNull final Kick kick) {
 		if (DEBUG) Log.v(TAG, "kick:");
 		cancelCall();
-		// FIXME これもMessageでラップして送ってRoomEventとしてレスポンスを受けないといけないかも
-		final Call<Kicked> call = mVideoRoomAPI.kick(
+		final Room roomCopy;
+		synchronized (mSync) {
+			roomCopy = mRoom;
+		}
+		if (roomCopy == null) {
+			reportError(new IllegalStateException("Unexpectedly room is null"));
+			return false;
+		}
+		final Message message = new Message(roomCopy,
+			kick, mTransactionCallback/* FIXME 無名オブジェクトにする */);
+		if (DEBUG) Log.v(TAG, "kick:" + message);
+		final Call<RoomEvent> call = mVideoRoomAPI.kick(
 			roomConnectionParameters.apiName,
-			sessionId(), pluginId(),
-			kick);
+			sessionId(), pluginId(), message);
 		addCall(call);
 		boolean result = false;
 		try {
-			final Response<Kicked> response = call.execute();
-			result = "success".equals(response.body().videoroom);
+			final Response<RoomEvent> response = call.execute();
+			if (DEBUG) Log.v(TAG, "configure:response=" + response
+				+ "\n,body=" + response.body());
+			final RoomEvent body = response.body();
+			result = (response.code() == 200)
+				&& "ack".equalsIgnoreCase(body.janus);
+			// FIXME　実際の結果はTransactionManagerのコールバックで返ってくるみたい
 			removeCall(call);
 		} catch (final IOException e) {
 			if (DEBUG) Log.w(TAG, e);
@@ -1345,7 +1358,8 @@ import retrofit2.Response;
 					+ "\n,body=" + response.body());
 				result = (response.code() == 200);
 				final RoomEvent body = response.body();
-				result = (response.code() == 200) && "ack".equalsIgnoreCase(body.janus);
+				result = (response.code() == 200)
+					&& "ack".equalsIgnoreCase(body.janus);
 				// FIXME　実際の結果はTransactionManagerのコールバックで返ってくるみたい
 				removeCall(call);
 			} catch (final Exception e) {
@@ -1471,7 +1485,8 @@ import retrofit2.Response;
 				if (DEBUG) Log.v(TAG, "configure:response=" + response
 					+ "\n,body=" + response.body());
 				final RoomEvent body = response.body();
-				result = (response.code() == 200) && "ack".equalsIgnoreCase(body.janus);
+				result = (response.code() == 200)
+					&& "ack".equalsIgnoreCase(body.janus);
 				// FIXME　実際の結果はTransactionManagerのコールバックで返ってくるみたい
 				removeCall(call);
 			} catch (final IOException e) {

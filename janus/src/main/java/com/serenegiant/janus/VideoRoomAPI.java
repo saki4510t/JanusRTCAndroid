@@ -23,9 +23,7 @@ import com.serenegiant.janus.request.Hangup;
 import com.serenegiant.janus.request.Message;
 import com.serenegiant.janus.request.Trickle;
 import com.serenegiant.janus.request.TrickleCompleted;
-import com.serenegiant.janus.request.videoroom.Kick;
 import com.serenegiant.janus.request.videoroom.List;
-import com.serenegiant.janus.response.videoroom.Kicked;
 import com.serenegiant.janus.response.videoroom.ListResponse;
 import com.serenegiant.janus.response.videoroom.RoomEvent;
 import com.serenegiant.janus.response.videoroom.RoomInfo;
@@ -98,19 +96,11 @@ public interface VideoRoomAPI extends JanusAPI {
 		@Path("plugin_id") final long pluginId,
 		@Body final Message message);
 
-	/**
-	 * FIXME これもMessageでラップして送ってRoomEventとしてレスポンスを受けないといけないかも
-	 * @param api
-	 * @param sessionId
-	 * @param pluginId
-	 * @param kick
-	 * @return
-	 */
 	@POST("{api}/{session_id}/{plugin_id}")
-	public Call<Kicked> kick(
+	public Call<RoomEvent> kick(
 		@Path("api") final String api,
 		@Path("session_id") final long sessionId,
 		@Path("plugin_id") final long pluginId,
-		@Body final Kick kick);
+		@Body final Message message);
 
 }
