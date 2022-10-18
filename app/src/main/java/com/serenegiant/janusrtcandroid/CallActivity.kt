@@ -719,7 +719,7 @@ class CallActivity : BaseActivity(), OnCallEvents {
 		}
 
 		override fun onEnter(info: PublisherInfo) {
-			if (DEBUG) Log.v(TAG, "onEnter:$info")
+			if (DEBUG) Log.v(TAG, "onEnter:$info,publishers=${janusClient?.publishers},subscribers=${janusClient?.subscribers}")
 			mNumUsers++
 		}
 
