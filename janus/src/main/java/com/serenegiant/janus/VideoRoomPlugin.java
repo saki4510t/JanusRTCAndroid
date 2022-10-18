@@ -932,7 +932,7 @@ import retrofit2.Response;
 		@NonNull final String transaction,
 		@NonNull final JSONObject body) {
 
-		if (DEBUG) Log.v(TAG, "onReceived:");
+		if (DEBUG) Log.v(TAG, "onReceived:" + body);
 		@Nullable
 		final String janus = body.optString("janus");
 		boolean handled = false;
