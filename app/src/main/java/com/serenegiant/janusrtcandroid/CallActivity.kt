@@ -34,13 +34,14 @@ import android.media.projection.MediaProjection
 import android.util.Log
 import android.view.View
 import android.view.Window
-import androidx.annotation.NonNull
 import androidx.fragment.app.FragmentTransaction
 import com.serenegiant.janus.JanusCallback
+import com.serenegiant.janus.request.videoroom.ConfigPublisher
 import retrofit2.Retrofit
 import org.webrtc.PeerConnection.IceServer
 import com.serenegiant.janus.response.videoroom.PublisherInfo
 import com.serenegiant.janus.response.videoroom.RoomEvent
+import com.serenegiant.utils.HandlerThreadHandler
 import okhttp3.OkHttpClient
 import org.json.JSONObject
 import org.webrtc.*
@@ -52,6 +53,7 @@ import java.util.ArrayList
  * and call view.
  */
 class CallActivity : BaseActivity(), OnCallEvents {
+	private val asyncHandler = HandlerThreadHandler.createHandler(TAG)
 	private val remoteProxyRenderer1 = ProxyVideoSink()
 	private val remoteProxyRenderer2 = ProxyVideoSink()
 	private val localProxyVideoSink = ProxyVideoSink()
@@ -391,6 +393,7 @@ class CallActivity : BaseActivity(), OnCallEvents {
 		if (logToast != null) {
 			logToast!!.cancel()
 		}
+		asyncHandler.quit()
 		activityRunning = false
 		super.onDestroy()
 	}
@@ -723,11 +726,21 @@ class CallActivity : BaseActivity(), OnCallEvents {
 		override fun onEnter(info: PublisherInfo) {
 			if (DEBUG) Log.v(TAG, "onEnter:$info,publishers=${janusClient?.publishers},subscribers=${janusClient?.subscribers}")
 			mNumUsers++
+			asyncHandler.postDelayed({
+				val r = janusClient?.configure(ConfigPublisher(2000000))
+				if (DEBUG) Log.v(TAG, "onEnter:configure=$r")
+			}, 1000)
 		}
 
 		override fun onLeave(info: PublisherInfo, numUsers: Int) {
 			mNumUsers--
 			if (DEBUG) Log.v(TAG, "onLeave:$info,numUsers=$numUsers/$mNumUsers")
+			if (mNumUsers <= 0) {
+				asyncHandler.post {
+					val r = janusClient?.configure(ConfigPublisher(1000000))
+					if (DEBUG) Log.v(TAG, "onLeave:configure=$r")
+				}
+			}
 		}
 
 		override fun getRemoteVideoSink(info: PublisherInfo): List<VideoSink> {
