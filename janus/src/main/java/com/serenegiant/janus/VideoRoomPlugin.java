@@ -1343,7 +1343,9 @@ import retrofit2.Response;
 				if (DEBUG) Log.v(TAG, "configure:response=" + response
 					+ "\n,body=" + response.body());
 				result = (response.code() == 200);
-//				result = "ok".equalsIgnoreCase(response.body().configured);
+				final RoomEvent body = response.body();
+				result = (response.code() == 200) && "ack".equalsIgnoreCase(body.janus);
+				// FIXME　実際の結果はTransactionManagerのコールバックで返ってくるみたい
 				removeCall(call);
 			} catch (final Exception e) {
 				if (DEBUG) Log.w(TAG, e);
@@ -1467,8 +1469,9 @@ import retrofit2.Response;
 				final Response<RoomEvent> response = call.execute();
 				if (DEBUG) Log.v(TAG, "configure:response=" + response
 					+ "\n,body=" + response.body());
-				result = (response.code() == 200);
-//				result = "ok".equalsIgnoreCase(response.body().configured);
+				final RoomEvent body = response.body();
+				result = (response.code() == 200) && "ack".equalsIgnoreCase(body.janus);
+				// FIXME　実際の結果はTransactionManagerのコールバックで返ってくるみたい
 				removeCall(call);
 			} catch (final IOException e) {
 				if (DEBUG) Log.w(TAG, e);
