@@ -441,6 +441,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 
 	/**
 	 * PublisherのプラグインID一覧を取得
+	 * 基本的にこれに入っているのは自分のパブリッシャーのプラグインIDのはず
 	 * @return
 	 */
 	@NonNull
@@ -459,6 +460,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 
 	/**
 	 * SubscriberのプラグインID一覧を取得
+	 * 基本的にこれに入っているのは自分がサブスクライブしているリモートに対応するプラグインIDのはず
 	 * @return
 	 */
 	@NonNull

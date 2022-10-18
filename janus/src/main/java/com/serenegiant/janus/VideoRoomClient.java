@@ -42,6 +42,7 @@ public interface VideoRoomClient extends JanusClient {
 
 	/**
 	 * PublisherのプラグインID一覧を取得
+	 * 基本的にこれに入っているのは自分のパブリッシャーのプラグインIDのはず
 	 * @return
 	 */
 	@NonNull
@@ -49,6 +50,7 @@ public interface VideoRoomClient extends JanusClient {
 
 	/**
 	 * SubscriberのプラグインID一覧を取得
+	 * 基本的にこれに入っているのは自分がサブスクライブしているリモートに対応するプラグインIDのはず
 	 * @return
 	 */
 	@NonNull
