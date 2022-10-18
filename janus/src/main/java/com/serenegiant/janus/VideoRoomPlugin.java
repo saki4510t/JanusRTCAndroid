@@ -1321,7 +1321,7 @@ import retrofit2.Response;
 		 * @param config
 		 */
 		public boolean configure(@NonNull final ConfigPublisher config) {
-			if (DEBUG) Log.v(TAG, "configure:");
+			if (DEBUG) Log.v(TAG, "configure:" + config);
 			cancelCall();
 			final Call<Configured> call = mVideoRoomAPI.configure(
 				roomConnectionParameters.apiName,
@@ -1435,7 +1435,7 @@ import retrofit2.Response;
 		 * @return true: 呼び出し成功
 		 */
 		public boolean configure(@NonNull final ConfigSubscriber config) {
-			if (DEBUG) Log.v(TAG, "configure:");
+			if (DEBUG) Log.v(TAG, "configure:" + config);
 			cancelCall();
 			final Call<Configured> call = mVideoRoomAPI.configure(
 				roomConnectionParameters.apiName,

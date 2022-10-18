@@ -484,6 +484,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 	 */
 	@Override
 	public boolean configure(@NonNull final ConfigPublisher config) {
+		if (DEBUG) Log.v(TAG, "configure:" + config);
 		boolean result = false;
 		if (mConnectionState == ConnectionState.CONNECTED) {
 			synchronized (mAttachedPlugins) {
@@ -505,6 +506,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 	 */
 	@Override
 	public boolean configure(final long pluginId, @NonNull final ConfigPublisher config) {
+		if (DEBUG) Log.v(TAG, "configure:id=" + pluginId + "," + config);
 		if (mConnectionState == ConnectionState.CONNECTED) {
 			synchronized (mAttachedPlugins) {
 				for (final VideoRoomPlugin plugin: mAttachedPlugins.values()) {
@@ -525,6 +527,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 	 */
 	@Override
 	public boolean configure(@NonNull final ConfigSubscriber config) {
+		if (DEBUG) Log.v(TAG, "configure:" + config);
 		boolean result = false;
 		if (mConnectionState == ConnectionState.CONNECTED) {
 			synchronized (mAttachedPlugins) {
@@ -546,6 +549,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 	 */
 	@Override
 	public boolean configure(final long pluginId, @NonNull final ConfigSubscriber config) {
+		if (DEBUG) Log.v(TAG, "configure:id=" + pluginId + "," + config);
 		if (mConnectionState == ConnectionState.CONNECTED) {
 			synchronized (mAttachedPlugins) {
 				for (final VideoRoomPlugin plugin: mAttachedPlugins.values()) {
