@@ -481,7 +481,7 @@ class CallActivity : BaseActivity(), OnCallEvents {
 			return
 		}
 		// Enable statistics callback.
-		janusClient!!.enableStatsEvents(true, STAT_CALLBACK_PERIOD)
+		janusClient!!.enableStatsEvents(STAT_ENABLED, STAT_CALLBACK_PERIOD)
 		setSwappedFeeds(1)
 	}
 
@@ -868,7 +868,8 @@ class CallActivity : BaseActivity(), OnCallEvents {
 			"android.permission.RECORD_AUDIO",
 			"android.permission.INTERNET"
 		)
-
+		// whether or not to get peer connection statistics
+		private const val STAT_ENABLED = false
 		// Peer connection statistics callback period in ms.
 		private const val STAT_CALLBACK_PERIOD = 1000
 		private var mediaProjectionPermissionResultData: Intent? = null
