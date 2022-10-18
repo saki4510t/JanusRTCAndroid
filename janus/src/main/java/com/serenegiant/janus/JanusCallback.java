@@ -22,6 +22,7 @@ package com.serenegiant.janus;
 import androidx.annotation.NonNull;
 
 import com.serenegiant.janus.response.videoroom.PublisherInfo;
+import com.serenegiant.janus.response.videoroom.RoomEvent;
 
 import org.json.JSONObject;
 import org.webrtc.IceCandidate;
@@ -52,7 +53,7 @@ public interface JanusCallback extends Utils.BuilderCallback {
 	 * Callback fired once the room's signaling parameters
 	 * SignalingParameters are extracted.
 	 */
-	public void onConnectedToRoom(final boolean initiator);
+	public void onConnectedToRoom(final boolean initiator, @NonNull final RoomEvent.Data room);
 	
 	/**
 	 * Callback fired once remote SDP is received.

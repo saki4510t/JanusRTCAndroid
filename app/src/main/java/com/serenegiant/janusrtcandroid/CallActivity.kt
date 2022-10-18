@@ -34,11 +34,13 @@ import android.media.projection.MediaProjection
 import android.util.Log
 import android.view.View
 import android.view.Window
+import androidx.annotation.NonNull
 import androidx.fragment.app.FragmentTransaction
 import com.serenegiant.janus.JanusCallback
 import retrofit2.Retrofit
 import org.webrtc.PeerConnection.IceServer
 import com.serenegiant.janus.response.videoroom.PublisherInfo
+import com.serenegiant.janus.response.videoroom.RoomEvent
 import okhttp3.OkHttpClient
 import org.json.JSONObject
 import org.webrtc.*
@@ -685,8 +687,8 @@ class CallActivity : BaseActivity(), OnCallEvents {
 			return ArrayList()
 		}
 
-		override fun onConnectedToRoom(initiator: Boolean) {
-			if (DEBUG) Log.v(TAG, "onConnectedToRoom:")
+		override fun onConnectedToRoom(initiator: Boolean, room: RoomEvent.Data) {
+			if (DEBUG) Log.v(TAG, "onConnectedToRoom:$room")
 			runOnUiThread { onConnectedToRoomInternal(initiator) }
 		}
 

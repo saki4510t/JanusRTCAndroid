@@ -1841,7 +1841,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		if (DEBUG) Log.v(TAG, "handleOnJoin:");
 		// roomにjoinできた
 		// Fire connection and signaling events.
-		mCallback.onConnectedToRoom(true);
+		mCallback.onConnectedToRoom(true, room.plugindata.data);
 	}
 
 	/**
