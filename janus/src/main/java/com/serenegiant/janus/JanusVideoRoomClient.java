@@ -82,6 +82,7 @@ import java.lang.ref.WeakReference;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -438,12 +439,75 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		}
 	}
 
+	/**
+	 * PublisherのプラグインID一覧を取得
+	 * @return
+	 */
+	@NonNull
+	@Override
+	public Collection<Long> getPublishers() {
+		final List<Long> result = new ArrayList<>();
+		synchronized (mAttachedPlugins) {
+			for (final VideoRoomPlugin plugin: mAttachedPlugins.values()) {
+				if (plugin instanceof VideoRoomPlugin.Publisher) {
+					result.add(plugin.pluginId());
+				}
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * SubscriberのプラグインID一覧を取得
+	 * @return
+	 */
+	@NonNull
+	@Override
+	public Collection<Long> getSubscribers() {
+		final List<Long> result = new ArrayList<>();
+		synchronized (mAttachedPlugins) {
+			for (final VideoRoomPlugin plugin: mAttachedPlugins.values()) {
+				if (plugin instanceof VideoRoomPlugin.Subscriber) {
+					result.add(plugin.pluginId());
+				}
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * 全てのPublisherを設定する
+	 * @param config
+	 * @return
+	 */
 	@Override
 	public boolean configure(@NonNull final ConfigPublisher config) {
+		boolean result = false;
 		if (mConnectionState == ConnectionState.CONNECTED) {
 			synchronized (mAttachedPlugins) {
 				for (final VideoRoomPlugin plugin: mAttachedPlugins.values()) {
 					if (plugin instanceof VideoRoomPlugin.Publisher) {
+						result |= ((VideoRoomPlugin.Publisher) plugin).configure(config);
+					}
+				}
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * 指定したプラグインIDが一致する最初のPublisherを設定する
+	 * @param pluginId
+	 * @param config
+	 * @return
+	 */
+	@Override
+	public boolean configure(final long pluginId, @NonNull final ConfigPublisher config) {
+		if (mConnectionState == ConnectionState.CONNECTED) {
+			synchronized (mAttachedPlugins) {
+				for (final VideoRoomPlugin plugin: mAttachedPlugins.values()) {
+					if ((plugin instanceof VideoRoomPlugin.Publisher)
+						&& (plugin.pluginId() == pluginId)) {
 						return ((VideoRoomPlugin.Publisher) plugin).configure(config);
 					}
 				}
@@ -452,12 +516,39 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		return false;
 	}
 
+	/**
+	 * 全てのSubscriberを設定する
+	 * @param config
+	 * @return
+	 */
 	@Override
 	public boolean configure(@NonNull final ConfigSubscriber config) {
+		boolean result = false;
 		if (mConnectionState == ConnectionState.CONNECTED) {
 			synchronized (mAttachedPlugins) {
 				for (final VideoRoomPlugin plugin: mAttachedPlugins.values()) {
 					if (plugin instanceof VideoRoomPlugin.Subscriber) {
+						result |= ((VideoRoomPlugin.Subscriber) plugin).configure(config);
+					}
+				}
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * 指定したプラグインIDが一致する最初のSubscriberを設定する
+	 * @param pluginId
+	 * @param config
+	 * @return
+	 */
+	@Override
+	public boolean configure(final long pluginId, @NonNull final ConfigSubscriber config) {
+		if (mConnectionState == ConnectionState.CONNECTED) {
+			synchronized (mAttachedPlugins) {
+				for (final VideoRoomPlugin plugin: mAttachedPlugins.values()) {
+					if ((plugin instanceof VideoRoomPlugin.Subscriber)
+						&& (plugin.pluginId() == pluginId)) {
 						return ((VideoRoomPlugin.Subscriber) plugin).configure(config);
 					}
 				}
@@ -1120,9 +1211,9 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 	}
 
 //--------------------------------------------------------------------------------
-	private void addPlugin(final long key, @NonNull final VideoRoomPlugin plugin) {
+	private void addPlugin(@NonNull final VideoRoomPlugin plugin) {
 		synchronized (mAttachedPlugins) {
-			mAttachedPlugins.put(key, plugin);
+			mAttachedPlugins.put(plugin.pluginId(), plugin);
 		}
 	}
 
@@ -1443,7 +1534,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		public void onAttach(@NonNull final JanusPlugin plugin) {
 			if (DEBUG) Log.v(TAG, "onAttach:" + plugin);
 			if (plugin instanceof VideoRoomPlugin) {
-				addPlugin(plugin.pluginId(), (VideoRoomPlugin) plugin);
+				addPlugin((VideoRoomPlugin) plugin);
 			}
 		}
 

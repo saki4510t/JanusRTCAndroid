@@ -17,6 +17,7 @@ import com.serenegiant.janus.response.videoroom.RoomInfo;
 
 import org.appspot.apprtc.RoomConnectionParameters;
 
+import java.util.Collection;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -40,16 +41,46 @@ public interface VideoRoomClient extends JanusClient {
 	public void disconnectFromRoom();
 
 	/**
-	 * config all publisher
+	 * PublisherのプラグインID一覧を取得
+	 * @return
+	 */
+	@NonNull
+	public Collection<Long> getPublishers();
+
+	/**
+	 * SubscriberのプラグインID一覧を取得
+	 * @return
+	 */
+	@NonNull
+	public Collection<Long> getSubscribers();
+
+	/**
+	 * 全てのPublisherを設定する
 	 * @param config
 	 * @return
 	 */
 	public boolean configure(@NonNull final ConfigPublisher config);
 
 	/**
-	 * config all subscriber
+	 * 指定したプラグインIDが一致する最初のPublisherを設定する
+	 * @param pluginId
+	 * @param config
+	 * @return
+	 */
+	public boolean configure(final long pluginId, @NonNull final ConfigPublisher config);
+
+	/**
+	 * 全てのSubscriberを設定する
 	 * @param config
 	 * @return
 	 */
 	public boolean configure(@NonNull final ConfigSubscriber config);
+
+	/**
+	 * 指定したプラグインIDが一致する最初のSubscriberを設定する
+	 * @param pluginId
+	 * @param config
+	 * @return
+	 */
+	public boolean configure(final long pluginId, @NonNull final ConfigSubscriber config);
 }
