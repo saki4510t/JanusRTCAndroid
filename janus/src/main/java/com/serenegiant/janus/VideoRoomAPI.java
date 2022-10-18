@@ -98,6 +98,14 @@ public interface VideoRoomAPI extends JanusAPI {
 		@Path("plugin_id") final long pluginId,
 		@Body final Message message);
 
+	/**
+	 * FIXME これもMessageでラップして送ってRoomEventとしてレスポンスを受けないといけないかも
+	 * @param api
+	 * @param sessionId
+	 * @param pluginId
+	 * @param kick
+	 * @return
+	 */
 	@POST("{api}/{session_id}/{plugin_id}")
 	public Call<Kicked> kick(
 		@Path("api") final String api,

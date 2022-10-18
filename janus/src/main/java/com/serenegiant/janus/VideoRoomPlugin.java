@@ -682,6 +682,7 @@ import retrofit2.Response;
 	public boolean kick(@NonNull final Kick kick) {
 		if (DEBUG) Log.v(TAG, "kick:");
 		cancelCall();
+		// FIXME これもMessageでラップして送ってRoomEventとしてレスポンスを受けないといけないかも
 		final Call<Kicked> call = mVideoRoomAPI.kick(
 			roomConnectionParameters.apiName,
 			sessionId(), pluginId(),
