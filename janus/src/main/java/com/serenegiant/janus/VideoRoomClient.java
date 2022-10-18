@@ -40,14 +40,14 @@ public interface VideoRoomClient extends JanusClient {
 	public void disconnectFromRoom();
 
 	/**
-	 * config publisher
+	 * config all publisher
 	 * @param config
 	 * @return
 	 */
 	public boolean configure(@NonNull final ConfigPublisher config);
 
 	/**
-	 * config subscriber
+	 * config all subscriber
 	 * @param config
 	 * @return
 	 */
