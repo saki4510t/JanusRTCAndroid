@@ -30,7 +30,6 @@ import com.serenegiant.janus.request.Attach;
 import com.serenegiant.janus.request.videoroom.ConfigPublisher;
 import com.serenegiant.janus.request.videoroom.ConfigSubscriber;
 import com.serenegiant.janus.request.videoroom.Kick;
-import com.serenegiant.janus.response.videoroom.Configured;
 import com.serenegiant.janus.request.videoroom.Offer;
 import com.serenegiant.janus.request.Detach;
 import com.serenegiant.janus.request.videoroom.Join;
@@ -1323,14 +1322,24 @@ import retrofit2.Response;
 		public boolean configure(@NonNull final ConfigPublisher config) {
 			if (DEBUG) Log.v(TAG, "configure:" + config);
 			cancelCall();
-			final Call<Configured> call = mVideoRoomAPI.configure(
+			final Room roomCopy;
+			synchronized (mSync) {
+				roomCopy = mRoom;
+			}
+			if (roomCopy == null) {
+				reportError(new IllegalStateException("Unexpectedly room is null"));
+				return false;
+			}
+			final Message message = new Message(roomCopy,
+				config, mTransactionCallback);
+			if (DEBUG) Log.v(TAG, "configure:" + message);
+			final Call<RoomEvent> call = mVideoRoomAPI.configure(
 				roomConnectionParameters.apiName,
-				sessionId(), pluginId(),
-				config);
+				sessionId(), pluginId(), message);
 			addCall(call);
 			boolean result = false;
 			try {
-				final Response<Configured> response = call.execute();
+				final Response<RoomEvent> response = call.execute();
 				if (DEBUG) Log.v(TAG, "configure:response=" + response
 					+ "\n,body=" + response.body());
 				result = (response.code() == 200);
@@ -1438,14 +1447,24 @@ import retrofit2.Response;
 		public boolean configure(@NonNull final ConfigSubscriber config) {
 			if (DEBUG) Log.v(TAG, "configure:" + config);
 			cancelCall();
-			final Call<Configured> call = mVideoRoomAPI.configure(
+			final Room roomCopy;
+			synchronized (mSync) {
+				roomCopy = mRoom;
+			}
+			if (roomCopy == null) {
+				reportError(new IllegalStateException("Unexpectedly room is null"));
+				return false;
+			}
+			final Message message = new Message(roomCopy,
+				config, mTransactionCallback);
+			if (DEBUG) Log.v(TAG, "configure:" + message);
+			final Call<RoomEvent> call = mVideoRoomAPI.configure(
 				roomConnectionParameters.apiName,
-				sessionId(), pluginId(),
-				config);
+				sessionId(), pluginId(), message);
 			addCall(call);
 			boolean result = false;
 			try {
-				final Response<Configured> response = call.execute();
+				final Response<RoomEvent> response = call.execute();
 				if (DEBUG) Log.v(TAG, "configure:response=" + response
 					+ "\n,body=" + response.body());
 				result = (response.code() == 200);
