@@ -44,6 +44,7 @@ ext {
 	androidXMaterial = '1.4.0'
 	androidXRecyclerview = '1.1.0'
 	constraintLibVersion = '2.1.4'
+	androidXPreference = '1.1.1'
 
 	androidXKtx = '1.6.0'
 	androidXLifecycleKtx = '2.3.1'

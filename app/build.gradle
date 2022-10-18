@@ -46,6 +46,8 @@ dependencies {
 	implementation "androidx.recyclerview:recyclerview:${androidXRecyclerview}"
 	implementation "androidx.constraintlayout:constraintlayout:${constraintLibVersion}"
 
+	implementation "androidx.preference:preference-ktx:${androidXPreference}"
+
 	implementation "com.squareup.retrofit2:retrofit:${retrofit2Version}"
 
 	implementation "com.serenegiant:common:${commonLibVersion}"
