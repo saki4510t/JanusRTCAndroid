@@ -1332,7 +1332,7 @@ import retrofit2.Response;
 				return false;
 			}
 			final Message message = new Message(roomCopy,
-				config, mTransactionCallback);
+				config, mTransactionCallback/* FIXME 無名オブジェクトにする */);
 			if (DEBUG) Log.v(TAG, "configure:" + message);
 			final Call<RoomEvent> call = mVideoRoomAPI.configure(
 				roomConnectionParameters.apiName,
@@ -1459,7 +1459,7 @@ import retrofit2.Response;
 				return false;
 			}
 			final Message message = new Message(roomCopy,
-				config, mTransactionCallback);
+				config, mTransactionCallback/* FIXME 無名オブジェクトにする */);
 			if (DEBUG) Log.v(TAG, "configure:" + message);
 			final Call<RoomEvent> call = mVideoRoomAPI.configure(
 				roomConnectionParameters.apiName,
