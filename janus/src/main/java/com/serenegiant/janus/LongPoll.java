@@ -30,11 +30,25 @@ import retrofit2.http.Path;
  * API interface of janus-gateway for long poll over http/https
  */
 public interface LongPoll {
+	/**
+	 * janusの死活確認・イベント受信用のlogPoll
+	 * @param api
+	 * @param sessionId
+	 * @return
+	 */
 	@GET("{api}/{session_id}")
 	public Call<ResponseBody> getEvent(
 		@Path("api") final String api,
 		@Path("session_id") final long sessionId);
 
+	/**
+	 * janusの死活確認・イベント受信用のlogPoll
+	 * @param api
+	 * @param sessionId
+	 * @return
+	 * @deprecated getEventと同じなので削除予定
+	 */
+	@Deprecated
 	@GET("{api}/{session_id}")
 	public Call<RoomEvent> getRoomEvent(
 		@Path("api") final String api,
