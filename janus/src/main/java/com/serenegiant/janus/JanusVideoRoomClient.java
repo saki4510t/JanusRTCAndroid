@@ -1307,16 +1307,19 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 	private void connectToRoomInternal() {
 		if (DEBUG) Log.v(TAG, "connectToRoomInternal:");
 		// 通常のRESTアクセス用APIインターフェースを生成
-		mJanus = setupRetrofit(
+		final VideoRoomAPI api = setupRetrofit(
 			setupHttpClient(false, HTTP_READ_TIMEOUT_MS, HTTP_WRITE_TIMEOUT_MS, mCallback),
 			roomConnectionParameters.roomUrl, mCallback).create(VideoRoomAPI.class);
+		mJanus = api;
 		// long poll用APIインターフェースを生成
 		mLongPoll = setupRetrofit(
 			setupHttpClient(true, HTTP_READ_TIMEOUT_MS_LONG_POLL, HTTP_WRITE_TIMEOUT_MS, mCallback),
 			roomConnectionParameters.roomUrl, mCallback).create(LongPoll.class);
-		executor.execute(() -> {
-			requestServerInfo();
-		});
+		try {
+			requestServerInfo(api);
+		} catch (final Exception e) {
+			Log.w(TAG, e);
+		}
 	}
 
 	/**
@@ -1334,10 +1337,10 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 	}
 	
 //--------------------------------------------------------------------
-	private void requestServerInfo() {
+	private void requestServerInfo(@NonNull final VideoRoomAPI api) {
 		if (DEBUG) Log.v(TAG, "requestServerInfo:");
 		// Janus-gatewayサーバー情報を取得
-		final Call<ServerInfo> call = mJanus.getInfo(roomConnectionParameters.apiName);
+		final Call<ServerInfo> call = api.getInfo(roomConnectionParameters.apiName);
 		addCall(call);
 		call.enqueue(new Callback<ServerInfo>() {
 			@Override
