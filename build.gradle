@@ -9,7 +9,7 @@ buildscript {
 		mavenLocal()
     }
     dependencies {
-		classpath 'com.android.tools.build:gradle:7.2.2'
+		classpath 'com.android.tools.build:gradle:7.3.1'
 		classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
 
         // NOTE: Do not place your application dependencies here; they belong
@@ -60,7 +60,7 @@ ext {
 	socketIOClientJavaVersion = '1.0.1'
 	libwebrtcVersion = '2022-08-02T04_04_41'
 
-	commonLibVersion= '8.10.0'
+	commonLibVersion= '8.11.1'
 
 	versionCodeNum = 58
 	versionNameString = '1.7.3'
