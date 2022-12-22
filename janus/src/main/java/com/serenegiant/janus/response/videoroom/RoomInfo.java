@@ -19,12 +19,15 @@ package com.serenegiant.janus.response.videoroom;
  *
 */
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import androidx.annotation.NonNull;
 
 /**
  * listリクエストの結果
  */
-public class RoomInfo {
+public class RoomInfo implements Parcelable {
 	public final Long room;					// <unique numeric ID>,
 	public final String description;		// "<Name of the room>",
 	public final boolean pin_required;		// <true|false, whether a PIN is required to join this room>,
@@ -83,6 +86,40 @@ public class RoomInfo {
 		this.transport_wide_cc_ext = transport_wide_cc_ext;
 	}
 
+	protected RoomInfo(@NonNull final Parcel src) {
+		if (src.readByte() == 0) {
+			room = null;
+		} else {
+			room = src.readLong();
+		}
+		description = src.readString();
+		pin_required = src.readByte() != 0;
+		is_private = src.readByte() != 0;
+		max_publishers = src.readInt();
+		bitrate = src.readInt();
+		bitrate_cap = src.readByte() != 0;
+		fir_freq = src.readInt();
+		require_pvtid = src.readByte() != 0;
+		require_e2ee = src.readByte() != 0;
+		notify_joining = src.readByte() != 0;
+		audiocodec = src.readString();
+		videocodec = src.readString();
+		opus_fec = src.readByte() != 0;
+		opus_dtx = src.readByte() != 0;
+		video_svc = src.readByte() != 0;
+		record = src.readByte() != 0;
+		rec_dir = src.readString();
+		lock_record = src.readByte() != 0;
+		num_participants = src.readInt();
+		audiolevel_ext = src.readByte() != 0;
+		audiolevel_event = src.readByte() != 0;
+		audio_active_packets = src.readInt();
+		audio_level_average = src.readInt();
+		videoorient_ext = src.readByte() != 0;
+		playoutdelay_ext = src.readByte() != 0;
+		transport_wide_cc_ext = src.readByte() != 0;
+	}
+
 	@NonNull
 	@Override
 	public String toString() {
@@ -116,4 +153,58 @@ public class RoomInfo {
 			", transport_wide_cc_ext=" + transport_wide_cc_ext +
 			'}';
 	}
+
+	@Override
+	public int describeContents() {
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(@NonNull final Parcel dst, final int flags) {
+		if (room == null) {
+			dst.writeByte((byte) 0);
+		} else {
+			dst.writeByte((byte) 1);
+			dst.writeLong(room);
+		}
+		dst.writeString(description);
+		dst.writeByte((byte) (pin_required ? 1 : 0));
+		dst.writeByte((byte) (is_private ? 1 : 0));
+		dst.writeInt(max_publishers);
+		dst.writeInt(bitrate);
+		dst.writeByte((byte) (bitrate_cap ? 1 : 0));
+		dst.writeInt(fir_freq);
+		dst.writeByte((byte) (require_pvtid ? 1 : 0));
+		dst.writeByte((byte) (require_e2ee ? 1 : 0));
+		dst.writeByte((byte) (notify_joining ? 1 : 0));
+		dst.writeString(audiocodec);
+		dst.writeString(videocodec);
+		dst.writeByte((byte) (opus_fec ? 1 : 0));
+		dst.writeByte((byte) (opus_dtx ? 1 : 0));
+		dst.writeByte((byte) (video_svc ? 1 : 0));
+		dst.writeByte((byte) (record ? 1 : 0));
+		dst.writeString(rec_dir);
+		dst.writeByte((byte) (lock_record ? 1 : 0));
+		dst.writeInt(num_participants);
+		dst.writeByte((byte) (audiolevel_ext ? 1 : 0));
+		dst.writeByte((byte) (audiolevel_event ? 1 : 0));
+		dst.writeInt(audio_active_packets);
+		dst.writeInt(audio_level_average);
+		dst.writeByte((byte) (videoorient_ext ? 1 : 0));
+		dst.writeByte((byte) (playoutdelay_ext ? 1 : 0));
+		dst.writeByte((byte) (transport_wide_cc_ext ? 1 : 0));
+	}
+
+	public static final Creator<RoomInfo> CREATOR = new Creator<RoomInfo>() {
+		@Override
+		public RoomInfo createFromParcel(@NonNull final Parcel src) {
+			return new RoomInfo(src);
+		}
+
+		@Override
+		public RoomInfo[] newArray(final int size) {
+			return new RoomInfo[size];
+		}
+	};
+
 }

@@ -19,6 +19,9 @@ package com.serenegiant.janus.response.videoroom;
  *
 */
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.util.Arrays;
 
 import androidx.annotation.NonNull;
@@ -26,7 +29,7 @@ import androidx.annotation.NonNull;
 /**
  * listparticipantsリクエストの結果
  */
-public class Participants {
+public class Participants implements Parcelable {
 	public final String videoroom;
 	public Long room;
 	public Participant[] participants;
@@ -37,7 +40,56 @@ public class Participants {
 		this.participants = participants;
 	}
 
-	public static class Participant {
+	protected Participants(@NonNull final Parcel src) {
+		videoroom = src.readString();
+		if (src.readByte() == 0) {
+			room = null;
+		} else {
+			room = src.readLong();
+		}
+		participants = src.createTypedArray(Participant.CREATOR);
+	}
+
+	@NonNull
+	@Override
+	public String toString() {
+		return "Participants{" +
+			"videoroom='" + videoroom + '\'' +
+			", room=" + room +
+			", participants=" + Arrays.toString(participants) +
+			'}';
+	}
+
+	@Override
+	public int describeContents() {
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(@NonNull final Parcel dst, final int flags) {
+		dst.writeString(videoroom);
+		if (room == null) {
+			dst.writeByte((byte) 0);
+		} else {
+			dst.writeByte((byte) 1);
+			dst.writeLong(room);
+		}
+		dst.writeTypedArray(participants, flags);
+	}
+
+	public static final Creator<Participants> CREATOR = new Creator<Participants>() {
+		@Override
+		public Participants createFromParcel(@NonNull final Parcel src) {
+			return new Participants(src);
+		}
+
+		@Override
+		public Participants[] newArray(final int size) {
+			return new Participants[size];
+		}
+	};
+
+	public static class Participant implements Parcelable {
 		public final Long id;		// <unique numeric ID of the participant>,
 		public final String display;	// "<display name of the participant, if any; optional>",
 		public final boolean publisher;	// "<true|false, whether user is an active publisher in the room>",
@@ -50,6 +102,17 @@ public class Participants {
 			this.talking = talking;
 		}
 
+		protected Participant(@NonNull final Parcel src) {
+			if (src.readByte() == 0) {
+				id = null;
+			} else {
+				id = src.readLong();
+			}
+			display = src.readString();
+			publisher = src.readByte() != 0;
+			talking = src.readByte() != 0;
+		}
+
 		@NonNull
 		@Override
 		public String toString() {
@@ -60,15 +123,35 @@ public class Participants {
 				", talking=" + talking +
 				'}';
 		}
-	}
 
-	@NonNull
-	@Override
-	public String toString() {
-		return "Participants{" +
-			"videoroom='" + videoroom + '\'' +
-			", room=" + room +
-			", participants=" + Arrays.toString(participants) +
-			'}';
+		@Override
+		public int describeContents() {
+			return 0;
+		}
+
+		@Override
+		public void writeToParcel(@NonNull final Parcel dst, final int flags) {
+			if (id == null) {
+				dst.writeByte((byte) 0);
+			} else {
+				dst.writeByte((byte) 1);
+				dst.writeLong(id);
+			}
+			dst.writeString(display);
+			dst.writeByte((byte) (publisher ? 1 : 0));
+			dst.writeByte((byte) (talking ? 1 : 0));
+		}
+
+		public static final Creator<Participant> CREATOR = new Creator<Participant>() {
+			@Override
+			public Participant createFromParcel(@NonNull final Parcel src) {
+				return new Participant(src);
+			}
+
+			@Override
+			public Participant[] newArray(final int size) {
+				return new Participant[size];
+			}
+		};
 	}
 }

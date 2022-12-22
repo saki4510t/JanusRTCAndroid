@@ -19,9 +19,12 @@ package com.serenegiant.janus.response.videoroom;
  *
 */
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import androidx.annotation.NonNull;
 
-public class PublisherInfo {
+public class PublisherInfo implements Parcelable {
 	/** パブリッシャーのID, XXX これはStringの方がいいのかも */
 	public final Long id;
 	public final String display;
@@ -40,7 +43,19 @@ public class PublisherInfo {
 		this.video_codec = video_codec;
 		this.talking = talking;
 	}
-	
+
+	protected PublisherInfo(@NonNull final Parcel src) {
+		if (src.readByte() == 0) {
+			id = null;
+		} else {
+			id = src.readLong();
+		}
+		display = src.readString();
+		audio_codec = src.readString();
+		video_codec = src.readString();
+		talking = src.readByte() != 0;
+	}
+
 	/**
 	 * 引数がPublisherの場合にidの比較のみを行う
 	 * @param o
@@ -48,7 +63,6 @@ public class PublisherInfo {
 	 */
 	@Override
 	public boolean equals(final Object o) {
-
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		final PublisherInfo publisher = (PublisherInfo) o;
@@ -76,4 +90,35 @@ public class PublisherInfo {
 			", talking=" + talking +
 			'}';
 	}
+
+	@Override
+	public int describeContents() {
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(@NonNull final Parcel dst, final int flags) {
+		if (id == null) {
+			dst.writeByte((byte) 0);
+		} else {
+			dst.writeByte((byte) 1);
+			dst.writeLong(id);
+		}
+		dst.writeString(display);
+		dst.writeString(audio_codec);
+		dst.writeString(video_codec);
+		dst.writeByte((byte) (talking ? 1 : 0));
+	}
+
+	public static final Creator<PublisherInfo> CREATOR = new Creator<PublisherInfo>() {
+		@Override
+		public PublisherInfo createFromParcel(@NonNull final Parcel src) {
+			return new PublisherInfo(src);
+		}
+
+		@Override
+		public PublisherInfo[] newArray(final int size) {
+			return new PublisherInfo[size];
+		}
+	};
 }

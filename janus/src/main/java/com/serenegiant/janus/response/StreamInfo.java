@@ -19,13 +19,16 @@ package com.serenegiant.janus.response;
  *
 */
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
  * subscribe/switchリクエストの結果
  */
-public class StreamInfo {
+public class StreamInfo implements Parcelable {
 	public final Long feed;	// <unique ID of the publisher the new source is from>,
 	@Nullable
 	public final String mid;		// "<unique mid of the source we want to switch to>"
@@ -39,6 +42,16 @@ public class StreamInfo {
 		this.sub_mid = sub_mid;
 	}
 
+	protected StreamInfo(@NonNull final Parcel src) {
+		if (src.readByte() == 0) {
+			feed = null;
+		} else {
+			feed = src.readLong();
+		}
+		mid = src.readString();
+		sub_mid = src.readString();
+	}
+
 	@NonNull
 	@Override
 	public String toString() {
@@ -48,4 +61,33 @@ public class StreamInfo {
 			", sub_mid=" + sub_mid +
 			'}';
 	}
+
+	@Override
+	public int describeContents() {
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(@NonNull final Parcel dst, int flags) {
+		if (feed == null) {
+			dst.writeByte((byte) 0);
+		} else {
+			dst.writeByte((byte) 1);
+			dst.writeLong(feed);
+		}
+		dst.writeString(mid);
+		dst.writeString(sub_mid);
+	}
+
+	public static final Creator<StreamInfo> CREATOR = new Creator<StreamInfo>() {
+		@Override
+		public StreamInfo createFromParcel(@NonNull final Parcel src) {
+			return new StreamInfo(src);
+		}
+
+		@Override
+		public StreamInfo[] newArray(final int size) {
+			return new StreamInfo[size];
+		}
+	};
 }
