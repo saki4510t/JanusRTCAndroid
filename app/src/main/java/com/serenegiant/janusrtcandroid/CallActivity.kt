@@ -14,7 +14,6 @@ import com.serenegiant.janusrtcandroid.CpuMonitor.Companion.isSupported
 import com.serenegiant.janusrtcandroid.CallFragment.OnCallEvents
 import com.serenegiant.janus.ProxyVideoSink
 import com.serenegiant.janus.VideoRoomClient
-import com.serenegiant.utils.runOnUiThread
 import org.appspot.apprtc.AppRTCAudioManager
 import android.widget.Toast
 import org.appspot.apprtc.RoomConnectionParameters
@@ -35,13 +34,16 @@ import android.util.Log
 import android.view.View
 import android.view.Window
 import androidx.fragment.app.FragmentTransaction
+import androidx.lifecycle.lifecycleScope
 import com.serenegiant.janus.JanusCallback
 import com.serenegiant.janus.request.videoroom.ConfigPublisher
 import retrofit2.Retrofit
 import org.webrtc.PeerConnection.IceServer
 import com.serenegiant.janus.response.videoroom.PublisherInfo
 import com.serenegiant.janus.response.videoroom.RoomEvent
-import com.serenegiant.utils.HandlerThreadHandler
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import org.json.JSONObject
 import org.webrtc.*
@@ -53,7 +55,6 @@ import java.util.ArrayList
  * and call view.
  */
 class CallActivity : BaseActivity(), OnCallEvents {
-	private val asyncHandler = HandlerThreadHandler.createHandler(TAG)
 	private val remoteProxyRenderer1 = ProxyVideoSink()
 	private val remoteProxyRenderer2 = ProxyVideoSink()
 	private val localProxyVideoSink = ProxyVideoSink()
@@ -269,7 +270,10 @@ class CallActivity : BaseActivity(), OnCallEvents {
 
 		// For command line execution run connection for <runTimeMs> and exit.
 		if (commandLineRun && runTimeMs > 0) {
-			runOnUiThread({ disconnect() }, runTimeMs.toLong())
+			lifecycleScope.launch {
+				delay(runTimeMs.toLong())
+				disconnect()
+			}
 		}
 		if (screenCaptureEnabled) {
 			startScreenCapture()
@@ -393,7 +397,6 @@ class CallActivity : BaseActivity(), OnCallEvents {
 		if (logToast != null) {
 			logToast!!.cancel()
 		}
-		asyncHandler.quit()
 		activityRunning = false
 		super.onDestroy()
 	}
@@ -565,7 +568,7 @@ class CallActivity : BaseActivity(), OnCallEvents {
 	}
 
 	private fun reportError(description: String?) {
-		runOnUiThread {
+		lifecycleScope.launch {
 			if (!isError) {
 				isError = true
 				disconnectWithErrorMessage(description)
@@ -673,7 +676,7 @@ class CallActivity : BaseActivity(), OnCallEvents {
 
 		override fun onConnectServer(client: JanusVideoRoomClient) {
 			if (DEBUG) Log.v(TAG, "onConnectServer:")
-			runOnUiThread {
+			lifecycleScope.launch {
 				var videoCapturer: VideoCapturer? = null
 				if (peerConnectionParameters!!.videoCallEnabled) {
 					videoCapturer = createVideoCapturer()
@@ -692,7 +695,7 @@ class CallActivity : BaseActivity(), OnCallEvents {
 
 		override fun onConnectedToRoom(initiator: Boolean, room: RoomEvent.Data) {
 			if (DEBUG) Log.v(TAG, "onConnectedToRoom:$room")
-			runOnUiThread { onConnectedToRoomInternal(initiator) }
+			lifecycleScope.launch { onConnectedToRoomInternal(initiator) }
 		}
 
 		override fun onDisconnected() {
@@ -703,7 +706,7 @@ class CallActivity : BaseActivity(), OnCallEvents {
 		override fun onIceConnected() {
 			if (DEBUG) Log.v(TAG, "onIceConnected:")
 			val delta = System.currentTimeMillis() - callStartedTimeMs
-			runOnUiThread {
+			lifecycleScope.launch {
 				logAndToast("ICE connected, delay=" + delta + "ms")
 				iceConnected = true
 				callConnected()
@@ -712,7 +715,7 @@ class CallActivity : BaseActivity(), OnCallEvents {
 
 		override fun onIceDisconnected() {
 			if (DEBUG) Log.v(TAG, "onIceDisconnected:")
-			runOnUiThread {
+			lifecycleScope.launch {
 				logAndToast("ICE disconnected")
 				iceConnected = false
 				disconnect()
@@ -726,17 +729,18 @@ class CallActivity : BaseActivity(), OnCallEvents {
 		override fun onEnter(info: PublisherInfo) {
 			if (DEBUG) Log.v(TAG, "onEnter:$info,publishers=${janusClient?.publishers},subscribers=${janusClient?.subscribers}")
 			mNumUsers++
-			asyncHandler.postDelayed({
+			lifecycleScope.launch(Dispatchers.IO) {
+				delay(1000L)
 				val r = janusClient?.configure(ConfigPublisher(2000000))
 				if (DEBUG) Log.v(TAG, "onEnter:configure=$r")
-			}, 1000)
+			}
 		}
 
 		override fun onLeave(info: PublisherInfo, numUsers: Int) {
 			mNumUsers--
 			if (DEBUG) Log.v(TAG, "onLeave:$info,numUsers=$numUsers/$mNumUsers")
 			if (mNumUsers <= 0) {
-				asyncHandler.post {
+				lifecycleScope.launch(Dispatchers.IO) {
 					val r = janusClient?.configure(ConfigPublisher(1000000))
 					if (DEBUG) Log.v(TAG, "onLeave:configure=$r")
 				}
@@ -763,18 +767,18 @@ class CallActivity : BaseActivity(), OnCallEvents {
 		override fun onRemoteDescription(sdp: SessionDescription) {
 			if (DEBUG) Log.v(TAG, "onRemoteDescription:")
 			val delta = System.currentTimeMillis() - callStartedTimeMs
-			runOnUiThread(Runnable {
+			lifecycleScope.launch {
 				if (janusClient == null) {
 					Log.e(TAG, "Received remote SDP for non-initialized peer connection.")
-					return@Runnable
+					return@launch
 				}
 				logAndToast("Received remote " + sdp.type + ", delay=" + delta + "ms")
-			})
+			}
 		}
 
 		override fun onRemoteIceCandidate(candidate: IceCandidate) {
 			if (DEBUG) Log.v(TAG, "onRemoteIceCandidate:")
-			runOnUiThread {
+			lifecycleScope.launch {
 				if (janusClient == null) {
 					Log.e(TAG, "Received ICE candidate for a non-initialized peer connection.")
 				}
@@ -783,7 +787,7 @@ class CallActivity : BaseActivity(), OnCallEvents {
 
 		override fun onRemoteIceCandidatesRemoved(candidates: Array<IceCandidate>) {
 			if (DEBUG) Log.v(TAG, "onRemoteIceCandidatesRemoved:")
-			runOnUiThread {
+			lifecycleScope.launch {
 				if (janusClient == null) {
 					Log.e(
 						TAG,
@@ -797,7 +801,7 @@ class CallActivity : BaseActivity(), OnCallEvents {
 			if (DEBUG) Log.v(TAG, "onChannelClose:")
 			if (mNumUsers <= 0) {
 				// パブリッシャーが全員退室したときは自分も退室する
-				runOnUiThread {
+				lifecycleScope.launch {
 					logAndToast("Remote end hung up; dropping PeerConnection")
 					disconnect()
 				}
