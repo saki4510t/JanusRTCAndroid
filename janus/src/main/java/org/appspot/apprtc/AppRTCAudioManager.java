@@ -448,6 +448,7 @@ public class AppRTCAudioManager {
 	 */
 	private void setSpeakerphoneOn(boolean on) {
 		boolean wasOn = audioManager.isSpeakerphoneOn();
+		if (DEBUG) Log.d(TAG, "setSpeakerphoneOn:" + wasOn + "=>" + on);
 		if (wasOn == on) {
 			return;
 		}
@@ -459,6 +460,7 @@ public class AppRTCAudioManager {
 	 */
 	private void setMicrophoneMute(boolean on) {
 		boolean wasMuted = audioManager.isMicrophoneMute();
+		if (DEBUG) Log.d(TAG, "setMicrophoneMute:" + wasMuted + "=>" + on);
 		if (wasMuted == on) {
 			return;
 		}
@@ -589,12 +591,14 @@ public class AppRTCAudioManager {
 		
 		// Start or stop Bluetooth SCO connection given states set earlier.
 		if (needBluetoothAudioStop) {
+			if (DEBUG) Log.d(TAG, "stop Bluetooth SCO audio");
 			bluetoothManager.stopScoAudio();
 			bluetoothManager.updateDevice();
 		}
 		
 		if (needBluetoothAudioStart && !needBluetoothAudioStop) {
 			// Attempt to start Bluetooth SCO audio (takes a few second to start).
+			if (DEBUG) Log.d(TAG, "start Bluetooth SCO audio");
 			if (!bluetoothManager.startScoAudio()) {
 				// Remove BLUETOOTH from list of available devices since SCO failed.
 				audioDevices.remove(AudioDevice.BLUETOOTH);
