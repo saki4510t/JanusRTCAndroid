@@ -534,17 +534,21 @@ public class AppRTCAudioManager {
 		if (bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_CONNECTED
 			|| bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_CONNECTING
 			|| bluetoothManager.getState() == AppRTCBluetoothManager.State.HEADSET_AVAILABLE) {
+			if (DEBUG) Log.d(TAG, "add BLUETOOTH");
 			newAudioDevices.add(AudioDevice.BLUETOOTH);
 		}
 		
 		if (hasWiredHeadset) {
 			// If a wired headset is connected, then it is the only possible option.
+			if (DEBUG) Log.d(TAG, "add WIRED_HEADSET");
 			newAudioDevices.add(AudioDevice.WIRED_HEADSET);
 		} else {
 			// No wired headset, hence the audio-device list can contain speaker
 			// phone (on a tablet), or speaker phone and earpiece (on mobile phone).
+			if (DEBUG) Log.d(TAG, "add SPEAKER_PHONE");
 			newAudioDevices.add(AudioDevice.SPEAKER_PHONE);
 			if (hasEarpiece()) {
+				if (DEBUG) Log.d(TAG, "add EARPIECE");
 				newAudioDevices.add(AudioDevice.EARPIECE);
 			}
 		}
