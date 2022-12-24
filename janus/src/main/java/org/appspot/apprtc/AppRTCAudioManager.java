@@ -19,6 +19,8 @@ import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
 import android.os.Build;
 import android.preference.PreferenceManager;
+
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import android.util.Log;
 
@@ -112,7 +114,8 @@ public class AppRTCAudioManager {
 	
 	// Contains a list of available audio devices. A Set collection is used to
 	// avoid duplicate elements.
-	private Set<AudioDevice> audioDevices = new HashSet<>();
+	@NonNull
+	private final Set<AudioDevice> audioDevices = new HashSet<>();
 	
 	// Broadcast receiver for wired headset intent broadcasts.
 	private final BroadcastReceiver wiredHeadsetReceiver;
@@ -526,7 +529,7 @@ public class AppRTCAudioManager {
 		}
 		
 		// Update the set of available audio devices.
-		Set<AudioDevice> newAudioDevices = new HashSet<>();
+		final Set<AudioDevice> newAudioDevices = new HashSet<>();
 		
 		if (bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_CONNECTED
 			|| bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_CONNECTING
@@ -548,7 +551,8 @@ public class AppRTCAudioManager {
 		// Store state which is set to true if the device list has changed.
 		boolean audioDeviceSetUpdated = !audioDevices.equals(newAudioDevices);
 		// Update the existing audio device set.
-		audioDevices = newAudioDevices;
+		audioDevices.clear();
+		audioDevices.addAll(newAudioDevices);
 		// Correct user selected audio devices if needed.
 		if (bluetoothManager.getState() == AppRTCBluetoothManager.State.HEADSET_UNAVAILABLE
 			&& userSelectedAudioDevice == AudioDevice.BLUETOOTH) {
