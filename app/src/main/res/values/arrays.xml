@@ -45,12 +45,14 @@
         <item>Auto (proximity sensor)</item>
         <item>Enabled</item>
         <item>Disabled</item>
+        <item>As possible</item>
     </string-array>
 
     <string-array name="speakerphoneValues">
         <item>auto</item>
         <item>true</item>
         <item>false</item>
+        <item>asPossible</item>
     </string-array>
 
     <string-array name="roomListContextMenu">
