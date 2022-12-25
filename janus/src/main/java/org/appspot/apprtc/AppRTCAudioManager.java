@@ -641,7 +641,7 @@ public class AppRTCAudioManager {
 			setAudioDeviceInternal(newAudioDevice);
 			if (DEBUG) Log.d(TAG, "New device status: "
 				+ "available=" + audioDevices + ", "
-				+ "selected=" + newAudioDevice);
+				+ "selected=" + selectedAudioDevice);
 			if (audioManagerEvents != null) {
 				// Notify a listening client that audio device has been changed.
 				audioManagerEvents.onAudioDeviceChanged(selectedAudioDevice, audioDevices);
