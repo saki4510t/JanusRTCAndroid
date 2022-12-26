@@ -27,6 +27,7 @@ import android.util.Log;
 import org.appspot.apprtc.util.AppRTCUtils;
 import org.webrtc.ThreadUtils;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
@@ -65,6 +66,14 @@ public class AppRTCBluetoothManager {
 		// Bluetooth audio SCO connection with remote device is established.
 		SCO_CONNECTED
 	}
+
+	public static final EnumSet<State> HAS_BT_SCO = EnumSet.of(
+		State.HEADSET_AVAILABLE, State.SCO_CONNECTING,  State.SCO_CONNECTED
+	);
+
+	public static final EnumSet<State> BT_SCO_START = EnumSet.of(
+		State.SCO_CONNECTING,  State.SCO_CONNECTED
+	);
 
 	private final Context apprtcContext;
 	private final AppRTCAudioManager apprtcAudioManager;
