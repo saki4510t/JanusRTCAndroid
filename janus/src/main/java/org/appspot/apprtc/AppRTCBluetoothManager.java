@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Set;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.UiThread;
 
 /**
  * AppRTCProximitySensor manages functions related to Bluetoth devices in the
@@ -209,11 +210,13 @@ public class AppRTCBluetoothManager {
 	/**
 	 * Construction.
 	 */
+	@UiThread
 	static AppRTCBluetoothManager create(Context context, AppRTCAudioManager audioManager) {
 		if (DEBUG) Log.d(TAG, "create" + AppRTCUtils.getThreadInfo());
 		return new AppRTCBluetoothManager(context, audioManager);
 	}
 
+	@UiThread
 	protected AppRTCBluetoothManager(Context context, AppRTCAudioManager audioManager) {
 		if (DEBUG) Log.d(TAG, "ctor");
 		ThreadUtils.checkIsOnMainThread();
@@ -229,6 +232,7 @@ public class AppRTCBluetoothManager {
 	/**
 	 * Returns the internal state.
 	 */
+	@UiThread
 	public State getState() {
 		ThreadUtils.checkIsOnMainThread();
 		return bluetoothState;
@@ -247,6 +251,7 @@ public class AppRTCBluetoothManager {
 	 * Note that the AppRTCAudioManager is also involved in driving this state
 	 * change.
 	 */
+	@UiThread
 	public void start() {
 		ThreadUtils.checkIsOnMainThread();
 		if (DEBUG) Log.d(TAG, "start");
@@ -297,6 +302,7 @@ public class AppRTCBluetoothManager {
 	/**
 	 * Stops and closes all components related to Bluetooth audio.
 	 */
+	@UiThread
 	public void stop() {
 		ThreadUtils.checkIsOnMainThread();
 		if (DEBUG) Log.d(TAG, "stop: BT state=" + bluetoothState);
@@ -334,6 +340,7 @@ public class AppRTCBluetoothManager {
 	 * higher. It might be required to initiates a virtual voice call since many devices do not
 	 * accept SCO audio without a "call".
 	 */
+	@UiThread
 	public boolean startScoAudio() {
 		ThreadUtils.checkIsOnMainThread();
 		if (DEBUG) Log.d(TAG, "startSco: BT state=" + bluetoothState + ", "
@@ -365,6 +372,7 @@ public class AppRTCBluetoothManager {
 	/**
 	 * Stops Bluetooth SCO connection with remote device.
 	 */
+	@UiThread
 	public void stopScoAudio() {
 		ThreadUtils.checkIsOnMainThread();
 		if (DEBUG) Log.d(TAG, "stopScoAudio: BT state=" + bluetoothState + ", "
@@ -461,6 +469,7 @@ public class AppRTCBluetoothManager {
 	/**
 	 * Ensures that the audio manager updates its list of available audio devices.
 	 */
+	@UiThread
 	private void updateAudioDeviceState() {
 		ThreadUtils.checkIsOnMainThread();
 		if (DEBUG) Log.d(TAG, "updateAudioDeviceState");
@@ -470,6 +479,7 @@ public class AppRTCBluetoothManager {
 	/**
 	 * Starts timer which times out after BLUETOOTH_SCO_TIMEOUT_MS milliseconds.
 	 */
+	@UiThread
 	private void startTimer() {
 		ThreadUtils.checkIsOnMainThread();
 		if (DEBUG) Log.d(TAG, "startTimer");
@@ -479,6 +489,7 @@ public class AppRTCBluetoothManager {
 	/**
 	 * Cancels any outstanding timer tasks.
 	 */
+	@UiThread
 	private void cancelTimer() {
 		ThreadUtils.checkIsOnMainThread();
 		if (DEBUG) Log.d(TAG, "cancelTimer");
@@ -489,6 +500,7 @@ public class AppRTCBluetoothManager {
 	 * Called when start of the BT SCO channel takes too long time. Usually
 	 * happens when the BT device has been turned on during an ongoing call.
 	 */
+	@UiThread
 	private void bluetoothTimeout() {
 		ThreadUtils.checkIsOnMainThread();
 		if (bluetoothState == State.UNINITIALIZED || bluetoothHeadset == null) {

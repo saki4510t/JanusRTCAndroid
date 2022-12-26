@@ -22,6 +22,8 @@ import android.preference.PreferenceManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.UiThread;
+
 import android.util.Log;
 
 import com.serenegiant.janus.R;
@@ -174,6 +176,7 @@ public class AppRTCAudioManager {
 	/**
 	 * Construction.
 	 */
+	@UiThread
 	public static AppRTCAudioManager create(Context context) {
 		return new AppRTCAudioManager(context);
 	}
@@ -221,6 +224,7 @@ public class AppRTCAudioManager {
 	@SuppressLint("WrongConstant")
 	@SuppressWarnings("deprecation")
 	// TODO(henrika): audioManager.requestAudioFocus() is deprecated.
+	@UiThread
 	public void start(AudioManagerEvents audioManagerEvents) {
 		if (DEBUG) Log.d(TAG, "start");
 		ThreadUtils.checkIsOnMainThread();
@@ -383,6 +387,7 @@ public class AppRTCAudioManager {
 	 * Changes default audio device.
 	 * TODO(henrika): add usage of this method in the AppRTCMobile client.
 	 */
+	@UiThread
 	public void setDefaultAudioDevice(AudioDevice defaultDevice) {
 		ThreadUtils.checkIsOnMainThread();
 		switch (defaultDevice) {
@@ -407,6 +412,7 @@ public class AppRTCAudioManager {
 	/**
 	 * Changes selection of the currently active audio device.
 	 */
+	@UiThread
 	public void selectAudioDevice(AudioDevice device) {
 		ThreadUtils.checkIsOnMainThread();
 		if (!audioDevices.contains(device)) {
@@ -419,6 +425,7 @@ public class AppRTCAudioManager {
 	/**
 	 * Returns current set of available/selectable audio devices.
 	 */
+	@UiThread
 	public Set<AudioDevice> getAudioDevices() {
 		ThreadUtils.checkIsOnMainThread();
 		return Collections.unmodifiableSet(new HashSet<>(audioDevices));
@@ -427,6 +434,7 @@ public class AppRTCAudioManager {
 	/**
 	 * Returns the currently selected audio device.
 	 */
+	@UiThread
 	public AudioDevice getSelectedAudioDevice() {
 		ThreadUtils.checkIsOnMainThread();
 		return selectedAudioDevice;
@@ -509,6 +517,7 @@ public class AppRTCAudioManager {
 	 * Updates list of possible audio devices and make new device selection.
 	 * TODO(henrika): add unit test to verify all state transitions.
 	 */
+	@UiThread
 	public void updateAudioDeviceState() {
 		ThreadUtils.checkIsOnMainThread();
 		if (DEBUG) Log.d(TAG, "--- updateAudioDeviceState: "
