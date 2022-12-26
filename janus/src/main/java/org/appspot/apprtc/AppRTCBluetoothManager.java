@@ -76,6 +76,10 @@ public class AppRTCBluetoothManager {
 		State.SCO_CONNECTING,  State.SCO_CONNECTED
 	);
 
+	public static final EnumSet<State> NEED_UPDATE = EnumSet.of(
+		State.HEADSET_AVAILABLE, State.HEADSET_UNAVAILABLE, State.SCO_DISCONNECTING
+	);
+
 	private final Context apprtcContext;
 	private final AppRTCAudioManager apprtcAudioManager;
 	@Nullable

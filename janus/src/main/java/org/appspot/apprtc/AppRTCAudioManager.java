@@ -531,22 +531,18 @@ public class AppRTCAudioManager {
 		// Check if any Bluetooth headset is connected. The internal BT state will
 		// change accordingly.
 		// TODO(henrika): perhaps wrap required state into BT manager.
-		if (bluetoothManager.getState() == AppRTCBluetoothManager.State.HEADSET_AVAILABLE
-			|| bluetoothManager.getState() == AppRTCBluetoothManager.State.HEADSET_UNAVAILABLE
-			|| bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_DISCONNECTING) {
+		if (AppRTCBluetoothManager.NEED_UPDATE.contains(bluetoothManager.getState())) {
 			bluetoothManager.updateDevice();
 		}
-		
+
 		// Update the set of available audio devices.
 		final Set<AudioDevice> newAudioDevices = new HashSet<>();
-		
-		if (bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_CONNECTED
-			|| bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_CONNECTING
-			|| bluetoothManager.getState() == AppRTCBluetoothManager.State.HEADSET_AVAILABLE) {
+
+		if (AppRTCBluetoothManager.HAS_BT_SCO.contains(bluetoothManager.getState())) {
 			if (DEBUG) Log.d(TAG, "add BLUETOOTH");
 			newAudioDevices.add(AudioDevice.BLUETOOTH);
 		}
-		
+
 		if (hasWiredHeadset) {
 			// If a wired headset is connected, then it is the only possible option.
 			if (DEBUG) Log.d(TAG, "add WIRED_HEADSET");
@@ -570,18 +566,18 @@ public class AppRTCAudioManager {
 		if (bluetoothManager.getState() == AppRTCBluetoothManager.State.HEADSET_UNAVAILABLE
 			&& userSelectedAudioDevice == AudioDevice.BLUETOOTH) {
 			// If BT is not available, it can't be the user selection.
-			userSelectedAudioDevice = AudioDevice.NONE;
-		}
+				userSelectedAudioDevice = AudioDevice.NONE;
+			}
 		if (hasWiredHeadset && userSelectedAudioDevice == AudioDevice.SPEAKER_PHONE) {
-			// If user selected speaker phone, but then plugged wired headset then make
-			// wired headset as user selected device.
-			userSelectedAudioDevice = AudioDevice.WIRED_HEADSET;
-		}
+					// If user selected speaker phone, but then plugged wired headset then make
+					// wired headset as user selected device.
+					userSelectedAudioDevice = AudioDevice.WIRED_HEADSET;
+				}
 		if (!hasWiredHeadset && userSelectedAudioDevice == AudioDevice.WIRED_HEADSET) {
-			// If user selected wired headset, but then unplugged wired headset then make
-			// speaker phone as user selected device.
-			userSelectedAudioDevice = AudioDevice.SPEAKER_PHONE;
-		}
+					// If user selected wired headset, but then unplugged wired headset then make
+					// speaker phone as user selected device.
+					userSelectedAudioDevice = AudioDevice.SPEAKER_PHONE;
+				}
 		
 		// Need to start Bluetooth if it is available and user either selected it explicitly or
 		// user did not select any output device.
@@ -597,15 +593,13 @@ public class AppRTCAudioManager {
 				|| bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_CONNECTING)
 				&& (userSelectedAudioDevice != AudioDevice.NONE
 				&& userSelectedAudioDevice != AudioDevice.BLUETOOTH);
-		
-		if (bluetoothManager.getState() == AppRTCBluetoothManager.State.HEADSET_AVAILABLE
-			|| bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_CONNECTING
-			|| bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_CONNECTED) {
+
+		if (AppRTCBluetoothManager.HAS_BT_SCO.contains(bluetoothManager.getState())) {
 			if (DEBUG) Log.d(TAG, "Need BT audio: start=" + needBluetoothAudioStart + ", "
 				+ "stop=" + needBluetoothAudioStop + ", "
 				+ "BT state=" + bluetoothManager.getState());
 		}
-		
+
 		// Start or stop Bluetooth SCO connection given states set earlier.
 		if (needBluetoothAudioStop) {
 			if (DEBUG) Log.d(TAG, "stop Bluetooth SCO audio");
