@@ -512,22 +512,10 @@ public class AppRTCAudioManager {
 			return false;
 		}
 	}
-	
-	/**
-	 * Updates list of possible audio devices and make new device selection.
-	 * TODO(henrika): add unit test to verify all state transitions.
-	 */
+
 	@UiThread
-	public void updateAudioDeviceState() {
+	private boolean updateDevices() {
 		ThreadUtils.checkIsOnMainThread();
-		if (DEBUG) Log.d(TAG, "--- updateAudioDeviceState: "
-			+ "wired headset=" + hasWiredHeadset + ", "
-			+ "BT state=" + bluetoothManager.getState());
-		if (DEBUG) Log.d(TAG, "Device status: "
-			+ "available=" + audioDevices + ", "
-			+ "selected=" + selectedAudioDevice + ", "
-			+ "user selected=" + userSelectedAudioDevice);
-		
 		// Check if any Bluetooth headset is connected. The internal BT state will
 		// change accordingly.
 		// TODO(henrika): perhaps wrap required state into BT manager.
@@ -547,6 +535,14 @@ public class AppRTCAudioManager {
 			// If a wired headset is connected, then it is the only possible option.
 			if (DEBUG) Log.d(TAG, "add WIRED_HEADSET");
 			newAudioDevices.add(AudioDevice.WIRED_HEADSET);
+			if (useSpeakerphone.equals(SPEAKERPHONE_AS_POSSIBLE)) {
+				if (DEBUG) Log.d(TAG, "add SPEAKER_PHONE");
+				newAudioDevices.add(AudioDevice.SPEAKER_PHONE);
+				if (hasEarpiece()) {
+					if (DEBUG) Log.d(TAG, "add EARPIECE");
+					newAudioDevices.add(AudioDevice.EARPIECE);
+				}
+			}
 		} else {
 			// No wired headset, hence the audio-device list can contain speaker
 			// phone (on a tablet), or speaker phone and earpiece (on mobile phone).
@@ -562,6 +558,26 @@ public class AppRTCAudioManager {
 		// Update the existing audio device set.
 		audioDevices.clear();
 		audioDevices.addAll(newAudioDevices);
+
+		return audioDeviceSetUpdated;
+	}
+
+	/**
+	 * Updates list of possible audio devices and make new device selection.
+	 * TODO(henrika): add unit test to verify all state transitions.
+	 */
+	@UiThread
+	public void updateAudioDeviceState() {
+		ThreadUtils.checkIsOnMainThread();
+		if (DEBUG) Log.d(TAG, "--- updateAudioDeviceState: "
+			+ "wired headset=" + hasWiredHeadset + ", "
+			+ "BT state=" + bluetoothManager.getState());
+		if (DEBUG) Log.d(TAG, "Device status: "
+			+ "available=" + audioDevices + ", "
+			+ "selected=" + selectedAudioDevice + ", "
+			+ "user selected=" + userSelectedAudioDevice);
+
+		boolean audioDeviceSetUpdated = updateDevices();
 		// Correct user selected audio devices if needed.
 		if (bluetoothManager.getState() == AppRTCBluetoothManager.State.HEADSET_UNAVAILABLE
 			&& userSelectedAudioDevice == AudioDevice.BLUETOOTH) {
