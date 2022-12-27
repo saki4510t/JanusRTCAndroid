@@ -38,8 +38,8 @@ import java.util.Set;
 /**
  * AppRTCAudioManager manages all audio related parts of the AppRTC demo.
  */
-public class AppRTCAudioManager {
-	private static final boolean DEBUG = false; // set false on production
+public class AppRTCAudioManager
+	implements AppRTCBluetoothManager.UpdateBluetoothStateListener {
 	private static final String TAG = AppRTCAudioManager.class.getSimpleName();
 	private static final String SPEAKERPHONE_AUTO = "auto";
 	private static final String SPEAKERPHONE_TRUE = "true";
@@ -560,6 +560,18 @@ public class AppRTCAudioManager {
 		audioDevices.addAll(newAudioDevices);
 
 		return audioDeviceSetUpdated;
+	}
+
+	/**
+	 * Bluetoothヘッドセットの接続状態が変化したとき
+	 * AppRTCBluetoothManagerから呼び出される
+	 */
+	@UiThread
+	@Override
+	public void onUpdateBluetoothHeadsetState() {
+		ThreadUtils.checkIsOnMainThread();
+		if (DEBUG) Log.d(TAG, "onUpdateBluetoothHeadsetState: userSelectedAudioDevice=" + userSelectedAudioDevice);
+		updateAudioDeviceState();
 	}
 
 	/**

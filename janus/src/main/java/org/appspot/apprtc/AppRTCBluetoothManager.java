@@ -31,6 +31,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 
@@ -42,6 +43,14 @@ import androidx.annotation.UiThread;
 public class AppRTCBluetoothManager {
 	private static final boolean DEBUG = false; // set false on production
 	private static final String TAG = AppRTCBluetoothManager.class.getSimpleName();
+
+	/**
+	 * Bleutoothの接続状態が変化したときのコールバックリスナー
+	 */
+	public interface UpdateBluetoothStateListener {
+		@UiThread
+		public void onUpdateBluetoothHeadsetState();
+	}
 
 	// Timeout interval for starting or stopping audio to a Bluetooth SCO device.
 	private static final int BLUETOOTH_SCO_TIMEOUT_MS = 4000;
@@ -81,7 +90,7 @@ public class AppRTCBluetoothManager {
 	);
 
 	private final Context apprtcContext;
-	private final AppRTCAudioManager apprtcAudioManager;
+	private final UpdateBluetoothStateListener mListener;
 	@Nullable
 	private final AudioManager audioManager;
 	private final Handler handler;
@@ -215,17 +224,22 @@ public class AppRTCBluetoothManager {
 	 * Construction.
 	 */
 	@UiThread
-	static AppRTCBluetoothManager create(Context context, AppRTCAudioManager audioManager) {
+	static AppRTCBluetoothManager create(
+		@NonNull final Context context,
+		@NonNull final UpdateBluetoothStateListener listener) {
 		if (DEBUG) Log.d(TAG, "create" + AppRTCUtils.getThreadInfo());
-		return new AppRTCBluetoothManager(context, audioManager);
+		return new AppRTCBluetoothManager(context, listener);
 	}
 
 	@UiThread
-	protected AppRTCBluetoothManager(Context context, AppRTCAudioManager audioManager) {
+	protected AppRTCBluetoothManager(
+		@NonNull final Context context,
+		@NonNull final UpdateBluetoothStateListener listener) {
+
 		if (DEBUG) Log.d(TAG, "ctor");
 		ThreadUtils.checkIsOnMainThread();
 		apprtcContext = context;
-		apprtcAudioManager = audioManager;
+		mListener = listener;
 		this.audioManager = getAudioManager(context);
 		bluetoothState = State.UNINITIALIZED;
 		bluetoothServiceListener = new BluetoothServiceListener();
@@ -477,7 +491,7 @@ public class AppRTCBluetoothManager {
 	private void updateAudioDeviceState() {
 		ThreadUtils.checkIsOnMainThread();
 		if (DEBUG) Log.d(TAG, "updateAudioDeviceState");
-		apprtcAudioManager.updateAudioDeviceState();
+		mListener.onUpdateBluetoothHeadsetState();
 	}
 
 	/**
