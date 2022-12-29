@@ -14,18 +14,13 @@ import com.serenegiant.janusrtcandroid.CpuMonitor.Companion.isSupported
 import com.serenegiant.janusrtcandroid.CallFragment.OnCallEvents
 import com.serenegiant.janus.ProxyVideoSink
 import com.serenegiant.janus.VideoRoomClient
-import org.appspot.apprtc.AppRTCAudioManager
 import android.widget.Toast
-import org.appspot.apprtc.RoomConnectionParameters
-import org.appspot.apprtc.PeerConnectionParameters
 import android.os.Bundle
-import org.appspot.apprtc.UnhandledExceptionHandler
 import android.view.WindowManager
 import android.content.Intent
 import org.webrtc.RendererCommon.ScalingType
 import android.content.pm.PackageManager
 import android.util.DisplayMetrics
-import org.appspot.apprtc.DataChannelParameters
 import com.serenegiant.janus.JanusVideoRoomClient
 import android.app.AlertDialog
 import android.media.projection.MediaProjectionManager
@@ -45,6 +40,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
+import org.appspot.apprtc.*
 import org.json.JSONObject
 import org.webrtc.*
 import java.io.IOException
@@ -62,7 +58,7 @@ class CallActivity : BaseActivity(), OnCallEvents {
 	private lateinit var pipRenderer2: SurfaceViewRenderer
 	private lateinit var fullscreenRenderer: SurfaceViewRenderer
 	private var janusClient: VideoRoomClient? = null
-	private var audioManager: AppRTCAudioManager? = null
+	private var audioManager: IAppRTCAudioManager? = null
 	private var videoFileRenderer: VideoFileRenderer? = null
 	private val remoteRenderers: MutableList<VideoSink> = ArrayList()
 	private var logToast: Toast? = null
@@ -468,7 +464,7 @@ class CallActivity : BaseActivity(), OnCallEvents {
 
 		// Create and audio manager that will take care of audio routing,
 		// audio modes, audio device enumeration etc.
-		audioManager = AppRTCAudioManager.create(applicationContext)
+		audioManager = AppRTCAudioManager2.create(applicationContext)
 		// Store existing audio settings and change audio mode to
 		// MODE_IN_COMMUNICATION for best possible VoIP performance.
 		if (DEBUG) Log.d(TAG, "Starting the audio manager...")
@@ -496,8 +492,8 @@ class CallActivity : BaseActivity(), OnCallEvents {
 	// This method is called when the audio manager reports audio device change,
 	// e.g. from wired headset to speakerphone.
 	private fun onAudioManagerDevicesChanged(
-		device: AppRTCAudioManager.AudioDevice,
-		availableDevices: Set<AppRTCAudioManager.AudioDevice>
+		device: IAppRTCAudioManager.AudioDevice,
+		availableDevices: Set<IAppRTCAudioManager.AudioDevice>
 	) {
 		if (DEBUG) Log.d(
 			TAG, "onAudioManagerDevicesChanged: " + availableDevices + ", "
