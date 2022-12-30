@@ -95,7 +95,7 @@ public class AppRTCBluetoothManager {
 	private final AudioManager audioManager;
 	private final Handler handler;
 
-	int scoConnectionAttempts;
+	private int scoConnectionAttempts;
 	private State bluetoothState;
 	private final BluetoothProfile.ServiceListener bluetoothServiceListener;
 	@Nullable
@@ -161,6 +161,7 @@ public class AppRTCBluetoothManager {
 				return;
 			}
 			final String action = intent.getAction();
+			if (DEBUG) Log.v(TAG, "onReceive:action=" + action);
 			// Change in connection state of the Headset profile. Note that the
 			// change does not tell us anything about whether we're streaming
 			// audio to BT over SCO. Typically received when user turns on a BT
@@ -169,10 +170,10 @@ public class AppRTCBluetoothManager {
 				final int state =
 					intent.getIntExtra(BluetoothHeadset.EXTRA_STATE, BluetoothHeadset.STATE_DISCONNECTED);
 				if (DEBUG) Log.d(TAG, "BluetoothHeadsetBroadcastReceiver.onReceive: "
-					+ "a=ACTION_CONNECTION_STATE_CHANGED, "
-					+ "s=" + stateToString(state) + ", "
-					+ "sb=" + isInitialStickyBroadcast() + ", "
-					+ "BT state: " + bluetoothState);
+					+ "action=ACTION_CONNECTION_STATE_CHANGED, "
+					+ "state=" + connectionStateToString(state) + ", "
+					+ "isInitialStickyBroadcast=" + isInitialStickyBroadcast() + ", "
+					+ "bluetoothState=" + bluetoothState);
 				if (state == BluetoothHeadset.STATE_CONNECTED) {
 					scoConnectionAttempts = 0;
 					updateAudioDeviceState();
@@ -191,10 +192,10 @@ public class AppRTCBluetoothManager {
 				final int state = intent.getIntExtra(
 					BluetoothHeadset.EXTRA_STATE, BluetoothHeadset.STATE_AUDIO_DISCONNECTED);
 				if (DEBUG) Log.d(TAG, "BluetoothHeadsetBroadcastReceiver.onReceive: "
-					+ "a=ACTION_AUDIO_STATE_CHANGED, "
-					+ "s=" + stateToString(state) + ", "
-					+ "sb=" + isInitialStickyBroadcast() + ", "
-					+ "BT state: " + bluetoothState);
+					+ "action=ACTION_AUDIO_STATE_CHANGED, "
+					+ "audioState=" + audioStateToString(state) + ", "
+					+ "isInitialStickyBroadcast=" + isInitialStickyBroadcast() + ", "
+					+ "bluetoothState=" + bluetoothState);
 				if (state == BluetoothHeadset.STATE_AUDIO_CONNECTED) {
 					cancelTimer();
 					if (bluetoothState == State.SCO_CONNECTING) {
@@ -203,7 +204,7 @@ public class AppRTCBluetoothManager {
 						scoConnectionAttempts = 0;
 						updateAudioDeviceState();
 					} else {
-						Log.w(TAG, "Unexpected state BluetoothHeadset.STATE_AUDIO_CONNECTED");
+						Log.w(TAG, "Unexpected state " + bluetoothState + ",expected=SCO_CONNECTING");
 					}
 				} else if (state == BluetoothHeadset.STATE_AUDIO_CONNECTING) {
 					if (DEBUG) Log.d(TAG, "+++ Bluetooth audio SCO is now connecting...");
@@ -236,7 +237,7 @@ public class AppRTCBluetoothManager {
 		@NonNull final Context context,
 		@NonNull final UpdateBluetoothStateListener listener) {
 
-		if (DEBUG) Log.d(TAG, "ctor");
+		if (DEBUG) Log.v(TAG, "ctor");
 		ThreadUtils.checkIsOnMainThread();
 		apprtcContext = context;
 		mListener = listener;
@@ -272,7 +273,7 @@ public class AppRTCBluetoothManager {
 	@UiThread
 	public void start() {
 		ThreadUtils.checkIsOnMainThread();
-		if (DEBUG) Log.d(TAG, "start");
+		if (DEBUG) Log.v(TAG, "start");
 		if (!hasPermission(apprtcContext, android.Manifest.permission.BLUETOOTH)) {
 			Log.w(TAG, "Process (pid=" + Process.myPid() + ") lacks BLUETOOTH permission");
 			return;
@@ -311,7 +312,7 @@ public class AppRTCBluetoothManager {
 		bluetoothHeadsetFilter.addAction(BluetoothHeadset.ACTION_AUDIO_STATE_CHANGED);
 		registerReceiver(bluetoothHeadsetReceiver, bluetoothHeadsetFilter);
 		if (DEBUG) Log.d(TAG, "HEADSET profile state: "
-			+ stateToString(bluetoothAdapter.getProfileConnectionState(BluetoothProfile.HEADSET)));
+			+ connectionStateToString(bluetoothAdapter.getProfileConnectionState(BluetoothProfile.HEADSET)));
 		if (DEBUG) Log.d(TAG, "Bluetooth proxy for headset profile has started");
 		bluetoothState = State.HEADSET_UNAVAILABLE;
 		if (DEBUG) Log.d(TAG, "start done: BT state=" + bluetoothState);
@@ -323,7 +324,7 @@ public class AppRTCBluetoothManager {
 	@UiThread
 	public void stop() {
 		ThreadUtils.checkIsOnMainThread();
-		if (DEBUG) Log.d(TAG, "stop: BT state=" + bluetoothState);
+		if (DEBUG) Log.v(TAG, "stop: BT state=" + bluetoothState);
 		if (bluetoothAdapter == null) {
 			return;
 		}
@@ -361,7 +362,7 @@ public class AppRTCBluetoothManager {
 	@UiThread
 	public boolean startScoAudio() {
 		ThreadUtils.checkIsOnMainThread();
-		if (DEBUG) Log.d(TAG, "startSco: BT state=" + bluetoothState + ", "
+		if (DEBUG) Log.v(TAG, "startScoAudio: BT state=" + bluetoothState + ", "
 			+ "attempts: " + scoConnectionAttempts + ", "
 			+ "SCO is on: " + isScoOn());
 		if (scoConnectionAttempts >= MAX_SCO_CONNECTION_ATTEMPTS) {
@@ -393,7 +394,7 @@ public class AppRTCBluetoothManager {
 	@UiThread
 	public void stopScoAudio() {
 		ThreadUtils.checkIsOnMainThread();
-		if (DEBUG) Log.d(TAG, "stopScoAudio: BT state=" + bluetoothState + ", "
+		if (DEBUG) Log.v(TAG, "stopScoAudio: BT state=" + bluetoothState + ", "
 			+ "SCO is on: " + isScoOn());
 		if (bluetoothState != State.SCO_CONNECTING && bluetoothState != State.SCO_CONNECTED) {
 			return;
@@ -417,7 +418,7 @@ public class AppRTCBluetoothManager {
 		if (bluetoothState == State.UNINITIALIZED || bluetoothHeadset == null) {
 			return;
 		}
-		if (DEBUG) Log.d(TAG, "updateDevice");
+		if (DEBUG) Log.v(TAG, "updateDevice");
 		// Get connected devices for the headset profile. Returns the set of
 		// devices which are in state STATE_CONNECTED. The BluetoothDevice class
 		// is just a thin wrapper for a Bluetooth hardware address.
@@ -432,7 +433,7 @@ public class AppRTCBluetoothManager {
 			bluetoothState = State.HEADSET_AVAILABLE;
 			if (DEBUG) Log.d(TAG, "Connected bluetooth headset: "
 				+ "name=" + bluetoothDevice.getName() + ", "
-				+ "state=" + stateToString(bluetoothHeadset.getConnectionState(bluetoothDevice))
+				+ "state=" + connectionStateToString(bluetoothHeadset.getConnectionState(bluetoothDevice))
 				+ ", SCO audio=" + bluetoothHeadset.isAudioConnected(bluetoothDevice));
 		}
 		if (DEBUG) Log.d(TAG, "updateDevice done: BT state=" + bluetoothState);
@@ -471,7 +472,7 @@ public class AppRTCBluetoothManager {
 	protected void logBluetoothAdapterInfo(BluetoothAdapter localAdapter) {
 		if (DEBUG) Log.d(TAG, "BluetoothAdapter: "
 			+ "enabled=" + localAdapter.isEnabled() + ", "
-			+ "state=" + stateToString(localAdapter.getState()) + ", "
+			+ "state=" + connectionStateToString(localAdapter.getState()) + ", "
 			+ "name=" + localAdapter.getName() + ", "
 			+ "address=" + localAdapter.getAddress());
 		// Log the set of BluetoothDevice objects that are bonded (paired) to the local adapter.
@@ -490,7 +491,7 @@ public class AppRTCBluetoothManager {
 	@UiThread
 	private void updateAudioDeviceState() {
 		ThreadUtils.checkIsOnMainThread();
-		if (DEBUG) Log.d(TAG, "updateAudioDeviceState");
+		if (DEBUG) Log.v(TAG, "updateAudioDeviceState");
 		mListener.onUpdateBluetoothHeadsetState();
 	}
 
@@ -500,7 +501,7 @@ public class AppRTCBluetoothManager {
 	@UiThread
 	private void startTimer() {
 		ThreadUtils.checkIsOnMainThread();
-		if (DEBUG) Log.d(TAG, "startTimer");
+		if (DEBUG) Log.v(TAG, "startTimer");
 		handler.postDelayed(bluetoothTimeoutRunnable, BLUETOOTH_SCO_TIMEOUT_MS);
 	}
 
@@ -510,7 +511,7 @@ public class AppRTCBluetoothManager {
 	@UiThread
 	private void cancelTimer() {
 		ThreadUtils.checkIsOnMainThread();
-		if (DEBUG) Log.d(TAG, "cancelTimer");
+		if (DEBUG) Log.v(TAG, "cancelTimer");
 		handler.removeCallbacks(bluetoothTimeoutRunnable);
 	}
 
@@ -524,7 +525,7 @@ public class AppRTCBluetoothManager {
 		if (bluetoothState == State.UNINITIALIZED || bluetoothHeadset == null) {
 			return;
 		}
-		if (DEBUG) Log.d(TAG, "bluetoothTimeout: BT state=" + bluetoothState + ", "
+		if (DEBUG) Log.v(TAG, "bluetoothTimeout: BT state=" + bluetoothState + ", "
 			+ "attempts: " + scoConnectionAttempts + ", "
 			+ "SCO is on: " + isScoOn());
 		if (bluetoothState != State.SCO_CONNECTING) {
@@ -565,7 +566,7 @@ public class AppRTCBluetoothManager {
 	/**
 	 * Converts BluetoothAdapter states into local string representations.
 	 */
-	private String stateToString(int state) {
+	private String connectionStateToString(int state) {
 		switch (state) {
 		case BluetoothAdapter.STATE_DISCONNECTED:
 			return "DISCONNECTED";
@@ -587,6 +588,22 @@ public class AppRTCBluetoothManager {
 			// Indicates the local Bluetooth adapter is turning on. However local clients should wait
 			// for STATE_ON before attempting to use the adapter.
 			return "TURNING_ON";
+		default:
+			return "INVALID";
+		}
+	}
+
+	/**
+	 * Converts audio states into local string representations.
+	 */
+	private String audioStateToString(int state) {
+		switch (state) {
+		case BluetoothHeadset.STATE_AUDIO_CONNECTING:
+			return "AUDIO_CONNECTING";
+		case BluetoothHeadset.STATE_AUDIO_CONNECTED:
+			return "AUDIO_CONNECTED";
+		case BluetoothHeadset.STATE_AUDIO_DISCONNECTED:
+			return "AUDIO_DISCONNECTED";
 		default:
 			return "INVALID";
 		}
