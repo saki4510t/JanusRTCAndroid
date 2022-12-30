@@ -533,14 +533,17 @@ public class AppRTCBluetoothManager {
 		}
 		// Bluetooth SCO should be connecting; check the latest result.
 		boolean scoConnected = false;
-		List<BluetoothDevice> devices = bluetoothHeadset.getConnectedDevices();
-		if (devices.size() > 0) {
-			bluetoothDevice = devices.get(0);
-			if (bluetoothHeadset.isAudioConnected(bluetoothDevice)) {
-				if (DEBUG) Log.d(TAG, "SCO connected with " + bluetoothDevice.getName());
-				scoConnected = true;
-			} else {
-				if (DEBUG) Log.d(TAG, "SCO is not connected with " + bluetoothDevice.getName());
+		final List<BluetoothDevice> devices = bluetoothHeadset.getConnectedDevices();
+		if (!devices.isEmpty()) {
+			for (final BluetoothDevice device: devices) {
+				if (bluetoothHeadset.isAudioConnected(device)) {
+					if (DEBUG) Log.d(TAG, "SCO connected with " + device.getName());
+					scoConnected = true;
+					bluetoothDevice = device;
+					break;
+				} else {
+					if (DEBUG) Log.d(TAG, "SCO is not connected with " + device.getName());
+				}
 			}
 		}
 		if (scoConnected) {
