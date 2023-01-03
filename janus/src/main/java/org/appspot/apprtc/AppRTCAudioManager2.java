@@ -109,6 +109,7 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 		// available audio devices.
 		if (audioDevices.size() == 2 && audioDevices.contains(AudioDevice.EARPIECE)
 			&& audioDevices.contains(AudioDevice.SPEAKER_PHONE)) {
+			if (DEBUG) Log.v(TAG, "onProximitySensorChangedState:");
 			if (proximitySensor.sensorReportsNearState()) {
 				// Sensor reports that a "handset is being held up to a person's ear",
 				// or "something is covering the light sensor".
@@ -691,6 +692,7 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 		// Switch to new device but only if there has been any changes.
 		if (newAudioDevice != selectedAudioDevice || audioDeviceSetUpdated) {
 			// Do the required device switch.
+			if (DEBUG) Log.d(TAG, "set new audio device," + newAudioDevice);
 			setAudioDeviceInternal(newAudioDevice);
 			if (DEBUG) Log.d(TAG, "New device status: "
 				+ "available=" + audioDevices + ", "
