@@ -1,5 +1,8 @@
 package org.appspot.apprtc;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.util.Set;
 
 import androidx.annotation.NonNull;
@@ -33,8 +36,37 @@ public interface IAppRTCAudioManager
 	 * AudioDevice is the names of possible audio devices that we currently
 	 * support.
 	 */
-	public enum AudioDevice {
-		SPEAKER_PHONE, WIRED_HEADSET, EARPIECE, BLUETOOTH, NONE
+	public enum AudioDevice implements Parcelable {
+		SPEAKER_PHONE, WIRED_HEADSET, EARPIECE, BLUETOOTH, NONE;
+
+		AudioDevice() {
+		}
+
+		AudioDevice(@NonNull final Parcel src) {
+		}
+
+		@Override
+		public int describeContents() {
+			return 0;
+		}
+
+		@Override
+		public void writeToParcel(@NonNull final Parcel dst, final int flags) {
+			dst.writeInt(ordinal());
+		}
+
+		public static final Creator<AudioDevice> CREATOR = new Creator<AudioDevice>() {
+			@Override
+			public AudioDevice createFromParcel(@NonNull final Parcel src) {
+				return AudioDevice.values()[src.readInt()];
+			}
+
+			@Override
+			public AudioDevice[] newArray(final int size) {
+				return new AudioDevice[size];
+			}
+		};
+
 	}
 
 	/**
