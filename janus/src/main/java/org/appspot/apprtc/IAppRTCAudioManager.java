@@ -17,18 +17,26 @@ public interface IAppRTCAudioManager
 
 	/**
 	 * スピーカーフォン設定を自動切り替え
+	 * 有線/無線ヘッドセットの切り替えを自動で行う
+	 * 近接センサーでの切り替えを自動で行う
 	 */
 	static final String SPEAKERPHONE_AUTO = "auto";
 	/**
 	 * スピーカーフォンを有効に
+	 * 有線/無線ヘッドセットへの切り替えは自動で行う
+	 * 近接センサーでの切り替えを自動で行わない
 	 */
 	static final String SPEAKERPHONE_TRUE = "true";
 	/**
 	 * スピーカーフォンを無効に
+	 * 有線/無線ヘッドセットへの切り替えは自動で行う
+	 * 近接センサーでの切り替えを自動で行わない
 	 */
 	static final String SPEAKERPHONE_FALSE = "false";
 	/**
 	 * ユーザーが他の音声機器を明示的に選択しない限りスピーカーフォンを有効にする
+	 * 有線/無線ヘッドセットへの切り替えは自動で行わない
+	 * 近接センサーでの切り替えを自動で行わない
 	 */
 	static final String SPEAKERPHONE_AS_POSSIBLE = "asPossible";
 
@@ -96,13 +104,30 @@ public interface IAppRTCAudioManager
 	@UiThread
 	public void stop();
 
+	/**
+	 * デフォルトで使う音声機器を指定する
+	 * EARPIECEを指定したときにEARPIECEが利用可能でなければSPEAKER_PHONEになる
+	 * @param defaultDevice SPEAKER_PHONEまたはEARPIECE
+	 */
 	@UiThread
 	public void setDefaultAudioDevice(@NonNull final AudioDevice defaultDevice);
+	/**
+	 * 指定した音声機器での通話への切り替えを試みる
+	 * @param device
+	 */
 	@UiThread
 	public void selectAudioDevice(@NonNull final AudioDevice device);
+	/**
+	 * 利用可能な音声聞き委一覧を取得する
+	 * @return
+	 */
 	@UiThread
 	@NonNull
 	public Set<AudioDevice> getAudioDevices();
+	/**
+	 * 現在選択されている音声機器を取得する
+	 * @return
+	 */
 	@UiThread
 	@NonNull
 	public AudioDevice getSelectedAudioDevice();
