@@ -168,15 +168,6 @@ public class AppRTCAudioManager implements IAppRTCAudioManager {
 			defaultAudioDevice = AudioDevice.SPEAKER_PHONE;
 		}
 
-		// Create and initialize the proximity sensor.
-		// Tablet devices (e.g. Nexus 7) does not support proximity sensors.
-		// Note that, the sensor will not be active until start() has been called.
-		proximitySensor = AppRTCProximitySensor.create(context,
-			// This method will be called each time a state change is detected.
-			// Example: user holds his hand over the device (closer than ~5 cm),
-			// or removes his hand from the device.
-			this::onProximitySensorChangedState);
-
 		if (DEBUG) Log.d(TAG, "defaultAudioDevice: " + defaultAudioDevice);
 		AppRTCUtils.logDeviceInfo(TAG);
 	}
@@ -281,6 +272,17 @@ public class AppRTCAudioManager implements IAppRTCAudioManager {
 		// detection of new (enabled) BT devices.
 		bluetoothManager.start();
 
+		// Create and initialize the proximity sensor.
+		// Tablet devices (e.g. Nexus 7) does not support proximity sensors.
+		// Note that, the sensor will not be active until start() has been called.
+		if (proximitySensor != null) {
+			proximitySensor.stop();
+		}
+		proximitySensor = AppRTCProximitySensor.create(apprtcContext,
+			// This method will be called each time a state change is detected.
+			// Example: user holds his hand over the device (closer than ~5 cm),
+			// or removes his hand from the device.
+			this::onProximitySensorChangedState);
 		if (proximitySensor != null) {
 			proximitySensor.start();
 		}

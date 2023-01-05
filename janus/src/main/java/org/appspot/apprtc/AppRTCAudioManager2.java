@@ -82,6 +82,7 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 	private AppRTCProximitySensor proximitySensor;
 
 	// Handles all tasks related to Bluetooth headset devices.
+	@NonNull
 	private final AppRTCBluetoothManager bluetoothManager;
 
 	// Contains a list of available audio devices. A Set collection is used to
@@ -90,6 +91,7 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 	private final Set<AudioDevice> audioDevices = new HashSet<>();
 
 	// Broadcast receiver for wired headset intent broadcasts.
+	@NonNull
 	private final BroadcastReceiver wiredHeadsetReceiver;
 
 	// Callback method for changes in audio focus.
@@ -131,14 +133,16 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			int state = intent.getIntExtra("state", STATE_UNPLUGGED);
-			int microphone = intent.getIntExtra("microphone", HAS_NO_MIC);
-			String name = intent.getStringExtra("name");
-			if (DEBUG) Log.d(TAG, "WiredHeadsetReceiver.onReceive" + AppRTCUtils.getThreadInfo() + ": "
+			final int state = intent.getIntExtra("state", STATE_UNPLUGGED);
+			if (DEBUG) {
+				final int microphone = intent.getIntExtra("microphone", HAS_NO_MIC);
+				final String name = intent.getStringExtra("name");
+				Log.d(TAG, "WiredHeadsetReceiver.onReceive" + AppRTCUtils.getThreadInfo() + ": "
 				+ "a=" + intent.getAction() + ", s="
 				+ (state == STATE_UNPLUGGED ? "unplugged" : "plugged") + ", m="
 				+ (microphone == HAS_MIC ? "mic" : "no mic") + ", n=" + name + ", sb="
 				+ isInitialStickyBroadcast());
+			}
 			hasWiredHeadset = (state == STATE_PLUGGED);
 			onUpdateWiredHeadsetState();
 		}
@@ -162,7 +166,7 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 		wiredHeadsetReceiver = new WiredHeadsetReceiver();
 		amState = AudioManagerState.UNINITIALIZED;
 
-		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+		final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 		useSpeakerphone = sharedPreferences.getString(context.getString(R.string.pref_speakerphone_key),
 			context.getString(R.string.pref_speakerphone_default));
 		if (DEBUG) Log.d(TAG, "useSpeakerphone: " + useSpeakerphone);
@@ -171,15 +175,6 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 		} else {
 			defaultAudioDevice = AudioDevice.SPEAKER_PHONE;
 		}
-
-		// Create and initialize the proximity sensor.
-		// Tablet devices (e.g. Nexus 7) does not support proximity sensors.
-		// Note that, the sensor will not be active until start() has been called.
-		proximitySensor = AppRTCProximitySensor.create(context,
-			// This method will be called each time a state change is detected.
-			// Example: user holds his hand over the device (closer than ~5 cm),
-			// or removes his hand from the device.
-			this::onProximitySensorChangedState);
 
 		if (DEBUG) Log.d(TAG, "defaultAudioDevice: " + defaultAudioDevice);
 		AppRTCUtils.logDeviceInfo(TAG);
@@ -260,7 +255,7 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 		};
 
 		// Request audio playout focus (without ducking) and install listener for changes in focus.
-		int result = audioManager.requestAudioFocus(audioFocusChangeListener,
+		final int result = audioManager.requestAudioFocus(audioFocusChangeListener,
 			AudioManager.STREAM_VOICE_CALL, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
 		if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
 			if (DEBUG) Log.d(TAG, "Audio focus request granted for VOICE_CALL streams");
@@ -284,6 +279,18 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 		// Initialize and start Bluetooth if a BT device is available or initiate
 		// detection of new (enabled) BT devices.
 		bluetoothManager.start();
+
+		// Create and initialize the proximity sensor.
+		// Tablet devices (e.g. Nexus 7) does not support proximity sensors.
+		// Note that, the sensor will not be active until start() has been called.
+		if (proximitySensor != null) {
+			proximitySensor.stop();
+		}
+		proximitySensor = AppRTCProximitySensor.create(apprtcContext,
+			// This method will be called each time a state change is detected.
+			// Example: user holds his hand over the device (closer than ~5 cm),
+			// or removes his hand from the device.
+			this::onProximitySensorChangedState);
 
 		if (proximitySensor != null) {
 			proximitySensor.start();
@@ -622,18 +629,18 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 
 		// Need to start Bluetooth if it is available and user either selected it explicitly or
 		// user did not select any output device.
-		boolean needBluetoothAudioStart =
+		final boolean needBluetoothAudioStart =
 			(bluetoothState == AppRTCBluetoothManager.State.HEADSET_AVAILABLE)
 			&& (userSelectedAudioDevice == AudioDevice.NONE
 				|| userSelectedAudioDevice == AudioDevice.BLUETOOTH);
 		
 		// Need to stop Bluetooth audio if user selected different device and
 		// Bluetooth SCO connection is established or in the process.
-		boolean needBluetoothAudioStop =
+		final boolean needBluetoothAudioStop =
 			(bluetoothState == AppRTCBluetoothManager.State.SCO_CONNECTED
 				|| bluetoothState == AppRTCBluetoothManager.State.SCO_CONNECTING)
 				&& (userSelectedAudioDevice != AudioDevice.NONE
-				&& userSelectedAudioDevice != AudioDevice.BLUETOOTH);
+					&& userSelectedAudioDevice != AudioDevice.BLUETOOTH);
 
 		if (AppRTCBluetoothManager.HAS_BT_SCO.contains(bluetoothState)) {
 			if (DEBUG) Log.d(TAG, "Need BT audio: start=" + needBluetoothAudioStart + ", "
