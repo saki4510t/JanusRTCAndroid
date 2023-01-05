@@ -492,6 +492,7 @@ public class AppRTCBluetoothManager {
 	private void updateAudioDeviceState() {
 		ThreadUtils.checkIsOnMainThread();
 		if (DEBUG) Log.v(TAG, "updateAudioDeviceState");
+		updateDevice();
 		mListener.onUpdateBluetoothHeadsetState();
 	}
 
