@@ -39,7 +39,7 @@ import java.util.Set;
  * AppRTCAudioManager manages all audio related parts of the AppRTC demo.
  */
 public class AppRTCAudioManager2 implements IAppRTCAudioManager {
-	private static final boolean DEBUG = true; // set false on production
+	private static final boolean DEBUG = false; // set false on production
 	private static final String TAG = AppRTCAudioManager2.class.getSimpleName();
 
 	private final Context apprtcContext;
