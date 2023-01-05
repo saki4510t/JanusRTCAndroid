@@ -509,34 +509,27 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 		final Set<AudioDevice> newAudioDevices = new HashSet<>();
 
 		if (AppRTCBluetoothManager.HAS_BT_SCO.contains(bluetoothManager.getState())) {
+			// Bluetoothヘッドセットが接続されているとき
 			if (DEBUG) Log.d(TAG, "add BLUETOOTH");
 			newAudioDevices.add(AudioDevice.BLUETOOTH);
 		}
-
 		if (hasWiredHeadset) {
-			// If a wired headset is connected, then it is the only possible option.
+			// 有線ヘッドセットが接続されているとき
 			if (DEBUG) Log.d(TAG, "add WIRED_HEADSET");
 			newAudioDevices.add(AudioDevice.WIRED_HEADSET);
-			if (useSpeakerphone.equals(SPEAKERPHONE_AS_POSSIBLE)) {
-				// asPossibleの時は有線ヘッドセットへの自動切り替えをしないので
-				// 内蔵マイク/スピーカーも選択肢に含める
-				if (DEBUG) Log.d(TAG, "add SPEAKER_PHONE");
-				newAudioDevices.add(AudioDevice.SPEAKER_PHONE);
-				if (hasEarpiece()) {
-					if (DEBUG) Log.d(TAG, "add EARPIECE");
-					newAudioDevices.add(AudioDevice.EARPIECE);
-				}
-			}
-		} else {
-			// No wired headset, hence the audio-device list can contain speaker
-			// phone (on a tablet), or speaker phone and earpiece (on mobile phone).
+		}
+		// 有線ヘッドセット未接続またはAUTOでなければSPEAKER_PHONE(タブレットの場合)
+		// またはSPEAKER_PHONEとEARPIECE(モバイル)を追加する
+		// XXX 有線ヘッドセットが接続されている時はEARPIECEを選択できなさそうなので除外
+		if (!hasWiredHeadset || !useSpeakerphone.equals(SPEAKERPHONE_AUTO)) {
 			if (DEBUG) Log.d(TAG, "add SPEAKER_PHONE");
 			newAudioDevices.add(AudioDevice.SPEAKER_PHONE);
-			if (hasEarpiece()) {
+			if (hasEarpiece() && !hasWiredHeadset) {
 				if (DEBUG) Log.d(TAG, "add EARPIECE");
 				newAudioDevices.add(AudioDevice.EARPIECE);
 			}
 		}
+
 		// Store state which is set to true if the device list has changed.
 		boolean audioDeviceSetUpdated = !audioDevices.equals(newAudioDevices);
 		// Update the existing audio device set.
