@@ -487,6 +487,7 @@ public class AppRTCAudioManager implements IAppRTCAudioManager {
 		}
 	}
 
+	@UiThread
 	@Override
 	public void onUpdateBluetoothHeadsetState() {
 		ThreadUtils.checkIsOnMainThread();
