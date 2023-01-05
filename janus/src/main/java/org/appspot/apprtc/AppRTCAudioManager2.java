@@ -508,7 +508,7 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 		// Update the set of available audio devices.
 		final Set<AudioDevice> newAudioDevices = new HashSet<>();
 
-		if (AppRTCBluetoothManager.HAS_BT_SCO.contains(bluetoothManager.getState())) {
+		if (bluetoothManager.hasBTSco()) {
 			// Bluetoothヘッドセットが接続されているとき
 			if (DEBUG) Log.d(TAG, "add BLUETOOTH");
 			newAudioDevices.add(AudioDevice.BLUETOOTH);
@@ -564,11 +564,7 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 	public void onUpdateBluetoothHeadsetState() {
 		ThreadUtils.checkIsOnMainThread();
 		if (DEBUG) Log.d(TAG, "onUpdateBluetoothHeadsetState: userSelectedAudioDevice=" + userSelectedAudioDevice);
-		if (AppRTCBluetoothManager.NEED_UPDATE.contains(bluetoothManager.getState())) {
-			bluetoothManager.updateDevice();
-		}
-		final boolean hasBTSco = AppRTCBluetoothManager.HAS_BT_SCO.contains(bluetoothManager.getState());
-		if (hasBTSco
+		if (bluetoothManager.hasBTSco()
 			&& !useSpeakerphone.equals(SPEAKERPHONE_AS_POSSIBLE)		// asPossible時は自動切り替えしない
 			&& (userSelectedAudioDevice != AudioDevice.WIRED_HEADSET)	// WIRED_HEADSETの時は自動切り替えしない
 			&& (userSelectedAudioDevice != AudioDevice.BLUETOOTH) ) {

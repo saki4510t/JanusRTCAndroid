@@ -257,6 +257,11 @@ public class AppRTCBluetoothManager {
 		return bluetoothState;
 	}
 
+	@UiThread
+	public boolean hasBTSco() {
+		return AppRTCBluetoothManager.HAS_BT_SCO.contains(getState());
+	}
+
 	/**
 	 * Activates components required to detect Bluetooth devices and to enable
 	 * BT SCO (audio is routed via BT SCO) for the headset profile. The end
