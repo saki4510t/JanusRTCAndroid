@@ -148,7 +148,7 @@
     <string name="pref_data_protocol_key">Subprotocol</string>
     <string name="pref_data_protocol_title">Subprotocol.</string>
     <string name="pref_data_protocol_dlg">Enter subprotocol.</string>
-    <string name="pref_data_protocol_default" translatable="false"></string>
+    <string name="pref_data_protocol_default" translatable="false" />
 
     <string name="pref_negotiated_key">negotiated_preference</string>
     <string name="pref_negotiated_title">Negotiated.</string>
