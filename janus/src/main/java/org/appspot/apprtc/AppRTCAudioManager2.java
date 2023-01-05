@@ -597,7 +597,8 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 		boolean audioDeviceSetUpdated = updateDevices();
 
 		// Bluetoothヘッドセットの接続状態を取得
-		final boolean hasBTSco = AppRTCBluetoothManager.HAS_BT_SCO.contains(bluetoothManager.getState());
+		final AppRTCBluetoothManager.State bluetoothState = bluetoothManager.getState();
+		final boolean hasBTSco = AppRTCBluetoothManager.HAS_BT_SCO.contains(bluetoothState);
 		// ユーザー選択状態が現在の状態と矛盾しないように調整
 		// Correct user selected audio devices if needed.
 		if (!hasBTSco
@@ -626,22 +627,22 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 		// Need to start Bluetooth if it is available and user either selected it explicitly or
 		// user did not select any output device.
 		boolean needBluetoothAudioStart =
-			bluetoothManager.getState() == AppRTCBluetoothManager.State.HEADSET_AVAILABLE
-				&& (userSelectedAudioDevice == AudioDevice.NONE
+			(bluetoothState == AppRTCBluetoothManager.State.HEADSET_AVAILABLE)
+			&& (userSelectedAudioDevice == AudioDevice.NONE
 				|| userSelectedAudioDevice == AudioDevice.BLUETOOTH);
 		
 		// Need to stop Bluetooth audio if user selected different device and
 		// Bluetooth SCO connection is established or in the process.
 		boolean needBluetoothAudioStop =
-			(bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_CONNECTED
-				|| bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_CONNECTING)
+			(bluetoothState == AppRTCBluetoothManager.State.SCO_CONNECTED
+				|| bluetoothState == AppRTCBluetoothManager.State.SCO_CONNECTING)
 				&& (userSelectedAudioDevice != AudioDevice.NONE
 				&& userSelectedAudioDevice != AudioDevice.BLUETOOTH);
 
-		if (AppRTCBluetoothManager.HAS_BT_SCO.contains(bluetoothManager.getState())) {
+		if (AppRTCBluetoothManager.HAS_BT_SCO.contains(bluetoothState)) {
 			if (DEBUG) Log.d(TAG, "Need BT audio: start=" + needBluetoothAudioStart + ", "
 				+ "stop=" + needBluetoothAudioStop + ", "
-				+ "BT state=" + bluetoothManager.getState());
+				+ "BT state=" + bluetoothState);
 		}
 
 		// Start or stop Bluetooth SCO connection given states set earlier.
@@ -666,7 +667,7 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 		if (useSpeakerphone.equals(SPEAKERPHONE_AS_POSSIBLE)
 			&& audioDevices.contains(AudioDevice.SPEAKER_PHONE)) {
 			newAudioDevice = AudioDevice.SPEAKER_PHONE;
-		} else if (bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_CONNECTED) {
+		} else if (bluetoothState == AppRTCBluetoothManager.State.SCO_CONNECTED) {
 			// If a Bluetooth is connected, then it should be used as output audio
 			// device. Note that it is not sufficient that a headset is available;
 			// an active SCO channel must also be up and running.
