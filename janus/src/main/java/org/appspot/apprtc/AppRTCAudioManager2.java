@@ -399,10 +399,12 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 	@Override
 	public void selectAudioDevice(@NonNull final AudioDevice device) {
 		ThreadUtils.checkIsOnMainThread();
-		if (!audioDevices.contains(device)) {
-			Log.e(TAG, "Can not select " + device + " from available " + audioDevices);
+		if ((device == AudioDevice.NONE) || audioDevices.contains(device)) {
+			userSelectedAudioDevice = device;
+		} else {
+			Log.w(TAG, "Can not select " + device + " from available " + audioDevices);
+			userSelectedAudioDevice = AudioDevice.NONE;
 		}
-		userSelectedAudioDevice = device;
 		updateAudioDeviceState();
 	}
 
@@ -667,7 +669,10 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 		
 		// Update selected audio device.
 		final AudioDevice newAudioDevice;
-		if (useSpeakerphone.equals(SPEAKERPHONE_AS_POSSIBLE)
+		if ((userSelectedAudioDevice != null)
+			&& (userSelectedAudioDevice != AudioDevice.NONE)) {
+			newAudioDevice = userSelectedAudioDevice;
+		} else if (useSpeakerphone.equals(SPEAKERPHONE_AS_POSSIBLE)
 			&& audioDevices.contains(AudioDevice.SPEAKER_PHONE)) {
 			newAudioDevice = AudioDevice.SPEAKER_PHONE;
 		} else if (bluetoothState == AppRTCBluetoothManager.State.SCO_CONNECTED) {
