@@ -45,7 +45,7 @@ public class AppRTCBluetoothManager {
 	private static final String TAG = AppRTCBluetoothManager.class.getSimpleName();
 
 	/**
-	 * Bleutoothの接続状態が変化したときのコールバックリスナー
+	 * Bluetoothの接続状態が変化したときのコールバックリスナー
 	 */
 	public interface UpdateBluetoothStateListener {
 		@UiThread
