@@ -491,7 +491,9 @@ public class AppRTCAudioManager implements IAppRTCAudioManager {
 
 	@UiThread
 	@Override
-	public void onUpdateBluetoothHeadsetState() {
+	public void onUpdateBluetoothHeadsetState(
+		final AppRTCBluetoothManager.State prevState,
+		final AppRTCBluetoothManager.State newState) {
 		ThreadUtils.checkIsOnMainThread();
 		if (DEBUG) Log.d(TAG, "onUpdateBluetoothHeadsetState: userSelectedAudioDevice=" + userSelectedAudioDevice);
 		updateAudioDeviceState();

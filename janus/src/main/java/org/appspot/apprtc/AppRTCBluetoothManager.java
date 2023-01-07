@@ -49,7 +49,8 @@ public class AppRTCBluetoothManager {
 	 */
 	public interface UpdateBluetoothStateListener {
 		@UiThread
-		public void onUpdateBluetoothHeadsetState();
+		public void onUpdateBluetoothHeadsetState(
+			final State prevState, final State newState);
 	}
 
 	// Timeout interval for starting or stopping audio to a Bluetooth SCO device.
@@ -494,13 +495,15 @@ public class AppRTCBluetoothManager {
 	 * Ensures that the audio manager updates its list of available audio devices.
 	 */
 	@UiThread
-	private void updateAudioDeviceState() {
+	private void updateAudioDeviceState(final State newState) {
 		ThreadUtils.checkIsOnMainThread();
+		final State prev = bluetoothState;
+		bluetoothState = newState;
 		if (DEBUG) Log.v(TAG, "updateAudioDeviceState");
 		if (NEED_UPDATE.contains(getState())) {
-			updateDevice();
+			bluetoothState = updateDeviceInternal();
 		}
-		mListener.onUpdateBluetoothHeadsetState();
+		mListener.onUpdateBluetoothHeadsetState(prev, bluetoothState);
 	}
 
 	/**
