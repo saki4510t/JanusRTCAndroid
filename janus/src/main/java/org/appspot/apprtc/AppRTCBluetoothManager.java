@@ -130,7 +130,7 @@ public class AppRTCBluetoothManager {
 			if (profile != BluetoothProfile.HEADSET || bluetoothState == State.UNINITIALIZED) {
 				return;
 			}
-			if (DEBUG) Log.d(TAG, "BluetoothServiceListener.onServiceConnected: BT state=" + bluetoothState);
+			if (DEBUG) Log.d(TAG, "onServiceConnected: BT state=" + bluetoothState);
 			// Android only supports one connected Bluetooth Headset at a time.
 			bluetoothHeadset = (BluetoothHeadset) proxy;
 			updateAudioDeviceState();
@@ -143,8 +143,8 @@ public class AppRTCBluetoothManager {
 			if (profile != BluetoothProfile.HEADSET || bluetoothState == State.UNINITIALIZED) {
 				return;
 			}
-			if (DEBUG) Log.d(TAG, "BluetoothServiceListener.onServiceDisconnected: BT state=" + bluetoothState);
 			stopScoAudio();
+			if (DEBUG) Log.d(TAG, "onServiceDisconnected: BT state=" + bluetoothState);
 			bluetoothHeadset = null;
 			bluetoothDevice = null;
 			bluetoothState = State.HEADSET_UNAVAILABLE;
@@ -170,8 +170,7 @@ public class AppRTCBluetoothManager {
 			if (action.equals(BluetoothHeadset.ACTION_CONNECTION_STATE_CHANGED)) {
 				final int state =
 					intent.getIntExtra(BluetoothHeadset.EXTRA_STATE, BluetoothHeadset.STATE_DISCONNECTED);
-				if (DEBUG) Log.d(TAG, "BluetoothHeadsetBroadcastReceiver.onReceive: "
-					+ "action=ACTION_CONNECTION_STATE_CHANGED, "
+				if (DEBUG) Log.d(TAG, "onReceive:action=ACTION_CONNECTION_STATE_CHANGED, "
 					+ "state=" + connectionStateToString(state) + ", "
 					+ "isInitialStickyBroadcast=" + isInitialStickyBroadcast() + ", "
 					+ "bluetoothState=" + bluetoothState);
@@ -192,8 +191,7 @@ public class AppRTCBluetoothManager {
 			} else if (action.equals(BluetoothHeadset.ACTION_AUDIO_STATE_CHANGED)) {
 				final int state = intent.getIntExtra(
 					BluetoothHeadset.EXTRA_STATE, BluetoothHeadset.STATE_AUDIO_DISCONNECTED);
-				if (DEBUG) Log.d(TAG, "BluetoothHeadsetBroadcastReceiver.onReceive: "
-					+ "action=ACTION_AUDIO_STATE_CHANGED, "
+				if (DEBUG) Log.d(TAG, "onReceive:action=ACTION_AUDIO_STATE_CHANGED, "
 					+ "audioState=" + audioStateToString(state) + ", "
 					+ "isInitialStickyBroadcast=" + isInitialStickyBroadcast() + ", "
 					+ "bluetoothState=" + bluetoothState);
