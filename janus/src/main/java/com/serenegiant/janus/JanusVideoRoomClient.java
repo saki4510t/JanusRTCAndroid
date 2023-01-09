@@ -20,6 +20,8 @@ package com.serenegiant.janus;
 */
 
 import android.content.Context;
+import android.media.AudioDeviceInfo;
+import android.os.Build;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import androidx.annotation.NonNull;
@@ -37,6 +39,7 @@ import com.serenegiant.janus.response.videoroom.PublisherInfo;
 import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
 import com.serenegiant.janus.response.videoroom.RoomInfo;
+import com.serenegiant.system.BuildCheck;
 
 import org.appspot.apprtc.AppRTCConst;
 import org.appspot.apprtc.PeerConnectionParameters;
@@ -93,6 +96,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
+import androidx.annotation.RequiresApi;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -176,7 +180,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 	@Nullable
 	private AudioTrack localAudioTrack;
 	private MediaStream mLocalStream;
-
+	private JavaAudioDeviceModule mAudioDeviceModule;
 	/**
 	 * リモート映像・音声のpluginのfeedIdとVideoSinkHolderのマップ
 	 */
@@ -193,6 +197,11 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 	private ConnectionState mConnectionState;
 	private ServerInfo mServerInfo;
 	private Session mSession;
+	/**
+	 * 音声入力デバイスのヒント
+	 */
+	@Nullable
+	private AudioDeviceInfo mPreferredInputDevice = null;
 
 	/**
 	 * コンストラクタ
@@ -563,6 +572,19 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		return false;
 	}
 
+	/**
+	 * 通話時の音声入力デバイスのヒントを設定
+	 * @param preferredInputDevice
+	 * @return
+	 */
+	@RequiresApi(api = Build.VERSION_CODES.M)
+	public void setPreferredInputDevice(@Nullable final AudioDeviceInfo preferredInputDevice) {
+		mPreferredInputDevice = preferredInputDevice;
+		if (mAudioDeviceModule != null) {
+			mAudioDeviceModule.setPreferredInputDevice(preferredInputDevice);
+		}
+	}
+
 //================================================================================
 	private void createPeerConnectionFactoryInternal(
 		@NonNull final PeerConnectionFactory.Options options) {
@@ -593,6 +615,10 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		}
 
 		final AudioDeviceModule adm = createJavaAudioDevice();
+		if (BuildCheck.isAPI23() && (adm instanceof JavaAudioDeviceModule)) {
+			mAudioDeviceModule = (JavaAudioDeviceModule)adm;
+			((JavaAudioDeviceModule) adm).setPreferredInputDevice(mPreferredInputDevice);
+		}
 		
 		// Create peer connection factory.
 		if (options != null && DEBUG) {
@@ -1459,6 +1485,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 			audioSource.dispose();
 			audioSource = null;
 		}
+		mAudioDeviceModule = null;
 		if (DEBUG) Log.d(TAG, "Stopping capture.");
 		if (videoCapturer != null) {
 			try {
