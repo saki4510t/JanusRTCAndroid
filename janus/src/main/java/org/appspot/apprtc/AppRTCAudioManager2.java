@@ -53,6 +53,10 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 	private boolean savedIsSpeakerPhoneOn = false;
 	private boolean savedIsMicrophoneMute = false;
 	private boolean hasWiredHeadset = false;
+	/**
+	 * Bluetoothヘッドセットが接続されたときに処理を１回だけ行うためのフラグ
+	 */
+	private boolean hasBTHeadset = false;
 
 	// Default audio device; speaker phone for video calls or earpiece for audio
 	// only calls.
@@ -529,11 +533,11 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 		}
 		// 有線ヘッドセット未接続またはAUTOでなければSPEAKER_PHONE(タブレットの場合)
 		// またはSPEAKER_PHONEとEARPIECE(モバイル)を追加する
-		// XXX 有線ヘッドセットが接続されている時はEARPIECEを選択できなさそうなので除外
+		// XXX 有線/無線ヘッドセットが接続されている時はEARPIECEを選択できなさそうなので除外
 		if (!hasWiredHeadset || !useSpeakerphone.equals(SPEAKERPHONE_AUTO)) {
 			if (DEBUG) Log.d(TAG, "add SPEAKER_PHONE");
 			newAudioDevices.add(AudioDevice.SPEAKER_PHONE);
-			if (hasEarpiece() && !hasWiredHeadset) {
+			if (hasEarpiece() && !hasWiredHeadset && !hasBTHeadset) {
 				if (DEBUG) Log.d(TAG, "add EARPIECE");
 				newAudioDevices.add(AudioDevice.EARPIECE);
 			}
@@ -575,11 +579,25 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 		final AppRTCBluetoothManager.State newState) {
 		ThreadUtils.checkIsOnMainThread();
 		if (DEBUG) Log.d(TAG, "onUpdateBluetoothHeadsetState: userSelectedAudioDevice=" + userSelectedAudioDevice);
-		if (bluetoothManager.hasBTSco()
+		if (AppRTCBluetoothManager.INTERMEDIATE_STATE.contains(newState)) {
+			if (DEBUG) Log.v(TAG, "onUpdateBluetoothHeadsetState:skip intermediate state," + newState);
+			return;
+		}
+		final boolean hasBTSco = bluetoothManager.hasBTSco();
+		if ((newState == AppRTCBluetoothManager.State.SCO_DISCONNECTING)
+			&& (userSelectedAudioDevice == AudioDevice.BLUETOOTH)) {
+			// Bluetoothヘッドセット使用中に切断されたときはNONEにする
+			userSelectedAudioDevice = AudioDevice.NONE;
+		} else if (!hasBTSco) {
+			// Bluetoothヘッドセットが取り外された時
+			hasBTHeadset = false;
+		} else if (!hasBTHeadset && hasBTSco
 			&& !useSpeakerphone.equals(SPEAKERPHONE_AS_POSSIBLE)		// asPossible時は自動切り替えしない
 			&& (userSelectedAudioDevice != AudioDevice.WIRED_HEADSET)	// WIRED_HEADSETの時は自動切り替えしない
 			&& (userSelectedAudioDevice != AudioDevice.BLUETOOTH) ) {
+			// Bluetoothヘッドセットが接続されたとき
 			if (DEBUG) Log.d(TAG, "updateBluetoothHeadsetState: Bluetoothヘッドセットを選択");
+			hasBTHeadset = true;
 			userSelectedAudioDevice = AudioDevice.BLUETOOTH;
 		}
 		updateAudioDeviceState();
@@ -635,8 +653,7 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 		// user did not select any output device.
 		final boolean needBluetoothAudioStart =
 			(bluetoothState == AppRTCBluetoothManager.State.HEADSET_AVAILABLE)
-			&& (userSelectedAudioDevice == AudioDevice.NONE
-				|| userSelectedAudioDevice == AudioDevice.BLUETOOTH);
+			&& (userSelectedAudioDevice == AudioDevice.BLUETOOTH);
 		
 		// Need to stop Bluetooth audio if user selected different device and
 		// Bluetooth SCO connection is established or in the process.
