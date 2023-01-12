@@ -10,32 +10,31 @@ package com.serenegiant.janusrtcandroid
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-import com.serenegiant.janusrtcandroid.CpuMonitor.Companion.isSupported
-import com.serenegiant.janusrtcandroid.CallFragment.OnCallEvents
-import com.serenegiant.janus.ProxyVideoSink
-import com.serenegiant.janus.VideoRoomClient
-import android.widget.Toast
-import android.os.Bundle
-import android.view.WindowManager
-import android.content.Intent
-import org.webrtc.RendererCommon.ScalingType
-import android.content.pm.PackageManager
-import android.util.DisplayMetrics
-import com.serenegiant.janus.JanusVideoRoomClient
 import android.app.AlertDialog
-import android.media.projection.MediaProjectionManager
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.media.AudioFormat
+import android.media.MediaRecorder
 import android.media.projection.MediaProjection
+import android.media.projection.MediaProjectionManager
+import android.os.Bundle
+import android.util.DisplayMetrics
 import android.util.Log
 import android.view.View
 import android.view.Window
+import android.view.WindowManager
+import android.widget.Toast
 import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.lifecycleScope
 import com.serenegiant.janus.JanusCallback
+import com.serenegiant.janus.JanusVideoRoomClient
+import com.serenegiant.janus.ProxyVideoSink
+import com.serenegiant.janus.VideoRoomClient
 import com.serenegiant.janus.request.videoroom.ConfigPublisher
-import retrofit2.Retrofit
-import org.webrtc.PeerConnection.IceServer
 import com.serenegiant.janus.response.videoroom.PublisherInfo
 import com.serenegiant.janus.response.videoroom.RoomEvent
+import com.serenegiant.janusrtcandroid.CallFragment.OnCallEvents
+import com.serenegiant.janusrtcandroid.CpuMonitor.Companion.isSupported
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -43,8 +42,10 @@ import okhttp3.OkHttpClient
 import org.appspot.apprtc.*
 import org.json.JSONObject
 import org.webrtc.*
+import org.webrtc.PeerConnection.IceServer
+import org.webrtc.RendererCommon.ScalingType
+import retrofit2.Retrofit
 import java.io.IOException
-import java.util.ArrayList
 
 /**
  * Activity for peer connection call setup, call waiting
@@ -190,37 +191,48 @@ class CallActivity : BaseActivity(), OnCallEvents {
 			videoWidth = displayMetrics.widthPixels
 			videoHeight = displayMetrics.heightPixels
 		}
-		var dataChannelParameters: DataChannelParameters? = null
-		if (intent.getBooleanExtra(EXTRA_DATA_CHANNEL_ENABLED, false)) {
-			dataChannelParameters = DataChannelParameters(
-				intent.getBooleanExtra(EXTRA_ORDERED, true),
-				intent.getIntExtra(EXTRA_MAX_RETRANSMITS_MS, -1),
-				intent.getIntExtra(EXTRA_MAX_RETRANSMITS, -1),
-				intent.getStringExtra(EXTRA_PROTOCOL),
-				intent.getBooleanExtra(EXTRA_NEGOTIATED, false),
-				intent.getIntExtra(EXTRA_ID, -1)
-			)
+		peerConnectionParameters = PeerConnectionParameters.Builder().apply {
+			setVideoCallEnabled(intent.getBooleanExtra(EXTRA_VIDEO_CALL, true))
+			setLoopback(loopback)
+			setTracing(tracing)
+			setVideoWidth(videoWidth)
+			setVideoHeight(videoHeight)
+			setVideoFps(intent.getIntExtra(EXTRA_VIDEO_FPS, 0))
+			setVideoMaxBitrate(intent.getIntExtra(EXTRA_VIDEO_BITRATE, 0))
+			setVideoCodec(intent.getStringExtra(EXTRA_VIDEOCODEC))
+			setVideoCodecHwAcceleration(intent.getBooleanExtra(EXTRA_HWCODEC_ENABLED, true))
+			setVideoFlexfecEnabled(intent.getBooleanExtra(EXTRA_FLEXFEC_ENABLED, false))
+			setAudioSource(intent.getIntExtra(EXTRA_AUDIO_SOURCE, MediaRecorder.AudioSource.VOICE_RECOGNITION))
+			setAudioFormat(intent.getIntExtra(EXTRA_AUDIO_FORMAT, AudioFormat.ENCODING_PCM_16BIT))
+			setAudioStartBitrate(intent.getIntExtra(EXTRA_AUDIO_BITRATE, 0))
+			setAudioCodec(intent.getStringExtra(EXTRA_AUDIOCODEC))
+			setNoAudioProcessing(intent.getBooleanExtra(EXTRA_NOAUDIOPROCESSING_ENABLED, false))
+			setAecDump(intent.getBooleanExtra(EXTRA_AECDUMP_ENABLED, false))
+			setSaveInputAudioToFile(intent.getBooleanExtra(EXTRA_SAVE_INPUT_AUDIO_TO_FILE_ENABLED, false))
+			setUseOpenSLES(intent.getBooleanExtra(EXTRA_OPENSLES_ENABLED, false))
+			setDisableBuiltInAEC(intent.getBooleanExtra(EXTRA_DISABLE_BUILT_IN_AEC, false))
+			setDisableBuiltInAGC(intent.getBooleanExtra(EXTRA_DISABLE_BUILT_IN_AGC, false))
+			setDisableBuiltInNS(intent.getBooleanExtra(EXTRA_DISABLE_BUILT_IN_NS, false))
+			setDisableWebRtcAGCAndHPF(intent.getBooleanExtra(EXTRA_DISABLE_WEBRTC_AGC_AND_HPF, false))
+			setEnableRtcEventLog(intent.getBooleanExtra(EXTRA_ENABLE_RTCEVENTLOG, false))
+			if (intent.getBooleanExtra(EXTRA_DATA_CHANNEL_ENABLED, false)) {
+				setDataChannelParameters(
+					DataChannelParameters.Builder()
+					.apply {
+						setOrdered(intent.getBooleanExtra(EXTRA_ORDERED, true))
+						setMaxRetransmitTimeMs(intent.getIntExtra(EXTRA_MAX_RETRANSMITS_MS, -1))
+						setMaxRetransmits(intent.getIntExtra(EXTRA_MAX_RETRANSMITS, -1))
+						setProtocol(intent.getStringExtra(EXTRA_PROTOCOL))
+						setNegotiated(intent.getBooleanExtra(EXTRA_NEGOTIATED, false))
+						setId(intent.getIntExtra(EXTRA_ID, -1))
+					}.run {
+						build()
+					}
+				)
+			}
+		}.run {
+			build()
 		}
-		peerConnectionParameters = PeerConnectionParameters(
-			intent.getBooleanExtra(EXTRA_VIDEO_CALL, true), loopback,
-			tracing, videoWidth, videoHeight, intent.getIntExtra(EXTRA_VIDEO_FPS, 0),
-			intent.getIntExtra(EXTRA_VIDEO_BITRATE, 0), intent.getStringExtra(EXTRA_VIDEOCODEC),
-			intent.getBooleanExtra(EXTRA_HWCODEC_ENABLED, true),
-			intent.getBooleanExtra(EXTRA_FLEXFEC_ENABLED, false),
-			intent.getIntExtra(EXTRA_AUDIO_SOURCE, 7),
-			intent.getIntExtra(EXTRA_AUDIO_FORMAT, 2),
-			intent.getIntExtra(EXTRA_AUDIO_BITRATE, 0), intent.getStringExtra(EXTRA_AUDIOCODEC),
-			intent.getBooleanExtra(EXTRA_NOAUDIOPROCESSING_ENABLED, false),
-			intent.getBooleanExtra(EXTRA_AECDUMP_ENABLED, false),
-			intent.getBooleanExtra(EXTRA_SAVE_INPUT_AUDIO_TO_FILE_ENABLED, false),
-			intent.getBooleanExtra(EXTRA_OPENSLES_ENABLED, false),
-			intent.getBooleanExtra(EXTRA_DISABLE_BUILT_IN_AEC, false),
-			intent.getBooleanExtra(EXTRA_DISABLE_BUILT_IN_AGC, false),
-			intent.getBooleanExtra(EXTRA_DISABLE_BUILT_IN_NS, false),
-			intent.getBooleanExtra(EXTRA_DISABLE_WEBRTC_AGC_AND_HPF, false),
-			intent.getBooleanExtra(EXTRA_ENABLE_RTCEVENTLOG, false),
-			dataChannelParameters
-		)
 		commandLineRun = intent.getBooleanExtra(EXTRA_CMDLINE, false)
 		val runTimeMs = intent.getIntExtra(EXTRA_RUNTIME, 0)
 		if (DEBUG) Log.d(
@@ -236,12 +248,18 @@ class CallActivity : BaseActivity(), OnCallEvents {
 		val urlParameters = intent.getStringExtra(EXTRA_URLPARAMETERS)
 		val userName = intent.getStringExtra(EXTRA_USER_NAME)
 		val displayName = intent.getStringExtra(EXTRA_DISPLAY_NAME)
-		roomConnectionParameters = RoomConnectionParameters(
-			roomUri.toString(),
-			"janus", roomId,
-			loopback, urlParameters,
-			userName, displayName
-		)
+		roomConnectionParameters = RoomConnectionParameters.Builder()
+			.apply {
+				setRoomUrl(roomUri.toString())
+				setApiName("janus")
+				setRoomId(roomId)
+				setLoopback(loopback)
+				setUrlParameters(urlParameters)
+				setUserName(userName)
+				setDisplayName(displayName)
+			}.run {
+				build()
+			}
 		janusClient = JanusVideoRoomClient(
 			applicationContext,
 			eglBase, peerConnectionParameters!!, roomConnectionParameters!!,
