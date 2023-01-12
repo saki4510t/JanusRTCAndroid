@@ -1287,6 +1287,12 @@ import retrofit2.Response;
 		}
 	};
 //================================================================================
+
+	/**
+	 * janus-gatewayのVideoRoomプラグインへリモート映像・音声を送信するための
+	 * ピアコネクションを保持するVideoRoomPlugin
+	 * XXX パブリッシャー側は当面マルチストリーム対応しない予定
+	 */
 	public static class Publisher extends VideoRoomPlugin {
 
 		/**
@@ -1408,7 +1414,13 @@ import retrofit2.Response;
 			}
 		}
 	}
-	
+
+	/**
+	 * janus-gatewayのVideoRoomプラグインからのリモート映像・音声の受信を行うための
+	 * ピアコネクションを保持するVideoRoomPlugin
+	 *
+	 * FIXME マルチストリーム対応を追加する
+	 */
 	public static class Subscriber extends VideoRoomPlugin {
 		@NonNull
 		public final PublisherInfo info;

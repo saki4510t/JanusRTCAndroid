@@ -761,6 +761,9 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		return factory.createPeerConnection(rtcConfig, observer);
 	}
 
+	/**
+	 * XXX パブリッシャー側は当面マルチストリーム対応しない予定
+	 */
 	private void createPublisherInternal() {
 		if (DEBUG) Log.v(TAG, "createPublisherInternal:");
 		final Context context = getContext();
@@ -913,6 +916,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 	
 	/**
 	 * Subscriberを生成
+	 * FIXME マルチストリーム対応を追加する
 	 * @param info
 	 */
 	protected void createSubscriber(
@@ -952,7 +956,9 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		// Use ECDSA encryption.
 		rtcConfig.keyType = PeerConnection.KeyType.ECDSA;
 		rtcConfig.sdpSemantics = SDP_SEMANTICS;
-		
+
+		// FIXME マルチストリームの時はここで既存のSubscriberを検索して
+		//       なければ新規追加、あればトラックを追加みたいになるのかな？
 		final VideoRoomPlugin.Subscriber subscriber = new VideoRoomPlugin.Subscriber(
 			mJanus, mSession, mVideoRoomCallback,
 			peerConnectionParameters,
