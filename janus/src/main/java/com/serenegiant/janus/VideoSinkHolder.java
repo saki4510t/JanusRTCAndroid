@@ -23,8 +23,7 @@ public class VideoSinkHolder {
 	@NonNull
 	public final List<VideoSink> mVideoSinks;
 	@Nullable
-	private MediaStream mMediaStream;
-
+	public MediaStream mMediaStream;
 
 	public VideoSinkHolder(final long feedId,
 		@NonNull final VideoTrack videoTrack,
