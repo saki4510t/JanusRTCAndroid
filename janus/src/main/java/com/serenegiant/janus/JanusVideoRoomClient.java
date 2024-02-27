@@ -40,6 +40,7 @@ import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
 import com.serenegiant.janus.response.videoroom.RoomInfo;
 import com.serenegiant.system.BuildCheck;
+import com.serenegiant.webrtc.MediaStreamUtils;
 
 import org.appspot.apprtc.AppRTCConst;
 import org.appspot.apprtc.PeerConnectionParameters;
@@ -583,6 +584,41 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		if (mAudioDeviceModule != null) {
 			mAudioDeviceModule.setPreferredInputDevice(preferredInputDevice);
 		}
+	}
+
+	/**
+	 * 指定したパブリッシャーからの音声をミュートする
+	 * @param info
+	 * @param mute
+	 */
+	public void setMute(@NonNull final PublisherInfo info, final boolean mute) {
+		final VideoSinkHolder holder = getHolder(info);
+		if (holder != null) {
+			MediaStreamUtils.setMute(holder.mMediaStream, mute);
+		}
+	}
+
+	/**
+	 * 指定したパブリッシャーからの音量を設定する
+	 * @param info
+	 * @param volume
+	 */
+	public void setVolume(@NonNull final PublisherInfo info, final double volume) {
+		final VideoSinkHolder holder = getHolder(info);
+		if (holder != null) {
+			MediaStreamUtils.setVolume(holder.mMediaStream, volume);
+		}
+	}
+
+	/**
+	 * 指定したパブリッシャーに対応するVideoSinkHolderを取得する
+	 * @param info
+	 * @return
+	 */
+	@Nullable
+	public VideoSinkHolder getHolder(@NonNull final PublisherInfo info) {
+		final long feedId = info.id;
+		return remoteVideoSinkMap.containsKey(feedId) ? remoteVideoSinkMap.get(feedId) : null;
 	}
 
 //================================================================================
