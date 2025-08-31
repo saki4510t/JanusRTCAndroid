@@ -188,10 +188,7 @@ class SettingsActivity : BaseActivity(), OnSharedPreferenceChangeListener {
 		super.onPause()
 	}
 
-	override fun onSharedPreferenceChanged(
-		sharedPreferences: SharedPreferences,
-		key: String
-	) {
+	override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String?) {
 
 		// clang-format off
 		if (key == keyprefResolution || key == keyprefFps || key == keyprefMaxVideoBitrateType || key == keyPrefVideoCodec || key == keyprefStartAudioBitrateType || key == keyPrefAudioCodec || key == keyPrefRoomServerUrl || key == keyprefMaxRetransmitTimeMs || key == keyprefMaxRetransmits || key == keyprefDataProtocol || key == keyprefDataId) {

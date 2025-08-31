@@ -44,7 +44,7 @@ import com.serenegiant.webrtc.MediaStreamUtils;
 
 import org.appspot.apprtc.AppRTCConst;
 import org.appspot.apprtc.PeerConnectionParameters;
-import org.appspot.apprtc.RecordedAudioToFileController;
+import org.webrtc.audio.RecordedAudioToFileController;
 import org.appspot.apprtc.RoomConnectionParameters;
 import org.appspot.apprtc.RtcEventLog;
 import org.json.JSONException;

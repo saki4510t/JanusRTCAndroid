@@ -204,10 +204,10 @@ abstract class BaseActivity : AppCompatActivity(),
 		private const val DEBUG = true // set false on production
 		private val TAG = BaseActivity::class.java.simpleName
 
-		private const val ID_PERMISSION_REQUEST_AUDIO = R.string.permission_audio_request
-		private const val ID_PERMISSION_REQUEST_NETWORK = R.string.permission_network_request
-		private const val ID_PERMISSION_REQUEST_EXT_STORAGE = R.string.permission_ext_storage_request
-		private const val ID_PERMISSION_REQUEST_CAMERA = R.string.permission_camera_request
+		private val ID_PERMISSION_REQUEST_AUDIO = R.string.permission_audio_request
+		private val ID_PERMISSION_REQUEST_NETWORK = R.string.permission_network_request
+		private val ID_PERMISSION_REQUEST_EXT_STORAGE = R.string.permission_ext_storage_request
+		private val ID_PERMISSION_REQUEST_CAMERA = R.string.permission_camera_request
 
 		protected const val REQUEST_PERMISSION_AUDIO_RECORDING = 0x234567
 		protected const val REQUEST_PERMISSION_NETWORK = 0x456789
