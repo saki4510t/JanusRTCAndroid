@@ -20,17 +20,35 @@ package com.serenegiant.janusrtcandroid
 */
 
 import android.Manifest
-import androidx.appcompat.app.AppCompatActivity
-import com.serenegiant.dialog.PermissionDescriptionDialogV4
 import android.annotation.SuppressLint
-import com.serenegiant.system.BuildCheck
-import com.serenegiant.system.PermissionUtils
 import android.content.pm.PackageManager
+import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import com.serenegiant.dialog.PermissionDescriptionDialogV4
+import com.serenegiant.dialog.RationalDialogV4
+import com.serenegiant.system.BuildCheck
+import com.serenegiant.system.PermissionUtils
 
 abstract class BaseActivity : AppCompatActivity(),
 	PermissionDescriptionDialogV4.DialogResultListener {
+
+	private lateinit var mMissingPermissions: Array<String>
+	private lateinit var mPermissions: PermissionUtils
+
+	override fun onCreate(savedInstanceState: Bundle?) {
+		super.onCreate(savedInstanceState)
+		try {
+			val missingPermissions = PermissionUtils.missingPermissions(this)
+			mMissingPermissions = missingPermissions.toTypedArray<String>()
+		} catch (e: PackageManager.NameNotFoundException) {
+			Log.w(TAG, e)
+			mMissingPermissions = arrayOf("")
+		}
+		mPermissions = PermissionUtils(this, mPermissionCallback)
+			.prepare(this, mMissingPermissions)
+	}
 
 	/**
 	 * MessageDialogFragmentメッセージダイアログからのコールバックリスナー
@@ -117,101 +135,75 @@ abstract class BaseActivity : AppCompatActivity(),
 					R.string.permission_network, Toast.LENGTH_SHORT
 				).show()
 			}
+			if (Manifest.permission.BLUETOOTH == permission
+				|| Manifest.permission.BLUETOOTH_CONNECT == permission
+			) {
+				Toast.makeText(
+					applicationContext,
+					R.string.permission_bluetooth, Toast.LENGTH_SHORT
+				).show()
+			}
+			if (Manifest.permission.ACCESS_COARSE_LOCATION == permission
+				|| Manifest.permission.ACCESS_FINE_LOCATION == permission
+			) {
+				Toast.makeText(
+					applicationContext,
+					R.string.permission_location, Toast.LENGTH_SHORT
+				).show()
+			}
 		}
 	}
 
 	/**
-	 * 外部ストレージへの書き込みパーミッションが有るかどうかをチェック
-	 * なければ説明ダイアログを表示する
-	 *
-	 * @return true 外部ストレージへの書き込みパーミッションが有る
+	 * アプリの実行に必要なパーミッションを一括して要求する
+	 * @return
 	 */
-	protected fun checkPermissionWriteExternalStorage(): Boolean {
-		if (!PermissionUtils.hasWriteExternalStorage(this)) {
-			PermissionDescriptionDialogV4.showDialog(
-				this,
-				REQUEST_PERMISSION_WRITE_EXTERNAL_STORAGE,
-				R.string.permission_title,
-				ID_PERMISSION_REQUEST_EXT_STORAGE,
-				arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-			)
-			return false
-		}
-		return true
+	protected fun checkPermissions(): Boolean {
+		if (DEBUG) Log.v(TAG, "checkPermissions:missingPermissions=${mMissingPermissions.contentToString()}")
+		return mPermissions.requestPermission(mMissingPermissions, false)
 	}
 
-	/**
-	 * 録音のパーミッションが有るかどうかをチェック
-	 * なければ説明ダイアログを表示する
-	 *
-	 * @return true 録音のパーミッションが有る
-	 */
-	protected fun checkPermissionAudio(): Boolean {
-		if (!PermissionUtils.hasAudio(this)) {
-			PermissionDescriptionDialogV4.showDialog(
-				this,
-				REQUEST_PERMISSION_AUDIO_RECORDING,
-				R.string.permission_title,
-				ID_PERMISSION_REQUEST_AUDIO,
-				arrayOf(Manifest.permission.RECORD_AUDIO)
-			)
-			return false
+	private val mPermissionCallback = object : PermissionUtils.PermissionCallback {
+		override fun onPermissionShowRational(permission: String) {
+			if (DEBUG) Log.v(TAG, "onPermissionShowRational:$permission")
+			val dialog = RationalDialogV4.showDialog(this@BaseActivity, permission)
+			if (dialog == null) {
+				if (DEBUG) Log.v(TAG, "onPermissionShowRational:デフォルトのダイアログ表示ができなかったので自前で表示しないといけない,$permission")
+				// FIXME 未実装
+			}
 		}
-		return true
-	}
 
-	/**
-	 * カメラアクセスのパーミッションが有るかどうかをチェック
-	 * なければ説明ダイアログを表示する
-	 *
-	 * @return true カメラアクセスのパーミッションがある
-	 */
-	protected fun checkPermissionCamera(): Boolean {
-		if (!PermissionUtils.hasCamera(this)) {
-			PermissionDescriptionDialogV4.showDialog(
-				this,
-				REQUEST_PERMISSION_CAMERA,
-				R.string.permission_title,
-				ID_PERMISSION_REQUEST_CAMERA,
-				arrayOf(Manifest.permission.CAMERA)
-			)
-			return false
+		override fun onPermissionShowRational(permissions: Array<String>) {
+			if (DEBUG) Log.v(TAG, "onPermissionShowRational:" + permissions.contentToString())
+			// FIXME 未実装
 		}
-		return true
-	}
 
-	/**
-	 * ネットワークアクセスのパーミッションが有るかどうかをチェック
-	 * なければ説明ダイアログを表示する
-	 *
-	 * @return true ネットワークアクセスのパーミッションが有る
-	 */
-	protected fun checkPermissionNetwork(): Boolean {
-		if (!PermissionUtils.hasNetwork(this)) {
-			PermissionDescriptionDialogV4.showDialog(
-				this,
-				REQUEST_PERMISSION_NETWORK,
-				R.string.permission_title,
-				ID_PERMISSION_REQUEST_NETWORK,
-				arrayOf(Manifest.permission.INTERNET)
-			)
-			return false
+		override fun onPermissionDenied(permission: String) {
+			if (DEBUG) Log.v(TAG, "onPermissionDenied:$permission")
+			// ユーザーがパーミッション要求を拒否したときの処理
+			// FIXME 未実装
 		}
-		return true
+
+		override fun onPermission(permission: String) {
+			if (DEBUG) Log.v(TAG, "onPermission:$permission")
+			// ユーザーがパーミッション要求を承認したときの処理
+		}
+
+		override fun onPermissionNeverAskAgain(permission: String) {
+			if (DEBUG) Log.v(TAG, "onPermissionNeverAskAgain:$permission")
+			// 端末のアプリ設定画面を開くためのボタンを配置した画面へ遷移させる
+			// FIXME 未実装
+		}
+
+		override fun onPermissionNeverAskAgain(permissions: Array<String>) {
+			if (DEBUG) Log.v(TAG, "onPermissionNeverAskAgain:" + permissions.contentToString())
+			// 端末のアプリ設定画面を開くためのボタンを配置した画面へ遷移させる
+			// FIXME 未実装
+		}
 	}
 
 	companion object {
 		private const val DEBUG = true // set false on production
 		private val TAG = BaseActivity::class.java.simpleName
-
-		private val ID_PERMISSION_REQUEST_AUDIO = R.string.permission_audio_request
-		private val ID_PERMISSION_REQUEST_NETWORK = R.string.permission_network_request
-		private val ID_PERMISSION_REQUEST_EXT_STORAGE = R.string.permission_ext_storage_request
-		private val ID_PERMISSION_REQUEST_CAMERA = R.string.permission_camera_request
-
-		protected const val REQUEST_PERMISSION_AUDIO_RECORDING = 0x234567
-		protected const val REQUEST_PERMISSION_NETWORK = 0x456789
-		protected const val REQUEST_PERMISSION_WRITE_EXTERNAL_STORAGE = 0x12345
-		protected const val REQUEST_PERMISSION_CAMERA = 0x345678
 	}
 }

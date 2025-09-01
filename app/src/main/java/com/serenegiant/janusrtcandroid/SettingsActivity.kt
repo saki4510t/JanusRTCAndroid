@@ -12,6 +12,7 @@ package com.serenegiant.janusrtcandroid
 import android.content.SharedPreferences
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener
 import android.os.Bundle
+import androidx.activity.enableEdgeToEdge
 import androidx.preference.CheckBoxPreference
 import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
@@ -62,6 +63,7 @@ class SettingsActivity : BaseActivity(), OnSharedPreferenceChangeListener {
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
+		enableEdgeToEdge()
 		keyprefVideoCall = getString(R.string.pref_videocall_key)
 		keyprefScreencapture = getString(R.string.pref_screencapture_key)
 		keyprefCamera2 = getString(R.string.pref_camera2_key)

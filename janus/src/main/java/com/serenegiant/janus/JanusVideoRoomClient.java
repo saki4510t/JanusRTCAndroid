@@ -314,8 +314,8 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 				createMediaConstraintsInternal();
 				createPublisherInternal();
 			} catch (Exception e) {
+				if (DEBUG) Log.w(TAG, e);
 				reportError(e);
-				throw e;
 			}
 		});
 	}
@@ -653,7 +653,14 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		final AudioDeviceModule adm = createJavaAudioDevice();
 		if (BuildCheck.isAPI23() && (adm instanceof JavaAudioDeviceModule)) {
 			mAudioDeviceModule = (JavaAudioDeviceModule)adm;
-			((JavaAudioDeviceModule) adm).setPreferredInputDevice(mPreferredInputDevice);
+			// XXX JavaAudioDeviceModule#setPreferredInputDeviceもそこから呼び出される
+			//     WebRtcAudioRecord#setPreferredDeviceの引数もnullableで
+			//     #setPreferredDevice内ではnullチェックをしているにも関わらず
+			//     AudioDeviceInfo#getIdが呼び出されてヌルポでクラッシュするので
+			//     自前でnullチェックを追加
+			if (mPreferredInputDevice != null) {
+				((JavaAudioDeviceModule) adm).setPreferredInputDevice(mPreferredInputDevice);
+			}
 		}
 		
 		// Create peer connection factory.

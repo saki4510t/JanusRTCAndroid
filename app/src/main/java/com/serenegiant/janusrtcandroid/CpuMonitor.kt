@@ -9,7 +9,6 @@ package com.serenegiant.janusrtcandroid
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-import android.annotation.TargetApi
 import android.content.Context
 import android.os.Build
 import kotlin.jvm.Synchronized
@@ -80,7 +79,6 @@ import java.util.concurrent.TimeUnit
  *
  * @param context
  */
-@TargetApi(Build.VERSION_CODES.KITKAT)
 class CpuMonitor(context: Context) {
 	/**
 	 * Should not hold strong reference of (app) context!!
@@ -278,10 +276,7 @@ class CpuMonitor(context: Context) {
 				}
 			}
 		} catch (e: FileNotFoundException) {
-			if (DEBUG) Log.e(
-				TAG,
-				"Cannot do CPU stats since /sys/devices/system/cpu/present is missing"
-			)
+			if (DEBUG) Log.e(TAG, "Cannot do CPU stats since /sys/devices/system/cpu/present is missing")
 		} catch (e: IOException) {
 			if (DEBUG) Log.e(TAG, "Error closing file")
 		} catch (e: Exception) {
@@ -316,7 +311,7 @@ class CpuMonitor(context: Context) {
 
 	// Use sticky broadcast with null receiver to read battery level once only.
 	private val batteryLevel: Int
-		private get() {
+		get() {
 			// Use sticky broadcast with null receiver to read battery level once only.
 			var batteryLevel = 0
 			val appContext = mWeakAppContext.get()

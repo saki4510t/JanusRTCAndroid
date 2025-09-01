@@ -24,6 +24,10 @@ import android.view.View
 import android.view.Window
 import android.view.WindowManager
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.lifecycleScope
 import com.serenegiant.janus.JanusCallback
@@ -34,6 +38,7 @@ import com.serenegiant.janus.request.videoroom.ConfigPublisher
 import com.serenegiant.janus.response.videoroom.PublisherInfo
 import com.serenegiant.janus.response.videoroom.RoomEvent
 import com.serenegiant.janusrtcandroid.CallFragment.OnCallEvents
+import com.serenegiant.janusrtcandroid.ConnectActivity.Companion
 import com.serenegiant.janusrtcandroid.CpuMonitor.Companion.isSupported
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -86,8 +91,9 @@ class CallActivity : BaseActivity(), OnCallEvents {
 	public override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		if (DEBUG) Log.v(TAG, "onCreate:")
-		Thread.setDefaultUncaughtExceptionHandler(UnhandledExceptionHandler(this))
+		enableEdgeToEdge()
 
+		Thread.setDefaultUncaughtExceptionHandler(UnhandledExceptionHandler(this))
 		// Set window styles for fullscreen-window size. Needs to be done before
 		// adding content.
 		requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -99,6 +105,9 @@ class CallActivity : BaseActivity(), OnCallEvents {
 		)
 		window.decorView.systemUiVisibility = systemUiVisibility
 		setContentView(R.layout.activity_call)
+		findViewById<View>(R.id.frame)?.let {
+			optimizeEdgeToEdge(it)
+		}
 		iceConnected = false
 		currentFullIx = -1
 
@@ -835,6 +844,26 @@ class CallActivity : BaseActivity(), OnCallEvents {
 
 		override fun onChannelError(t: Throwable) {
 			reportError(t.message)
+		}
+	}
+
+	private fun optimizeEdgeToEdge(rootView: View) {
+		ViewCompat.setOnApplyWindowInsetsListener(rootView) { root, windowInsets ->
+			val insets = windowInsets.getInsets(
+				// システムバー＝ステータスバー、ナビゲーションバー
+				WindowInsetsCompat.Type.systemBars() or
+					// ディスプレイカットアウト
+					WindowInsetsCompat.Type.displayCutout(),
+			)
+			if (DEBUG) Log.v(TAG, "onApplyWindowInsets:insets=$insets,root=$root")
+			root.updatePadding(
+				top = insets.top,
+				left = insets.left,
+				right = insets.right,
+				bottom = insets.bottom,
+			)
+			// このActivityでWindowInsetsを消費する(子Viewには伝播しない)
+			WindowInsetsCompat.CONSUMED
 		}
 	}
 

@@ -180,13 +180,14 @@ class HudFragment : Fragment() {
 				encoderStat.append("Actual BR: ").append(actualBitrate).append("\n")
 			}
 		}
-		if (cpuMonitor != null) {
+		val cpu = cpuMonitor
+		if (cpu != null) {
 			encoderStat.append("CPU%: ")
-				.append(cpuMonitor!!.cpuUsageCurrent)
+				.append(cpu.cpuUsageCurrent)
 				.append("/")
-				.append(cpuMonitor!!.cpuUsageAverage)
+				.append(cpu.cpuUsageAverage)
 				.append(". Freq: ")
-				.append(cpuMonitor!!.frequencyScaleAverage)
+				.append(cpu.frequencyScaleAverage)
 		}
 		encoderStatView.text = encoderStat.toString()
 	}

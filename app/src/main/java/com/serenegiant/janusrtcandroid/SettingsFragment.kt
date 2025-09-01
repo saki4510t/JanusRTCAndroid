@@ -11,6 +11,10 @@ package com.serenegiant.janusrtcandroid
 
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.preference.PreferenceFragmentCompat
 
 /**
@@ -26,10 +30,35 @@ class SettingsFragment : PreferenceFragmentCompat() {
 		addPreferencesFromResource(R.xml.preferences)
 	}
 
+	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+		super.onViewCreated(view, savedInstanceState)
+		optimizeEdgeToEdge(view);
+	}
+
 	override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
 		if (DEBUG) Log.v(TAG, "onCreatePreferences:rootKey=$rootKey")
 		// XMLリソースから設定画面を読み込む
 		setPreferencesFromResource(R.xml.preferences, rootKey)
+	}
+
+	private fun optimizeEdgeToEdge(rootView: View) {
+		ViewCompat.setOnApplyWindowInsetsListener(rootView) { root, windowInsets ->
+			val insets = windowInsets.getInsets(
+				// システムバー＝ステータスバー、ナビゲーションバー
+				WindowInsetsCompat.Type.systemBars() or
+					// ディスプレイカットアウト
+					WindowInsetsCompat.Type.displayCutout(),
+			)
+			if (DEBUG) Log.v(TAG, "onApplyWindowInsets:insets=$insets,root=$root")
+			root.updatePadding(
+				top = insets.top,
+				left = insets.left,
+				right = insets.right,
+				bottom = insets.bottom,
+			)
+			// このFragmentでWindowInsetsを消費する(子Viewには伝播しない)
+			WindowInsetsCompat.CONSUMED
+		}
 	}
 
 	companion object {

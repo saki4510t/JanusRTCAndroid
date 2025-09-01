@@ -26,11 +26,17 @@ import android.view.View
 import android.webkit.URLUtil
 import android.widget.*
 import android.widget.AdapterView.AdapterContextMenuInfo
+import androidx.activity.enableEdgeToEdge
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import org.json.JSONArray
 import org.json.JSONException
 import java.lang.Exception
 import java.lang.NumberFormatException
 import java.util.*
+import androidx.core.content.edit
+import androidx.core.net.toUri
 
 /**
  * Handles the initial setup where the user selects which room to join.
@@ -55,6 +61,7 @@ class ConnectActivity : BaseActivity() {
 	public override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
+		enableEdgeToEdge()
 		// Get setting keys.
 		PreferenceManager.setDefaultValues(this, R.xml.preferences, false)
 		sharedPref = PreferenceManager.getDefaultSharedPreferences(this)
@@ -68,6 +75,10 @@ class ConnectActivity : BaseActivity() {
 		keyprefRoom = getString(R.string.pref_room_key)
 		keyprefRoomList = getString(R.string.pref_room_list_key)
 		setContentView(R.layout.activity_connect)
+		findViewById<View>(R.id.frame)?.let {
+			optimizeEdgeToEdge(it)
+		}
+
 		roomEditText = findViewById(R.id.room_edittext)
 		roomEditText.setOnEditorActionListener(OnEditorActionListener { textView, i, keyEvent ->
 			if (i == EditorInfo.IME_ACTION_DONE) {
@@ -79,7 +90,7 @@ class ConnectActivity : BaseActivity() {
 		roomEditText.requestFocus()
 		roomListView = findViewById(R.id.room_listview)
 		roomListView.setEmptyView(findViewById(android.R.id.empty))
-		roomListView.setOnItemClickListener(roomListClickListener)
+		roomListView.onItemClickListener = roomListClickListener
 		registerForContextMenu(roomListView)
 		val connectButton = findViewById<ImageButton>(R.id.connect_button)
 		connectButton.setOnClickListener(connectListener)
@@ -88,7 +99,7 @@ class ConnectActivity : BaseActivity() {
 
 		// If an implicit VIEW intent is launching the app, go directly to that URL.
 		val intent = intent
-		if ("android.intent.action.VIEW" == intent.action && !commandLineRun) {
+		if (("android.intent.action.VIEW" == intent.action) && !commandLineRun) {
 			val loopback = intent.getBooleanExtra(CallActivity.EXTRA_LOOPBACK, false)
 			val runTimeMs = intent.getIntExtra(CallActivity.EXTRA_RUNTIME, 0)
 			val useValuesFromIntent =
@@ -148,10 +159,10 @@ class ConnectActivity : BaseActivity() {
 		super.onPause()
 		val room = roomEditText.text.toString()
 		val roomListJson = JSONArray(roomList).toString()
-		sharedPref.edit()
-			.putString(keyprefRoom, room)
-			.putString(keyprefRoomList, roomListJson)
-			.apply()
+		sharedPref.edit {
+			putString(keyprefRoom, room)
+				.putString(keyprefRoomList, roomListJson)
+		}
 	}
 
 	public override fun onResume() {
@@ -246,9 +257,7 @@ class ConnectActivity : BaseActivity() {
 		roomId: Long, commandLineRun: Boolean, loopback: Boolean,
 		useValuesFromIntent: Boolean, runTimeMs: Int) {
 		var rid = roomId
-		if (!checkPermissionNetwork()) return
-		if (!checkPermissionAudio()) return
-		if (!checkPermissionCamera()) return
+		if (!checkPermissions()) return
 		Companion.commandLineRun = commandLineRun
 
 		// roomId is random for loopback.
@@ -257,7 +266,7 @@ class ConnectActivity : BaseActivity() {
 		}
 		val roomUrl = sharedPref.getString(
 			keyprefRoomServerUrl, getString(R.string.pref_room_server_url_default)
-		)
+		)!!
 
 		// Video call enabled flag.
 		val videoCallEnabled = sharedPrefGetBoolean(
@@ -457,7 +466,7 @@ class ConnectActivity : BaseActivity() {
 			useValuesFromIntent
 		)
 
-		// Get datachannel options
+		// Get data channel options
 		val dataChannelEnabled = sharedPrefGetBoolean(
 			R.string.pref_enable_datachannel_key,
 			CallActivity.EXTRA_DATA_CHANNEL_ENABLED, R.string.pref_enable_datachannel_default,
@@ -492,7 +501,7 @@ class ConnectActivity : BaseActivity() {
 		// Start AppRTCMobile activity.
 		Log.d(TAG, "Connecting to room $rid at URL $roomUrl")
 		if (validateUrl(roomUrl)) {
-			val uri = Uri.parse(roomUrl)
+			val uri = roomUrl.toUri()
 			val intent = Intent(this, CallActivity::class.java)
 			intent.data = uri
 			intent.putExtra(CallActivity.EXTRA_ROOMID, rid)
@@ -599,9 +608,10 @@ class ConnectActivity : BaseActivity() {
 			val roomId = (view as TextView).text.toString().toLong()
 			connectToRoom(roomId, commandLineRun = false, loopback = false, useValuesFromIntent = false, 0)
 		} catch (e: Exception) {
+			if (DEBUG) Log.w(TAG, e)
 			Toast.makeText(
 				this@ConnectActivity,
-				"roomId should be number", Toast.LENGTH_SHORT
+				"Failed to connect room, roomId should be number", Toast.LENGTH_SHORT
 			).show()
 		}
 	}
@@ -617,10 +627,31 @@ class ConnectActivity : BaseActivity() {
 			val roomId = roomEditText.text.toString().toLong()
 			connectToRoom(roomId, commandLineRun = false, loopback = false, useValuesFromIntent = false, 0)
 		} catch (e: Exception) {
+			if (DEBUG) Log.w(TAG, e)
 			Toast.makeText(
 				this@ConnectActivity,
-				"roomId should be number", Toast.LENGTH_SHORT
+				"Failed to connect room, roomId should be number", Toast.LENGTH_SHORT
 			).show()
+		}
+	}
+
+	private fun optimizeEdgeToEdge(rootView: View) {
+		ViewCompat.setOnApplyWindowInsetsListener(rootView) { root, windowInsets ->
+			val insets = windowInsets.getInsets(
+				// システムバー＝ステータスバー、ナビゲーションバー
+				WindowInsetsCompat.Type.systemBars() or
+					// ディスプレイカットアウト
+					WindowInsetsCompat.Type.displayCutout(),
+			)
+			if (DEBUG) Log.v(TAG, "onApplyWindowInsets:insets=$insets,root=$root")
+			root.updatePadding(
+				top = insets.top,
+				left = insets.left,
+				right = insets.right,
+				bottom = insets.bottom,
+			)
+			// このActivityでWindowInsetsを消費する(子Viewには伝播しない)
+			WindowInsetsCompat.CONSUMED
 		}
 	}
 
