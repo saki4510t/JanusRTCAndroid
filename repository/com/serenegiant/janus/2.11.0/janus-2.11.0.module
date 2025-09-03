@@ -1,0 +1,221 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "com.serenegiant",
+    "module": "janus",
+    "version": "2.11.0",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.11.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "releaseApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.usage": "java-api",
+        "org.jetbrains.kotlin.platform.type": "androidJvm"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "1.9.24"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "janus-2.11.0.aar",
+          "url": "janus-2.11.0.aar",
+          "size": 195689,
+          "sha512": "dbdfc596e92a85650900125526e81679fe5c90a616833d7027d04e145f71a9a787583d00864a303fb2f744413e246ef1c1a041d28fafb4395ad9a55ad17cba85",
+          "sha256": "5c6a8754264f2fe46927622747f43f1dd5be2ccf1ca72ef396affb98246e53f9",
+          "sha1": "8026ff89b40ebb2c381cbd62dff75da772b64152",
+          "md5": "bf42c69c13c047599cd1a0e5598191bb"
+        }
+      ]
+    },
+    {
+      "name": "releaseRuntimeElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "androidJvm"
+      },
+      "dependencies": [
+        {
+          "group": "androidx.appcompat",
+          "module": "appcompat",
+          "version": {
+            "requires": "1.7.1"
+          }
+        },
+        {
+          "group": "com.google.code.gson",
+          "module": "gson",
+          "version": {
+            "requires": "2.9.1"
+          }
+        },
+        {
+          "group": "com.squareup.okhttp3",
+          "module": "okhttp",
+          "version": {
+            "requires": "4.12.0"
+          }
+        },
+        {
+          "group": "com.squareup.okhttp3",
+          "module": "logging-interceptor",
+          "version": {
+            "requires": "4.12.0"
+          }
+        },
+        {
+          "group": "com.squareup.retrofit2",
+          "module": "retrofit",
+          "version": {
+            "requires": "2.11.0"
+          }
+        },
+        {
+          "group": "com.squareup.retrofit2",
+          "module": "converter-gson",
+          "version": {
+            "requires": "2.11.0"
+          }
+        },
+        {
+          "group": "com.squareup.retrofit2",
+          "module": "adapter-rxjava3",
+          "version": {
+            "requires": "2.11.0"
+          }
+        },
+        {
+          "group": "io.socket",
+          "module": "socket.io-client",
+          "version": {
+            "requires": "1.0.1"
+          },
+          "excludes": [
+            {
+              "group": "org.json",
+              "module": "json"
+            }
+          ]
+        },
+        {
+          "group": "io.reactivex.rxjava3",
+          "module": "rxjava",
+          "version": {
+            "requires": "3.1.5"
+          }
+        },
+        {
+          "group": "io.reactivex.rxjava3",
+          "module": "rxkotlin",
+          "version": {
+            "requires": "3.0.1"
+          }
+        },
+        {
+          "group": "io.reactivex.rxjava3",
+          "module": "rxandroid",
+          "version": {
+            "requires": "3.0.0"
+          }
+        },
+        {
+          "group": "com.github.akarnokd",
+          "module": "rxjava3-retrofit-adapter",
+          "version": {
+            "requires": "3.0.0"
+          }
+        },
+        {
+          "group": "com.tinder.scarlet",
+          "module": "scarlet",
+          "version": {
+            "requires": "0.1.12"
+          }
+        },
+        {
+          "group": "com.tinder.scarlet",
+          "module": "websocket-okhttp",
+          "version": {
+            "requires": "0.1.12"
+          }
+        },
+        {
+          "group": "com.tinder.scarlet",
+          "module": "message-adapter-gson",
+          "version": {
+            "requires": "0.1.12"
+          }
+        },
+        {
+          "group": "com.tinder.scarlet",
+          "module": "stream-adapter-rxjava2",
+          "version": {
+            "requires": "0.1.12"
+          }
+        },
+        {
+          "group": "com.serenegiant",
+          "module": "common",
+          "version": {
+            "requires": "9.14.4"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "1.9.24"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "janus-2.11.0.aar",
+          "url": "janus-2.11.0.aar",
+          "size": 195689,
+          "sha512": "dbdfc596e92a85650900125526e81679fe5c90a616833d7027d04e145f71a9a787583d00864a303fb2f744413e246ef1c1a041d28fafb4395ad9a55ad17cba85",
+          "sha256": "5c6a8754264f2fe46927622747f43f1dd5be2ccf1ca72ef396affb98246e53f9",
+          "sha1": "8026ff89b40ebb2c381cbd62dff75da772b64152",
+          "md5": "bf42c69c13c047599cd1a0e5598191bb"
+        }
+      ]
+    },
+    {
+      "name": "releaseSourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "androidJvm"
+      },
+      "files": [
+        {
+          "name": "janus-2.11.0-sources.jar",
+          "url": "janus-2.11.0-sources.jar",
+          "size": 255923,
+          "sha512": "fdc3e6837cade06859bf12bc935113061a4e99a3ba5d4595207dce9dd0847767505eae83a63eb7569df653c91f87454319117ad0b99bcd84470486e8f521af75",
+          "sha256": "d5d8dd97a85ec3421d5d7b19f0a59e286d2b57f2510194eef68a1536ee02b5c2",
+          "sha1": "c483250b433889031c46da90cdb511912e1798b2",
+          "md5": "a15862508eaa9bdb70e8e3ba8b378d64"
+        }
+      ]
+    }
+  ]
+}
