@@ -248,10 +248,7 @@ class CallActivity : BaseActivity(), OnCallEvents {
 		}
 		commandLineRun = intent.getBooleanExtra(EXTRA_CMDLINE, false)
 		val runTimeMs = intent.getIntExtra(EXTRA_RUNTIME, 0)
-		if (DEBUG) Log.d(
-			TAG,
-			"VIDEO_FILE: '" + intent.getStringExtra(EXTRA_VIDEO_FILE_AS_CAMERA) + "'"
-		)
+		if (DEBUG) Log.d(TAG, "VIDEO_FILE: '${intent.getStringExtra(EXTRA_VIDEO_FILE_AS_CAMERA)}'")
 		val options = PeerConnectionFactory.Options()
 		if (loopback) {
 			options.networkIgnoreMask = 0
@@ -526,10 +523,7 @@ class CallActivity : BaseActivity(), OnCallEvents {
 		device: IAppRTCAudioManager.AudioDevice,
 		availableDevices: Set<IAppRTCAudioManager.AudioDevice>
 	) {
-		if (DEBUG) Log.d(
-			TAG, "onAudioManagerDevicesChanged: " + availableDevices + ", "
-				+ "selected: " + device
-		)
+		if (DEBUG) Log.d(TAG, "onAudioManagerDevicesChanged: $availableDevices, selected: $device")
 		// TODO(henrika): add callback handler.
 	}
 
@@ -777,16 +771,10 @@ class CallActivity : BaseActivity(), OnCallEvents {
 		override fun getRemoteVideoSink(info: PublisherInfo): List<VideoSink> {
 			if (DEBUG) Log.v(TAG, "getRemoteVideoSink:$info")
 			return if (mNumUsers <= remoteRenderers.size) {
-				if (DEBUG) Log.v(
-					TAG,
-					"getRemoteVideoSink:add remote video sink"
-				)
+				if (DEBUG) Log.v(TAG, "getRemoteVideoSink:add remote video sink")
 				remoteRenderers.subList(mNumUsers - 1, mNumUsers)
 			} else {
-				if (DEBUG) Log.v(
-					TAG,
-					"getRemoteVideoSink:out of range"
-				)
+				if (DEBUG) Log.v(TAG, "getRemoteVideoSink:out of range")
 				emptyList()
 			}
 		}
@@ -816,10 +804,7 @@ class CallActivity : BaseActivity(), OnCallEvents {
 			if (DEBUG) Log.v(TAG, "onRemoteIceCandidatesRemoved:")
 			lifecycleScope.launch {
 				if (janusClient == null) {
-					Log.e(
-						TAG,
-						"Received ICE candidate removals for a non-initialized peer connection."
-					)
+					Log.e(TAG, "Received ICE candidate removals for a non-initialized peer connection.")
 				}
 			}
 		}
