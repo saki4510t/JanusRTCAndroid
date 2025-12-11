@@ -28,20 +28,28 @@ import com.serenegiant.janus.TransactionManager.TransactionCallback
  * プラグインメッセージ送信用のヘルパークラス
  */
 class Message(
+	@JvmField
 	val plugin: Plugin,
-	val body: Any, val jsep: Any?,
-	val callback: TransactionCallback?
+	@JvmField
+	val body: Any,
+	@JvmField
+	val jsep: Any?,
+	@JvmField
+	val callback: TransactionCallback
 ) {
+	@JvmField
 	val janus = "message"
 	@JvmField
 	val transaction = TransactionManager.get(12, callback)
+	@JvmField
 	val session_id = plugin.sessionId()
+	@JvmField
 	val handle_id = plugin.pluginId()
 
 	constructor(
 		room: Room,
 		body: Any,
-		callback: TransactionCallback?
+		callback: TransactionCallback
 	) : this(room, body, null, callback)
 
 	override fun toString(): String {
