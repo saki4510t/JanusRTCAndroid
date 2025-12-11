@@ -17,11 +17,11 @@ object Packages {
 	}
 
 	object Version {
-		private const val major = 2
-		private const val minor = 11
+		private const val major = 3
+		private const val minor = 0
 		private const val build = 0
 
-		const val code = 67
+		const val code = 68
 		const val name = "$major.$minor.$build"
 	}
 }
