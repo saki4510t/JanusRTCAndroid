@@ -17,7 +17,7 @@ package com.serenegiant.janus;
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  *
-*/
+ */
 
 import android.os.Build;
 import androidx.annotation.NonNull;
@@ -73,6 +73,9 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+/**
+ * FIXME これおkotlinにするとなぜか#josinでエラーになるのでしばらく様子見
+ */
 /*package*/ abstract class VideoRoomPlugin extends JanusPlugin
 	implements PeerConnection.Observer {
 
@@ -969,6 +972,12 @@ import retrofit2.Response;
 				}
 				break;
 			}
+			case "detached":
+			{
+				detach();
+				mCallback.onDetach(this);
+				break;
+			}
 			case "media":
 			case "webrtcup":
 			case "slowlink":
@@ -1423,7 +1432,7 @@ import retrofit2.Response;
 	 */
 	public static class Subscriber extends VideoRoomPlugin {
 		@NonNull
-		public final PublisherInfo info;
+		public final PublisherInfo publisherInfo;
 
 		/**
 		 * コンストラクタ
@@ -1445,7 +1454,7 @@ import retrofit2.Response;
 				isVideoCallEnabled);
 
 			if (DEBUG) Log.v(TAG, "Subscriber:");
-			this.info = info;
+			this.publisherInfo = info;
 		}
 		
 		@NonNull
@@ -1455,7 +1464,7 @@ import retrofit2.Response;
 		}
 
 		protected long getFeedId() {
-			return info.id;
+			return publisherInfo.id;
 		}
 
 		@Override
