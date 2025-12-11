@@ -75,7 +75,7 @@ public class ServerInfo {
 		public String toString() {
 			final StringBuilder sb = new StringBuilder();
 			sb.append("Transports{");
-			if ((transports != null) && (transports.size() > 0)) {
+			if ((transports != null) && !transports.isEmpty()) {
 				for (final Transport transport: transports) {
 					sb.append(transport).append(",");
 				}
@@ -128,7 +128,7 @@ public class ServerInfo {
 		public String toString() {
 			final StringBuilder sb = new StringBuilder();
 			sb.append("PluginInfos{");
-			if ((plugins != null) && (plugins.size() > 0)) {
+			if ((plugins != null) && !plugins.isEmpty()) {
 				for (final PluginInfo plugin: plugins) {
 					sb.append(plugin).append(",");
 				}
