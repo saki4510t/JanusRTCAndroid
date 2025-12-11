@@ -1,4 +1,4 @@
-package org.appspot.apprtc.util;
+package com.serenegiant.webrtc.util;
 /*
  * JanusRTCAndroid
  * Video chat sample app using videoroom plugin on janus-gateway server and WebRTC.
@@ -19,7 +19,12 @@ package org.appspot.apprtc.util;
  *
 */
 
+import static com.serenegiant.webrtc.AppRTCConst.AUDIO_CODEC_PARAM_BITRATE;
+import static com.serenegiant.webrtc.AppRTCConst.VIDEO_CODEC_PARAM_START_BITRATE;
+
 import android.util.Log;
+
+import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,10 +32,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import androidx.annotation.Nullable;
-
-import static org.appspot.apprtc.AppRTCConst.*;
 
 public class SdpUtils {
 	private static final boolean DEBUG = false;	// set false on production

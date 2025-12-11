@@ -1,4 +1,5 @@
-package org.appspot.apprtc;/*
+package org.appspot.apprtc;
+/*
  *  Copyright 2014 The WebRTC Project Authors. All rights reserved.
  *
  *  Use of this source code is governed by a BSD-style license
@@ -27,8 +28,8 @@ import androidx.annotation.UiThread;
 import android.util.Log;
 
 import com.serenegiant.janus.R;
+import com.serenegiant.webrtc.util.AppRTCUtils;
 
-import org.appspot.apprtc.util.AppRTCUtils;
 import org.webrtc.ThreadUtils;
 
 import java.util.Collections;
@@ -37,7 +38,9 @@ import java.util.Set;
 
 /**
  * AppRTCAudioManager manages all audio related parts of the AppRTC demo.
+ * @deprecated will remove from janus module
  */
+@Deprecated
 public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 	private static final boolean DEBUG = false; // set false on production
 	private static final String TAG = AppRTCAudioManager2.class.getSimpleName();

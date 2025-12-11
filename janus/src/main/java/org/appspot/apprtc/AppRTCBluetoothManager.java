@@ -1,4 +1,5 @@
-package org.appspot.apprtc;/*
+package org.appspot.apprtc;
+/*
  *  Copyright 2016 The WebRTC Project Authors. All rights reserved.
  *
  *  Use of this source code is governed by a BSD-style license
@@ -24,7 +25,6 @@ import android.os.Looper;
 import android.os.Process;
 import android.util.Log;
 
-import org.appspot.apprtc.util.AppRTCUtils;
 import org.webrtc.ThreadUtils;
 
 import java.util.EnumSet;
@@ -35,10 +35,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 
+import com.serenegiant.webrtc.util.AppRTCUtils;
+
 /**
  * AppRTCProximitySensor manages functions related to Bluetoth devices in the
  * AppRTC demo.
+ * @deprecated will remove from janus module
  */
+@Deprecated
 @SuppressLint("MissingPermission")
 public class AppRTCBluetoothManager {
 	private static final boolean DEBUG = false; // set false on production

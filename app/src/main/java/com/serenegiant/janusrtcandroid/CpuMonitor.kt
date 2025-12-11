@@ -158,9 +158,9 @@ class CpuMonitor(context: Context) {
 
 	init {
 		if (!isSupported) {
-			throw RuntimeException("org.appspot.apprtc.CpuMonitor is not supported on this Android version.")
+			throw RuntimeException("com.serenegiant.webrtc.CpuMonitor is not supported on this Android version.")
 		}
-		if (DEBUG) Log.d(TAG, "org.appspot.apprtc.CpuMonitor ctor.")
+		if (DEBUG) Log.d(TAG, "com.serenegiant.webrtc.CpuMonitor ctor.")
 		mWeakAppContext = WeakReference(context.applicationContext)
 		userCpuUsage = MovingAverage(MOVING_AVERAGE_SAMPLES)
 		systemCpuUsage = MovingAverage(MOVING_AVERAGE_SAMPLES)

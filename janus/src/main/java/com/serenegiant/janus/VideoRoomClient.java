@@ -14,8 +14,7 @@ package com.serenegiant.janus;
 import com.serenegiant.janus.request.videoroom.ConfigPublisher;
 import com.serenegiant.janus.request.videoroom.ConfigSubscriber;
 import com.serenegiant.janus.response.videoroom.RoomInfo;
-
-import org.appspot.apprtc.RoomConnectionParameters;
+import com.serenegiant.webrtc.RoomConnectionParameters;
 
 import java.util.Collection;
 import java.util.List;

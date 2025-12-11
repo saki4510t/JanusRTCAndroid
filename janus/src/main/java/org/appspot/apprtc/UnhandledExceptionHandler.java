@@ -1,4 +1,5 @@
-package org.appspot.apprtc;/*
+package org.appspot.apprtc;
+/*
  *  Copyright 2013 The WebRTC Project Authors. All rights reserved.
  *
  *  Use of this source code is governed by a BSD-style license
@@ -28,7 +29,9 @@ import androidx.annotation.NonNull;
  * NOTE: almost always more useful to
  * Thread.setDefaultUncaughtExceptionHandler() rather than
  * Thread.setUncaughtExceptionHandler(), to apply to background threads as well.
+ * @deprecated will remove from janus module
  */
+@Deprecated
 public class UnhandledExceptionHandler implements Thread.UncaughtExceptionHandler {
 	private static final String TAG = "AppRTCMobileActivity";
 	private final Activity activity;

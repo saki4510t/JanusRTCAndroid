@@ -1,4 +1,5 @@
-package org.appspot.apprtc;/*
+package org.appspot.apprtc;
+/*
  *  Copyright 2014 The WebRTC Project Authors. All rights reserved.
  *
  *  Use of this source code is governed by a BSD-style license
@@ -16,10 +17,11 @@ import android.hardware.SensorManager;
 import android.os.Build;
 import android.util.Log;
 
-import org.appspot.apprtc.util.AppRTCUtils;
 import org.webrtc.ThreadUtils;
 
 import androidx.annotation.Nullable;
+
+import com.serenegiant.webrtc.util.AppRTCUtils;
 
 /**
  * AppRTCProximitySensor manages functions related to the proximity sensor in
@@ -29,7 +31,9 @@ import androidx.annotation.Nullable;
  * value i.e. the LUX value of the light sensor is compared with a threshold.
  * A LUX-value more than the threshold means the proximity sensor returns "FAR".
  * Anything less than the threshold value and the sensor  returns "NEAR".
+ * @deprecated will remove from janus module
  */
+@Deprecated
 public class AppRTCProximitySensor implements SensorEventListener {
 	private static final boolean DEBUG = false; // set false on production
 	private static final String TAG = AppRTCProximitySensor.class.getSimpleName();

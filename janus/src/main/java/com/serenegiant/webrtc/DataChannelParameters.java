@@ -1,4 +1,4 @@
-package org.appspot.apprtc;
+package com.serenegiant.webrtc;
 /*
  *  Copyright 2014 The WebRTC Project Authors. All rights reserved.
  *  Modified 2018 by saki t_saki@serenegiant.com
@@ -107,8 +107,8 @@ public class DataChannelParameters {
 	 * FIXME Builderを使うようにするためにprivate/protectedへ変更する
 	 */
 	public DataChannelParameters(final boolean ordered,
-		final int maxRetransmitTimeMs, final int maxRetransmits,
-		final String protocol, final boolean negotiated, final int id) {
+								 final int maxRetransmitTimeMs, final int maxRetransmits,
+								 final String protocol, final boolean negotiated, final int id) {
 
 		this.ordered = ordered;
 		this.maxRetransmitTimeMs = maxRetransmitTimeMs;

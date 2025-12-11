@@ -1,4 +1,4 @@
-package org.webrtc.audio;/*
+package com.serenegiant.webrtc.audio;/*
  *  Copyright 2018 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
@@ -12,6 +12,7 @@ import android.media.AudioFormat;
 import android.os.Environment;
 import android.util.Log;
 
+import org.webrtc.audio.JavaAudioDeviceModule;
 import org.webrtc.audio.JavaAudioDeviceModule.SamplesReadyCallback;
 
 import java.io.File;

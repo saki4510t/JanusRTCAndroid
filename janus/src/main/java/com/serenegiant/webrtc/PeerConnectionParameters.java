@@ -1,4 +1,4 @@
-package org.appspot.apprtc;
+package com.serenegiant.webrtc;
 /*
  *  Copyright 2014 The WebRTC Project Authors. All rights reserved.
  *  Modified 2018 by saki t_saki@serenegiant.com
@@ -9,16 +9,26 @@ package org.appspot.apprtc;
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
+
+import static com.serenegiant.webrtc.AppRTCConst.AUDIO_CODEC_OPUS;
+import static com.serenegiant.webrtc.AppRTCConst.DISABLE_WEBRTC_AGC_FIELDTRIAL;
+import static com.serenegiant.webrtc.AppRTCConst.VIDEO_CODEC_H264;
+import static com.serenegiant.webrtc.AppRTCConst.VIDEO_CODEC_H264_BASELINE;
+import static com.serenegiant.webrtc.AppRTCConst.VIDEO_CODEC_H264_HIGH;
+import static com.serenegiant.webrtc.AppRTCConst.VIDEO_CODEC_VP8;
+import static com.serenegiant.webrtc.AppRTCConst.VIDEO_CODEC_VP9;
+import static com.serenegiant.webrtc.AppRTCConst.VIDEO_FLEXFEC_FIELDTRIAL;
+import static com.serenegiant.webrtc.AppRTCConst.VIDEO_H264_HIGH_PROFILE_FIELDTRIAL;
+import static com.serenegiant.webrtc.AppRTCConst.VIDEO_VP8_INTEL_HW_ENCODER_FIELDTRIAL;
+
 import android.media.AudioFormat;
 import android.media.MediaRecorder;
 import android.util.Log;
 
-import com.serenegiant.media.AudioRecordCompat;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import static org.appspot.apprtc.AppRTCConst.*;
+import com.serenegiant.media.AudioRecordCompat;
 
 /**
  * Peer connection parameters.

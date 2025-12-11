@@ -18,8 +18,8 @@ import android.os.Bundle
 import android.util.TypedValue
 import android.view.View
 import androidx.fragment.app.Fragment
+import com.serenegiant.webrtc.AppRTCConst
 import org.webrtc.StatsReport
-import org.appspot.apprtc.AppRTCConst
 import java.lang.StringBuilder
 import java.util.HashMap
 

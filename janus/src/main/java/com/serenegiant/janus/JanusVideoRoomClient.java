@@ -40,13 +40,13 @@ import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
 import com.serenegiant.janus.response.videoroom.RoomInfo;
 import com.serenegiant.system.BuildCheck;
+import com.serenegiant.webrtc.AppRTCConst;
 import com.serenegiant.webrtc.MediaStreamUtils;
+import com.serenegiant.webrtc.PeerConnectionParameters;
+import com.serenegiant.webrtc.RoomConnectionParameters;
+import com.serenegiant.webrtc.RtcEventLog;
 
-import org.appspot.apprtc.AppRTCConst;
-import org.appspot.apprtc.PeerConnectionParameters;
-import org.webrtc.audio.RecordedAudioToFileController;
-import org.appspot.apprtc.RoomConnectionParameters;
-import org.appspot.apprtc.RtcEventLog;
+import com.serenegiant.webrtc.audio.RecordedAudioToFileController;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.webrtc.AudioSource;
@@ -665,7 +665,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 		
 		// Create peer connection factory.
 		if (options != null && DEBUG) {
-			if (DEBUG) Log.d(TAG, "Factory networkIgnoreMask option: " + options.networkIgnoreMask);
+			Log.d(TAG, "Factory networkIgnoreMask option: " + options.networkIgnoreMask);
 		}
 		final boolean enableH264HighProfile =
 			AppRTCConst.VIDEO_CODEC_H264_HIGH.equals(peerConnectionParameters.videoCodec);
@@ -949,7 +949,7 @@ public class JanusVideoRoomClient implements VideoRoomClient {
 			rtcEventLog = new RtcEventLog(peerConnection);
 			rtcEventLog.start(createRtcEventLogOutputFile());
 		} else {
-			if (DEBUG) Log.d(TAG, "org.appspot.apprtc.RtcEventLog is disabled.");
+			if (DEBUG) Log.d(TAG, "com.serenegiant.webrtc.RtcEventLog is disabled.");
 		}
 		if (DEBUG) Log.d(TAG, "Peer connection created.");
 

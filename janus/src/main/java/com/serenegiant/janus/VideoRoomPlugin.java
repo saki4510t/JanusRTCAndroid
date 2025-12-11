@@ -43,12 +43,12 @@ import com.serenegiant.janus.response.PluginInfo;
 import com.serenegiant.janus.response.videoroom.PublisherInfo;
 import com.serenegiant.janus.response.Session;
 import com.serenegiant.nio.CharsetsUtils;
+import com.serenegiant.webrtc.AppRTCConst;
+import com.serenegiant.webrtc.PeerConnectionParameters;
+import com.serenegiant.webrtc.RoomConnectionParameters;
+import com.serenegiant.webrtc.RtcEventLog;
+import com.serenegiant.webrtc.util.SdpUtils;
 
-import org.appspot.apprtc.AppRTCConst;
-import org.appspot.apprtc.PeerConnectionParameters;
-import org.appspot.apprtc.RoomConnectionParameters;
-import org.appspot.apprtc.RtcEventLog;
-import org.appspot.apprtc.util.SdpUtils;
 import org.json.JSONObject;
 import org.webrtc.DataChannel;
 import org.webrtc.IceCandidate;
@@ -187,7 +187,7 @@ import retrofit2.Response;
 	@NonNull
 	protected final RoomConnectionParameters roomConnectionParameters;
 	private PeerConnection peerConnection;
-	/** Enable org.appspot.apprtc.RtcEventLog. */
+	/** Enable com.serenegiant.webrtc.RtcEventLog. */
 	@Nullable
 	RtcEventLog rtcEventLog;
 	@Nullable
