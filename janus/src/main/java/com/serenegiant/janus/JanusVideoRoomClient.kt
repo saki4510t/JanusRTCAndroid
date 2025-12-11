@@ -1271,7 +1271,7 @@ class JanusVideoRoomClient(
 			// feederIdが一致するSubscriberを探す
 			for ((_, plugin) in mAttachedPlugins) {
 				if (plugin is VideoRoomPlugin.Subscriber) {
-					if (leavePlugin == plugin.getFeedId()) {
+					if (leavePlugin == plugin.feedId) {
 						found = plugin
 						break
 					}
@@ -1376,7 +1376,7 @@ class JanusVideoRoomClient(
 		if (DEBUG) Log.v(TAG, "requestServerInfo:")
 		// Janus-gatewayサーバー情報を取得
 		val call = api.getInfo(roomConnectionParameters.apiName)
-		addCall(call!!)
+		addCall(call)
 		call.enqueue(object : Callback<ServerInfo> {
 			override fun onResponse(
 				call: Call<ServerInfo>,
@@ -1409,7 +1409,7 @@ class JanusVideoRoomClient(
 		val call = mJanus!!.createSession(
 			roomConnectionParameters.apiName, CreateSession()
 		)
-		addCall(call!!)
+		addCall(call)
 		call.enqueue(object : Callback<Session?> {
 			override fun onResponse(
 				call: Call<Session?>,
@@ -1469,7 +1469,7 @@ class JanusVideoRoomClient(
 			val call = mJanus!!.destroySession(
 				roomConnectionParameters.apiName, mSession!!.id(), destroy
 			)
-			addCall(call!!)
+			addCall(call)
 			try {
 				call.execute()
 			} catch (e: IOException) {
@@ -1777,7 +1777,7 @@ class JanusVideoRoomClient(
 		val call = mLongPoll!!.getEvent(
 			roomConnectionParameters.apiName, mSession!!.id()
 		)
-		addCall(call!!)
+		addCall(call)
 		call.enqueue(object : Callback<ResponseBody> {
 			override fun onResponse(
 				call: Call<ResponseBody>,

@@ -42,7 +42,7 @@ interface JanusAPI {
 	 * @return
 	 */
 	@GET("{api}/info")
-	fun getInfo(@Path("api") api: String): Call<ServerInfo>?
+	fun getInfo(@Path("api") api: String): Call<ServerInfo>
 
 	/**
 	 * セッションを作成
@@ -55,7 +55,7 @@ interface JanusAPI {
 	fun createSession(
 		@Path("api") api: String,
 		@Body create: CreateSession
-	): Call<Session>?
+	): Call<Session>
 
 	/**
 	 * 指定したプラグインへ接続
@@ -70,7 +70,7 @@ interface JanusAPI {
 		@Path("api") api: String,
 		@Path("session_id") sessionId: Long,
 		@Body attach: Attach
-	): Call<PluginInfo>?
+	): Call<PluginInfo>
 
 	/**
 	 * 指定したプラグインから切断
@@ -87,7 +87,7 @@ interface JanusAPI {
 		@Path("session_id") sessionId: Long,
 		@Path("plugin_id") pluginId: Long,
 		@Body detach: Detach
-	): Call<Void>?
+	): Call<Void>
 
 	/**
 	 * セッションを破棄
@@ -102,5 +102,5 @@ interface JanusAPI {
 		@Path("api") api: String,
 		@Path("session_id") sessionId: Long,
 		@Body destroy: DestroySession
-	): Call<Void>?
+	): Call<Void>
 }

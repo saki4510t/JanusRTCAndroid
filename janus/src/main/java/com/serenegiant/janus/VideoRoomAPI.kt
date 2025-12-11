@@ -44,7 +44,7 @@ interface VideoRoomAPI : JanusAPI {
 		@Path("session_id") sessionId: Long,
 		@Path("plugin_id") pluginId: Long,
 		@Body list: List?
-	): Call<ListResponse<RoomInfo>>?
+	): Call<ListResponse<RoomInfo>>
 
 	@POST("{api}/{session_id}/{plugin_id}")
 	fun join(
@@ -52,7 +52,7 @@ interface VideoRoomAPI : JanusAPI {
 		@Path("session_id") sessionId: Long,
 		@Path("plugin_id") pluginId: Long,
 		@Body message: Message
-	): Call<RoomEvent>?
+	): Call<RoomEvent>
 
 	@POST("{api}/{session_id}/{plugin_id}")
 	fun offer(
@@ -60,7 +60,7 @@ interface VideoRoomAPI : JanusAPI {
 		@Path("session_id") sessionId: Long,
 		@Path("plugin_id") pluginId: Long,
 		@Body message: Message
-	): Call<RoomEvent>?
+	): Call<RoomEvent>
 
 	@POST("{api}/{session_id}/{plugin_id}")
 	fun trickle(
@@ -68,7 +68,7 @@ interface VideoRoomAPI : JanusAPI {
 		@Path("session_id") sessionId: Long,
 		@Path("plugin_id") pluginId: Long,
 		@Body trickle: Trickle
-	): Call<RoomEvent>?
+	): Call<RoomEvent>
 
 	@POST("{api}/{session_id}/{plugin_id}")
 	fun trickleCompleted(
@@ -76,7 +76,7 @@ interface VideoRoomAPI : JanusAPI {
 		@Path("session_id") sessionId: Long,
 		@Path("plugin_id") pluginId: Long,
 		@Body trickle: TrickleCompleted
-	): Call<RoomEvent>?
+	): Call<RoomEvent>
 
 	@POST("{api}/{session_id}/{plugin_id}")
 	fun send(
@@ -84,7 +84,7 @@ interface VideoRoomAPI : JanusAPI {
 		@Path("session_id") sessionId: Long,
 		@Path("plugin_id") pluginId: Long,
 		@Body message: Message
-	): Call<ResponseBody>?
+	): Call<ResponseBody>
 
 	@POST("{api}/{session_id}/{plugin_id}")
 	fun hangup(
@@ -92,7 +92,7 @@ interface VideoRoomAPI : JanusAPI {
 		@Path("session_id") sessionId: Long,
 		@Path("plugin_id") pluginId: Long,
 		@Body hangup: Hangup
-	): Call<Void>?
+	): Call<Void>
 
 	@POST("{api}/{session_id}/{plugin_id}")
 	fun configure(
@@ -100,7 +100,7 @@ interface VideoRoomAPI : JanusAPI {
 		@Path("session_id") sessionId: Long,
 		@Path("plugin_id") pluginId: Long,
 		@Body message: Message
-	): Call<RoomEvent>?
+	): Call<RoomEvent>
 
 	@POST("{api}/{session_id}/{plugin_id}")
 	fun kick(
@@ -108,5 +108,5 @@ interface VideoRoomAPI : JanusAPI {
 		@Path("session_id") sessionId: Long,
 		@Path("plugin_id") pluginId: Long,
 		@Body message: Message
-	): Call<RoomEvent>?
+	): Call<RoomEvent>
 }

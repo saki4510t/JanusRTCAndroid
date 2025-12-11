@@ -39,7 +39,7 @@ interface LongPoll {
 	fun getEvent(
 		@Path("api") api: String,
 		@Path("session_id") sessionId: Long
-	): Call<ResponseBody>?
+	): Call<ResponseBody>
 
 	/**
 	 * janusの死活確認・イベント受信用のlogPoll
@@ -52,5 +52,5 @@ interface LongPoll {
 	fun getRoomEvent(
 		@Path("api") api: String,
 		@Path("session_id") sessionId: Long
-	): Call<RoomEvent>?
+	): Call<RoomEvent>
 }
