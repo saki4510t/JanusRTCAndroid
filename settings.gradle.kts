@@ -1,8 +1,14 @@
 pluginManagement {
     repositories {
-        gradlePluginPortal()
-        google()
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
         mavenCentral()
+        gradlePluginPortal()
     }
 }
 
@@ -12,11 +18,12 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven { url = uri("https://raw.github.com/saki4510t/libcommon/master/repository/") }
+        mavenLocal()
     }
 }
 
 rootProject.name = "JanusRTCAndroid"
 
-include ':app'
-include ':janus'
-include ':libwebrtc'
+include(":app")
+include(":janus")
+include(":libwebrtc")
