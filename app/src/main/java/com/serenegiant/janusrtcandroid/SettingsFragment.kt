@@ -26,8 +26,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		if (DEBUG) Log.v(TAG, "onCreate:")
-		// Load the preferences from an XML resource
-		addPreferencesFromResource(R.xml.preferences)
 	}
 
 	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
