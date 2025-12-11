@@ -37,7 +37,6 @@ import retrofit2.http.Path;
 
 /**
  * API interface of videoroom plugin on janus-gateway over http://https
- * FIXME RxJavaを使うように変える
  */
 public interface VideoRoomAPI extends JanusAPI {
 	@GET("{api}/{session_id}/{plugin_id}")

@@ -63,10 +63,6 @@ gson = "2.10.1" # 2.11.x以降は互換性がないみたい？
 okhttp3 = "4.12.0"
 retrofit2 = "2.11.0"
 socketIOClientJava = "2.0.1"
-rxJava3 = "3.1.8"
-rxKotlin3 = "3.0.1"
-rxJava3Android = "3.0.0"
-rxJava3RetrofitAdaptor = "3.0.0"
 scarlet = "0.1.12"
 serenegiantCommon = "9.16.0"
 composeprefs3 = "1.0.5"
@@ -160,16 +156,10 @@ okhttp3-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-
 okhttp3-mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "okhttp3" }
 retrofit2 = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit2" }
 retrofit2-converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit2" }
-retrofit2-adapter-rxjava3 = { module = "com.squareup.retrofit2:adapter-rxjava3", version.ref = "retrofit2" }
 socketio = { group = "io.socket", name = "socket.io-client", version.ref = "socketIOClientJava" }
-rxjava3 = { group = "io.reactivex.rxjava3", name = "rxjava", version.ref = "rxJava3" }
-rxjava3-rxkotlin = { group = "io.reactivex.rxjava3", name = "rxkotlin", version.ref = "rxKotlin3" }
-rxjava3-rxandroid = { group = "io.reactivex.rxjava3", name = "rxandroid", version.ref = "rxJava3Android" }
-rxjava3-retrofit-adapter = { group = "com.github.akarnokd", name = "rxjava3-retrofit-adapter", version.ref = "rxJava3RetrofitAdaptor" }
 tinder-scarlet = { group = "com.tinder.scarlet", name = "scarlet", version.ref = "scarlet" }
 tinder-scarlet-websocket-okhttp = { group = "com.tinder.scarlet", name = "websocket-okhttp", version.ref = "scarlet" }
 tinder-scarlet-message-adapter-gson = { group = "com.tinder.scarlet", name = "message-adapter-gson", version.ref = "scarlet" }
-tinder-scarlet-stream-adapter-rxjava2 = { group = "com.tinder.scarlet", name = "stream-adapter-rxjava2", version.ref = "scarlet" }
 serenegiant-common = { group = "com.serenegiant", name = "common", version.ref = "serenegiantCommon" }
 composeprefs3 = { module = "com.github.JamalMulla:ComposePrefs3", version.ref = "composeprefs3" }
 

@@ -55,22 +55,15 @@ dependencies {
 	implementation(libs.okhttp3.logging.interceptor)
 	implementation(libs.retrofit2)
 	implementation(libs.retrofit2.converter.gson)
-	implementation(libs.retrofit2.adapter.rxjava3)
 
 	implementation(libs.socketio) {
 	  // excluding org.json which is provided by Android
 		exclude(group = "org.json", module = "json")
 	}
 
-	implementation(libs.rxjava3)
-	implementation(libs.rxjava3.rxkotlin)
-	implementation(libs.rxjava3.rxandroid)
-	implementation(libs.rxjava3.retrofit.adapter)
-
 	implementation(libs.tinder.scarlet)
 	implementation(libs.tinder.scarlet.websocket.okhttp)
 	implementation(libs.tinder.scarlet.message.adapter.gson)
-	implementation(libs.tinder.scarlet.stream.adapter.rxjava2)
 
 	implementation(libs.serenegiant.common)		// Apache V2
 
