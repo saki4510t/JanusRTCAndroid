@@ -19,24 +19,28 @@ package com.serenegiant.janus
  *
  */
 
+import okio.withLock
 import org.webrtc.VideoFrame
 import org.webrtc.VideoSink
+import java.util.concurrent.locks.ReentrantLock
 
 /**
  * VideoSinkを切り替えることができるVideoSink実装
  */
 class ProxyVideoSink : VideoSink {
+	private val mLock = ReentrantLock()
 	private var target: VideoSink? = null
 
-	@Synchronized
 	override fun onFrame(frame: VideoFrame) {
-		if (target != null) {
-			target!!.onFrame(frame)
+		val t = mLock.withLock {
+			target
 		}
+		t?.onFrame(frame)
 	}
 
-	@Synchronized
 	fun setTarget(target: VideoSink?) {
-		this.target = target
+		mLock.withLock {
+			this.target = target
+		}
 	}
 }

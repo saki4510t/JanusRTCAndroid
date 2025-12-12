@@ -25,12 +25,14 @@ import com.google.gson.internal.bind.DateTypeAdapter
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import okio.withLock
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.Date
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantLock
 
 object Utils {
 	private const val DEBUG = false
@@ -69,64 +71,65 @@ object Utils {
 	 * keep first OkHttpClient as singleton
 	 */
 	private var sOkHttpClient: OkHttpClient? = null
-
+	private val sLock = ReentrantLock()
 	/**
 	 * Janus-gatewayサーバーとの通信用のOkHttpClientインスタンスの初期化処理
 	 * @return
 	 */
-	@Synchronized
 	fun setupHttpClient(
 		isLongPoll: Boolean,
 		readTimeoutMs: Long, writeTimeoutMs: Long,
 		callback: BuilderCallback
 	): OkHttpClient {
 		if (DEBUG) Log.v(TAG, "setupHttpClient:")
-		var builder = if (sOkHttpClient == null) {
-			OkHttpClient.Builder()
-		} else {
-			sOkHttpClient!!.newBuilder()
-		}
-		builder
-			.connectTimeout(Const.HTTP_CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS) // 接続タイムアウト
-			.readTimeout(readTimeoutMs, TimeUnit.MILLISECONDS) // 読み込みタイムアウト
-			.writeTimeout(writeTimeoutMs, TimeUnit.MILLISECONDS) // 書き込みタイムアウト
-		builder = callback.setupOkHttp(
-			builder, isLongPoll,
-			Const.HTTP_CONNECT_TIMEOUT_MS, readTimeoutMs, writeTimeoutMs
-		)
-		val interceptors = builder.interceptors()
-		builder.addInterceptor(Interceptor { chain ->
-			val original = chain.request()
-			// header設定
-			val request = original.newBuilder()
-				.header("Accept", "application/json")
-				.method(original.method, original.body)
-				.build()
+		sLock.withLock {
+			var builder = if (sOkHttpClient == null) {
+				OkHttpClient.Builder()
+			} else {
+				sOkHttpClient!!.newBuilder()
+			}
+			builder
+				.connectTimeout(Const.HTTP_CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS) // 接続タイムアウト
+				.readTimeout(readTimeoutMs, TimeUnit.MILLISECONDS) // 読み込みタイムアウト
+				.writeTimeout(writeTimeoutMs, TimeUnit.MILLISECONDS) // 書き込みタイムアウト
+			builder = callback.setupOkHttp(
+				builder, isLongPoll,
+				Const.HTTP_CONNECT_TIMEOUT_MS, readTimeoutMs, writeTimeoutMs
+			)
+			val interceptors = builder.interceptors()
+			builder.addInterceptor(Interceptor { chain ->
+				val original = chain.request()
+				// header設定
+				val request = original.newBuilder()
+					.header("Accept", "application/json")
+					.method(original.method, original.body)
+					.build()
 
-			val response = chain.proceed(request)
-			response
-		})
-		// ログ出力設定
-		if (DEBUG) {
-			var hasLogging = false
-			for (interceptor in interceptors) {
-				if (interceptor is HttpLoggingInterceptor) {
-					hasLogging = true
-					break
+				val response = chain.proceed(request)
+				response
+			})
+			// ログ出力設定
+			if (DEBUG) {
+				var hasLogging = false
+				for (interceptor in interceptors) {
+					if (interceptor is HttpLoggingInterceptor) {
+						hasLogging = true
+						break
+					}
+				}
+				if (!hasLogging) {
+					val logging = HttpLoggingInterceptor()
+					logging.setLevel(HttpLoggingInterceptor.Level.BODY)
+					builder.addInterceptor(logging)
 				}
 			}
-			if (!hasLogging) {
-				val logging = HttpLoggingInterceptor()
-				logging.setLevel(HttpLoggingInterceptor.Level.BODY)
-				builder.addInterceptor(logging)
-			}
-		}
 
-		val result = builder.build()
-		if (sOkHttpClient == null) {
-			sOkHttpClient = result
+			val result = builder.build()
+			if (sOkHttpClient == null) {
+				sOkHttpClient = result
+			}
+			return result
 		}
-		return result
 	}
 
 	/**

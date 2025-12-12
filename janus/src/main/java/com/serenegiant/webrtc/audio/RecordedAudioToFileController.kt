@@ -20,6 +20,8 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.OutputStream
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * Implements the AudioRecordSamplesReadyCallback interface and writes
@@ -28,7 +30,7 @@ import java.util.concurrent.ExecutorService
 class RecordedAudioToFileController(
 	private val executor: ExecutorService
 ) : SamplesReadyCallback {
-	private val lock = Any()
+	private val lock = ReentrantLock()
 	private var rawAudioFileOutputStream: OutputStream? = null
 	private var isRunning = false
 	private var fileSizeInBytes: Long = 0
@@ -43,7 +45,7 @@ class RecordedAudioToFileController(
 			Log.e(TAG, "Writing to external media is not possible")
 			return false
 		}
-		synchronized(lock) {
+		lock.withLock {
 			isRunning = true
 		}
 		return true
@@ -55,7 +57,7 @@ class RecordedAudioToFileController(
 	 */
 	fun stop() {
 		Log.d(TAG, "stop")
-		synchronized(lock) {
+		lock.withLock {
 			isRunning = false
 			if (rawAudioFileOutputStream != null) {
 				try {
@@ -102,7 +104,7 @@ class RecordedAudioToFileController(
 			Log.e(TAG, "Invalid audio format")
 			return
 		}
-		synchronized(lock) {
+		lock.withLock {
 			// Abort early if stop() has been called.
 			if (!isRunning) {
 				return

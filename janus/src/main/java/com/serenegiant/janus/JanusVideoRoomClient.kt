@@ -97,6 +97,8 @@ import java.util.Date
 import java.util.Locale
 import java.util.Timer
 import java.util.TimerTask
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * Janus-gatewayへアクセスするためのヘルパークラス
@@ -160,6 +162,7 @@ class JanusVideoRoomClient(
 	private var mLocalStream: MediaStream? = null
 	private var mAudioDeviceModule: JavaAudioDeviceModule? = null
 
+	private val mVideoSinkLock = ReentrantLock()
 	/**
 	 * リモート映像・音声のpluginのfeedIdとVideoSinkHolderのマップ
 	 */
@@ -168,7 +171,9 @@ class JanusVideoRoomClient(
 	//--------------------------------------------------------------------------------
 	private var mJanus: VideoRoomAPI? = null
 	private var mLongPoll: LongPoll? = null
+	private val mCallLock = ReentrantLock()
 	private val mCurrentCalls = mutableListOf<Call<*>>()
+	private val mPluginLock = ReentrantLock()
 	private val mAttachedPlugins = mutableMapOf<Long, VideoRoomPlugin>()
 	private var mConnectionState: ConnectionState
 	private var mServerInfo: ServerInfo? = null
@@ -377,7 +382,7 @@ class JanusVideoRoomClient(
 		get() {
 			val result: MutableList<Long> =
 				ArrayList()
-			synchronized(mAttachedPlugins) {
+			mPluginLock.withLock {
 				for (plugin in mAttachedPlugins.values) {
 					if (plugin is VideoRoomPlugin.Publisher) {
 						result.add(plugin.pluginId())
@@ -396,7 +401,7 @@ class JanusVideoRoomClient(
 		get() {
 			val result: MutableList<Long> =
 				ArrayList()
-			synchronized(mAttachedPlugins) {
+			mPluginLock.withLock {
 				for (plugin in mAttachedPlugins.values) {
 					if (plugin is VideoRoomPlugin.Subscriber) {
 						result.add(plugin.pluginId())
@@ -415,7 +420,7 @@ class JanusVideoRoomClient(
 		if (DEBUG) Log.v(TAG, "configure:$config")
 		var result = false
 		if (mConnectionState == ConnectionState.CONNECTED) {
-			synchronized(mAttachedPlugins) {
+			mPluginLock.withLock {
 				for (plugin in mAttachedPlugins.values) {
 					if (plugin is VideoRoomPlugin.Publisher) {
 						result = result or plugin.configure(config)
@@ -436,7 +441,7 @@ class JanusVideoRoomClient(
 		if (DEBUG) Log.v(TAG, "configure:id=$pluginId,$config"
 		)
 		if (mConnectionState == ConnectionState.CONNECTED) {
-			synchronized(mAttachedPlugins) {
+			mPluginLock.withLock {
 				for (plugin in mAttachedPlugins.values) {
 					if ((plugin is VideoRoomPlugin.Publisher)
 						&& (plugin.pluginId() == pluginId)
@@ -458,7 +463,7 @@ class JanusVideoRoomClient(
 		if (DEBUG) Log.v(TAG, "configure:$config")
 		var result = false
 		if (mConnectionState == ConnectionState.CONNECTED) {
-			synchronized(mAttachedPlugins) {
+			mPluginLock.withLock {
 				for (plugin in mAttachedPlugins.values) {
 					if (plugin is VideoRoomPlugin.Subscriber) {
 						result = result or plugin.configure(config)
@@ -478,7 +483,7 @@ class JanusVideoRoomClient(
 	override fun configure(pluginId: Long, config: ConfigSubscriber): Boolean {
 		if (DEBUG) Log.v(TAG, "configure:id=$pluginId,$config")
 		if (mConnectionState == ConnectionState.CONNECTED) {
-			synchronized(mAttachedPlugins) {
+			mPluginLock.withLock {
 				for (plugin in mAttachedPlugins.values) {
 					if ((plugin is VideoRoomPlugin.Subscriber)
 						&& (plugin.pluginId() == pluginId)
@@ -976,7 +981,7 @@ class JanusVideoRoomClient(
 				// answer to get the remote track.
 				val remoteVideoTrack = getRemoteVideoTrack(peerConnection!!)
 				if (remoteVideoTrack != null) {
-					synchronized(remoteVideoSinkMap) {
+					mVideoSinkLock.withLock {
 						var holder = getHolder(info.id!!)
 						if (holder == null) {
 							val remoteVideoSinks = mCallback.getRemoteVideoSink(info)
@@ -1126,7 +1131,7 @@ class JanusVideoRoomClient(
 	private fun stats(): Unit {
 		// TODO(sakal): getStats is deprecated.
 		if (DEBUG) Log.v(TAG, "getStats:")
-		synchronized(mAttachedPlugins) {
+		mPluginLock.withLock {
 			for (plugin in mAttachedPlugins.values) {
 				plugin.requestStats()
 			}
@@ -1160,7 +1165,7 @@ class JanusVideoRoomClient(
 		) {
 			val remoteVideoTrack = remoteStream.videoTracks[0]
 			var holder: VideoSinkHolder?
-			synchronized(remoteVideoSinkMap) {
+			mVideoSinkLock.withLock {
 				holder = getHolder(info.id!!)
 				if (holder == null) {
 					if (remoteVideoTrack != null) {
@@ -1187,7 +1192,7 @@ class JanusVideoRoomClient(
 		remoteStream: MediaStream
 	) {
 		if (DEBUG) Log.v(TAG, "onAddRemoteStream:${getHolder(info.id!!)}")
-		synchronized(remoteVideoSinkMap) {
+		mVideoSinkLock.withLock {
 			val removed = remoteVideoSinkMap.remove(info.id)
 			if (DEBUG) Log.v(TAG, "onAddRemoteStream:removed=$removed")
 		}
@@ -1202,13 +1207,13 @@ class JanusVideoRoomClient(
 	 * @param call
 	 */
 	private fun addCall(call: Call<*>) {
-		synchronized(mCurrentCalls) {
+		mCallLock.withLock {
 			mCurrentCalls.add(call)
 		}
 	}
 
 	private fun removeCall(call: Call<*>) {
-		synchronized(mCurrentCalls) {
+		mCallLock.withLock {
 			mCurrentCalls.remove(call)
 		}
 		if (!call.isCanceled) {
@@ -1224,9 +1229,9 @@ class JanusVideoRoomClient(
 	 * cancel call if call is in progress
 	 */
 	private fun cancelCall() {
-		synchronized(mCurrentCalls) {
+		mCallLock.withLock {
 			for (call in mCurrentCalls) {
-				if ((call != null) && !call.isCanceled) {
+				if (!call.isCanceled) {
 					try {
 						call.cancel()
 					} catch (e: Exception) {
@@ -1240,7 +1245,7 @@ class JanusVideoRoomClient(
 
 	//--------------------------------------------------------------------------------
 	private fun addPlugin(plugin: VideoRoomPlugin) {
-		synchronized(mAttachedPlugins) {
+		mPluginLock.withLock {
 			mAttachedPlugins.put(plugin.pluginId(), plugin)
 		}
 	}
@@ -1248,14 +1253,14 @@ class JanusVideoRoomClient(
 	private fun removePlugin(plugin: VideoRoomPlugin) {
 		val key = plugin.pluginId()
 		Utils.executor.execute {
-			synchronized(mAttachedPlugins) {
+			mPluginLock.withLock {
 				mAttachedPlugins.remove(key)
 			}
 		}
 	}
 
 	private fun getPlugin(key: Long): VideoRoomPlugin? {
-		synchronized(mAttachedPlugins) {
+		mPluginLock.withLock {
 			if (mAttachedPlugins.containsKey(key)) {
 				return mAttachedPlugins[key]
 			}
@@ -1267,7 +1272,7 @@ class JanusVideoRoomClient(
 		if (DEBUG) Log.v(TAG, "leavePlugin:$leavePlugin")
 		var found: VideoRoomPlugin? = null
 
-		synchronized(mAttachedPlugins) {
+		mPluginLock.withLock {
 			// feederIdが一致するSubscriberを探す
 			for ((_, plugin) in mAttachedPlugins) {
 				if (plugin is VideoRoomPlugin.Subscriber) {
@@ -1449,7 +1454,7 @@ class JanusVideoRoomClient(
 		if (DEBUG) Log.v(TAG, "detachAll:")
 		cancelCall()
 		mConnectionState = ConnectionState.CLOSED
-		synchronized(mAttachedPlugins) {
+		mPluginLock.withLock {
 			for ((_, value) in mAttachedPlugins) {
 				value.detach()
 			}

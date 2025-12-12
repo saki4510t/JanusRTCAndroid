@@ -68,6 +68,8 @@ import retrofit2.Callback
 import retrofit2.Response
 import java.io.IOException
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * VideoRoomプラグインへアクセスするためのヘルパークラス
@@ -205,7 +207,9 @@ internal abstract class VideoRoomPlugin(
 
 	protected val TAG: String = "VideoRoomPlugin:" + javaClass.simpleName
 
-	protected val mSync: Any = Any()
+	protected val mLock = ReentrantLock()
+	protected val mCallLock = ReentrantLock()
+
 	var peerConnection: PeerConnection? = null
 		private set
 
@@ -370,7 +374,7 @@ internal abstract class VideoRoomPlugin(
 					removeCall(call)
 					val info = response.body()
 					if ((info != null) && ("success" == info.janus)) {
-						synchronized(mSync) {
+						mLock.withLock {
 							this@VideoRoomPlugin.info = info
 							mRoom = Room(session, info)
 							mRoomState = RoomState.ATTACHED
@@ -419,9 +423,8 @@ internal abstract class VideoRoomPlugin(
 		} else {
 			roomConnectionParameters.displayName!!
 		}
-		val roomCopy: Room?
-		synchronized(mSync) {
-			roomCopy = mRoom
+		val roomCopy = mLock.withLock {
+			mRoom
 		}
 		if (roomCopy == null) {
 			reportError(IllegalStateException("Unexpectedly room is null"))
@@ -486,7 +489,7 @@ internal abstract class VideoRoomPlugin(
 			}
 			removeCall(call)
 			if (DEBUG) Log.d(TAG, "Closing peer connection.")
-			synchronized(mSync) {
+			mLock.withLock {
 				mRoom = null
 				info = null
 			}
@@ -511,7 +514,7 @@ internal abstract class VideoRoomPlugin(
 			return
 		}
 		val roomCopy: Room?
-		synchronized(mSync) {
+		mLock.withLock {
 			roomCopy = mRoom
 		}
 		if (roomCopy == null) {
@@ -572,7 +575,7 @@ internal abstract class VideoRoomPlugin(
 			return
 		}
 		val roomCopy: Room?
-		synchronized(mSync) {
+		mLock.withLock {
 			roomCopy = mRoom
 		}
 		if (roomCopy == null) {
@@ -605,9 +608,8 @@ internal abstract class VideoRoomPlugin(
 		if (DEBUG) Log.v(TAG, "sendLocalIceCandidate:")
 		if (!attached()) return
 
-		val roomCopy: Room?
-		synchronized(mSync) {
-			roomCopy = mRoom
+		val roomCopy = mLock.withLock {
+			mRoom
 		}
 		if (roomCopy == null) {
 			reportError(IllegalStateException("Unexpectedly room is null"))
@@ -666,9 +668,8 @@ internal abstract class VideoRoomPlugin(
 	fun kick(kick: Kick): Boolean {
 		if (DEBUG) Log.v(TAG, "kick:")
 		cancelCall()
-		val roomCopy: Room?
-		synchronized(mSync) {
-			roomCopy = mRoom
+		val roomCopy = mLock.withLock {
+			mRoom
 		}
 		if (roomCopy == null) {
 			reportError(IllegalStateException("Unexpectedly room is null"))
@@ -1025,9 +1026,8 @@ internal abstract class VideoRoomPlugin(
 		room: RoomEvent
 	): Boolean {
 		if (DEBUG) Log.v(TAG, "handlePluginEventJoined:")
-		val roomCopy: Room?
-		synchronized(mSync) {
-			roomCopy = mRoom
+		val roomCopy = mLock.withLock {
+			mRoom
 		}
 		if (roomCopy == null) {
 			reportError(IllegalStateException("Unexpectedly room is null"))
@@ -1074,9 +1074,8 @@ internal abstract class VideoRoomPlugin(
 			if (room.plugindata.data.leaving != null) {
 				// FIXME ここは即プラグインマップから削除してその上でonLeaveを呼ぶほうがよい？
 				executor.execute {
-					val roomCopy: Room?
-					synchronized(mSync) {
-						roomCopy = mRoom
+					val roomCopy = mLock.withLock {
+						mRoom
 					}
 					mCallback.onLeave(
 						this@VideoRoomPlugin,
@@ -1132,13 +1131,13 @@ internal abstract class VideoRoomPlugin(
 	 * @param call
 	 */
 	protected fun addCall(call: Call<*>) {
-		synchronized(mCurrentCalls) {
+		mCallLock.withLock {
 			mCurrentCalls.add(call)
 		}
 	}
 
 	protected fun removeCall(call: Call<*>) {
-		synchronized(mCurrentCalls) {
+		mCallLock.withLock {
 			mCurrentCalls.remove(call)
 		}
 		if (!call.isCanceled) {
@@ -1154,7 +1153,7 @@ internal abstract class VideoRoomPlugin(
 	 * cancel call if call is in progress
 	 */
 	protected fun cancelCall() {
-		synchronized(mCurrentCalls) {
+		mCallLock.withLock {
 			for (call in mCurrentCalls) {
 				if (!call.isCanceled) {
 					try {
@@ -1303,9 +1302,8 @@ internal abstract class VideoRoomPlugin(
 		fun configure(config: ConfigPublisher): Boolean {
 			if (DEBUG) Log.v(TAG, "configure:$config")
 			cancelCall()
-			val roomCopy: Room?
-			synchronized(mSync) {
-				roomCopy = mRoom
+			val roomCopy = mLock.withLock {
+				mRoom
 			}
 			if (roomCopy == null) {
 				reportError(IllegalStateException("Unexpectedly room is null"))
@@ -1345,9 +1343,8 @@ internal abstract class VideoRoomPlugin(
 		 */
 		private fun checkPublishers(room: RoomEvent) {
 			if (DEBUG) Log.v(TAG, "checkPublishers:")
-			val roomCopy: Room?
-			synchronized(mSync) {
-				roomCopy = mRoom
+			val roomCopy = mLock.withLock {
+				mRoom
 			}
 			if ((roomCopy != null)
 				&& (room.plugindata != null)
@@ -1431,9 +1428,8 @@ internal abstract class VideoRoomPlugin(
 		fun configure(config: ConfigSubscriber): Boolean {
 			if (DEBUG) Log.v(TAG, "configure:$config")
 			cancelCall()
-			val roomCopy: Room?
-			synchronized(mSync) {
-				roomCopy = mRoom
+			val roomCopy = mLock.withLock {
+				mRoom
 			}
 			if (roomCopy == null) {
 				reportError(IllegalStateException("Unexpectedly room is null"))

@@ -19,8 +19,10 @@ package com.serenegiant.janus
  *
  */
 
+import okio.withLock
 import org.json.JSONObject
 import java.util.Random
+import java.util.concurrent.locks.ReentrantLock
 
 /**
  * manage relation ship between request and response over network connection
@@ -31,6 +33,7 @@ object TransactionManager {
 	 */
 	private val mRandomString = RandomString()
 
+	private val mLock = ReentrantLock()
 	/**
 	 * hold transaction id - TransactionCallback pair(s)
 	 */
@@ -45,7 +48,7 @@ object TransactionManager {
 	fun get(length: Int, callback: TransactionCallback?): String {
 		val transaction = mRandomString.get(length)
 		if (callback != null) {
-			synchronized(sTransactions) {
+			mLock.withLock {
 				sTransactions.put(transaction, callback)
 			}
 		}
@@ -61,12 +64,11 @@ object TransactionManager {
 	@JvmStatic
 	fun handleTransaction(transaction: String, body: JSONObject): Boolean {
 		var callback: TransactionCallback? = null
-		val result: Boolean
-		synchronized(sTransactions) {
+		val result = mLock.withLock {
 			if (sTransactions.containsKey(transaction)) {
 				callback = sTransactions[transaction]
 			}
-			result = callback != null && callback!!.onReceived(transaction, body)
+			callback != null && callback!!.onReceived(transaction, body)
 		}
 		return result
 	}
@@ -77,7 +79,7 @@ object TransactionManager {
 	 */
 	@JvmStatic
 	fun removeTransaction(transaction: String) {
-		synchronized(sTransactions) {
+		mLock.withLock {
 			sTransactions.remove(transaction)
 		}
 	}
@@ -87,7 +89,7 @@ object TransactionManager {
 	 */
 	@JvmStatic
 	fun clearTransactions() {
-		synchronized(sTransactions) {
+		mLock.withLock {
 			sTransactions.clear()
 		}
 	}

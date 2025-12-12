@@ -23,6 +23,8 @@ import com.serenegiant.janus.response.PluginInfo
 import com.serenegiant.janus.response.Session
 import com.serenegiant.janus.response.videoroom.PublisherInfo
 import java.util.Arrays
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * VideoRoomプラグイン用のヘルパークラス
@@ -40,6 +42,7 @@ class Room(session: Session, info: PluginInfo)
 	@JvmField
 	var publisherId: Long? = null
 
+	private val mLock = ReentrantLock()
 	/**
 	 * holds list of connected remote publisher
 	 */
@@ -50,7 +53,7 @@ class Room(session: Session, info: PluginInfo)
 	 * @return
 	 */
 	fun getPublishers(): List<PublisherInfo> {
-		synchronized(this.publishers) {
+		mLock.withLock {
 			return ArrayList(this.publishers)
 		}
 	}
@@ -68,7 +71,7 @@ class Room(session: Session, info: PluginInfo)
 			val newList = listOf(*newPublishers)
 			result.addAll(newList)
 
-			synchronized(this.publishers) {
+			mLock.withLock {
 				// 既にRoomに登録されているPublisherを除く=未登録分
 				result.removeAll(this.publishers)
 			}
@@ -82,7 +85,7 @@ class Room(session: Session, info: PluginInfo)
 	 * @return
 	 */
 	fun removePublisher(id: Long): List<PublisherInfo> {
-		synchronized(this.publishers) {
+		mLock.withLock {
 			var found: PublisherInfo? = null
 			for (info in publishers) {
 				if (id == info.id) {
@@ -104,7 +107,7 @@ class Room(session: Session, info: PluginInfo)
 	 * @param talking
 	 */
 	fun updatePublisher(id: Long, talking: Boolean) {
-		synchronized(this.publishers) {
+		mLock.withLock {
 			var found: PublisherInfo? = null
 			for (info in publishers) {
 				if (id == info.id) {
@@ -123,7 +126,7 @@ class Room(session: Session, info: PluginInfo)
 	 * @return
 	 */
 	fun getNumPublishers(): Int {
-		synchronized(this.publishers) {
+		mLock.withLock {
 			return publishers.size
 		}
 	}
