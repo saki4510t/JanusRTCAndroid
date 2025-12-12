@@ -26,7 +26,6 @@ import com.serenegiant.janus.request.Detach
 import com.serenegiant.janus.response.PluginInfo
 import com.serenegiant.janus.response.ServerInfo
 import com.serenegiant.janus.response.Session
-import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -42,7 +41,7 @@ interface JanusAPI {
 	 * @return
 	 */
 	@GET("{api}/info")
-	fun getInfo(@Path("api") api: String): Call<ServerInfo>
+	suspend fun getInfo(@Path("api") api: String): ServerInfo
 
 	/**
 	 * セッションを作成
@@ -52,10 +51,10 @@ interface JanusAPI {
 	 * @return
 	 */
 	@POST("{api}")
-	fun createSession(
+	suspend fun createSession(
 		@Path("api") api: String,
 		@Body create: CreateSession
-	): Call<Session>
+	): Session
 
 	/**
 	 * 指定したプラグインへ接続
@@ -66,11 +65,11 @@ interface JanusAPI {
 	 * @return
 	 */
 	@POST("{api}/{session_id}")
-	fun attachPlugin(
+	suspend fun attachPlugin(
 		@Path("api") api: String,
 		@Path("session_id") sessionId: Long,
 		@Body attach: Attach
-	): Call<PluginInfo>
+	): PluginInfo
 
 	/**
 	 * 指定したプラグインから切断
@@ -82,12 +81,12 @@ interface JanusAPI {
 	 * @return
 	 */
 	@POST("{api}/{session_id}/{plugin_id}")
-	fun detachPlugin(
+	suspend fun detachPlugin(
 		@Path("api") api: String,
 		@Path("session_id") sessionId: Long,
 		@Path("plugin_id") pluginId: Long,
 		@Body detach: Detach
-	): Call<Void>
+	)
 
 	/**
 	 * セッションを破棄
@@ -98,9 +97,9 @@ interface JanusAPI {
 	 * @return
 	 */
 	@POST("{api}/{session_id}")
-	fun destroySession(
+	suspend fun destroySession(
 		@Path("api") api: String,
 		@Path("session_id") sessionId: Long,
 		@Body destroy: DestroySession
-	): Call<Void>
+	)
 }

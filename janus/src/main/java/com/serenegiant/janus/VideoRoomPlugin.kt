@@ -38,7 +38,6 @@ import com.serenegiant.janus.request.videoroom.Join
 import com.serenegiant.janus.request.videoroom.Kick
 import com.serenegiant.janus.request.videoroom.Offer
 import com.serenegiant.janus.request.videoroom.Start
-import com.serenegiant.janus.response.PluginInfo
 import com.serenegiant.janus.response.Session
 import com.serenegiant.janus.response.videoroom.PublisherInfo
 import com.serenegiant.janus.response.videoroom.RoomEvent
@@ -51,9 +50,11 @@ import com.serenegiant.webrtc.util.SdpUtils.preferCodec
 import com.serenegiant.webrtc.util.SdpUtils.setStartBitrate
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import org.webrtc.DataChannel
 import org.webrtc.IceCandidate
@@ -69,8 +70,6 @@ import org.webrtc.RtpReceiver
 import org.webrtc.SdpObserver
 import org.webrtc.SessionDescription
 import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import java.io.IOException
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -212,7 +211,6 @@ internal abstract class VideoRoomPlugin(
 	protected val TAG: String = "VideoRoomPlugin:" + javaClass.simpleName
 
 	protected val mLock = ReentrantLock()
-	protected val mCallLock = ReentrantLock()
 
 	var peerConnection: PeerConnection? = null
 		private set
@@ -230,7 +228,7 @@ internal abstract class VideoRoomPlugin(
 
 	// Executorのワーカースレッド上で実行するためのCoroutineScope
 	protected val mScope = CoroutineScope(SupervisorJob() + Utils.executor.asCoroutineDispatcher() +  CoroutineName("scope_$TAG"))
-	protected val mCurrentCalls: MutableList<Call<*>> = ArrayList()
+	protected var mLastJob: Job? = null
 
 	private val isLoopback = peerConnectionParameters.loopback
 	protected var mRoomState: RoomState = RoomState.UNINITIALIZED
@@ -367,49 +365,35 @@ internal abstract class VideoRoomPlugin(
 	override fun attach() {
 		if (DEBUG) Log.v(TAG, "attach:")
 		val attach = Attach(session, "janus.plugin.videoroom", null)
-		val call = mVideoRoomAPI.attachPlugin(
-			roomConnectionParameters.apiName, sessionId(), attach)
-		addCall(call)
-		call.enqueue(object : Callback<PluginInfo?> {
-			override fun onResponse(
-				call: Call<PluginInfo?>,
-				response: Response<PluginInfo?>
-			) {
-				if (response.isSuccessful && (response.body() != null)) {
-					removeCall(call)
-					val info = response.body()
-					if ((info != null) && ("success" == info.janus)) {
-						mLock.withLock {
-							this@VideoRoomPlugin.info = info
-							mRoom = Room(session, info)
-							mRoomState = RoomState.ATTACHED
+		mLastJob?.cancel()
+		mLastJob = mScope.launch {
+			try {
+				val pluginInfo = mVideoRoomAPI.attachPlugin(
+					roomConnectionParameters.apiName, sessionId(), attach)
+				if ("success" == pluginInfo.janus) {
+					mLock.withLock {
+						this@VideoRoomPlugin.info = pluginInfo
+						mRoom = Room(session, pluginInfo)
+						mRoomState = RoomState.ATTACHED
+					}
+					// プラグインにアタッチできた＼(^o^)／
+					if (DEBUG) Log.v(TAG, "attach:success, $pluginInfo")
+					mCallback.onAttach(this@VideoRoomPlugin)
+					// ルームへjoin
+					mScope.launch {
+						try {
+							join()
+						} catch (e: Exception) {
+							reportError(e)
 						}
-						// プラグインにアタッチできた＼(^o^)／
-						if (DEBUG) Log.v(TAG, "attach:success")
-						mCallback.onAttach(this@VideoRoomPlugin)
-						// ルームへjoin
-						mScope.launch {
-							try {
-								join()
-							} catch (e: Exception) {
-								reportError(e)
-							}
-						}
-					} else {
-						reportError(RuntimeException("unexpected response:$response"))
 					}
 				} else {
-					reportError(RuntimeException("unexpected response:$response"))
+					reportError(RuntimeException("unexpected result:$pluginInfo"))
 				}
+			} catch (e: Exception) {
+				reportError(e)
 			}
-
-			override fun onFailure(
-				call: Call<PluginInfo?>,
-				t: Throwable
-			) {
-				reportError(t)
-			}
-		})
+		}
 	}
 
 	/**
@@ -441,31 +425,26 @@ internal abstract class VideoRoomPlugin(
 			mTransactionCallback
 		)
 		if (DEBUG) Log.v(TAG, "join:$message")
-		val call = mVideoRoomAPI.join(
-			roomConnectionParameters.apiName,
-			sessionId(), pluginId(), message
-		)
-		addCall(call)
-		try {
-			val response = call.execute()
-			if (response.isSuccessful && (response.body() != null)) {
-				removeCall(call)
-				val join = response.body()
-				if ("event" == join!!.janus) {
+		mLastJob?.cancel()
+		mLastJob = mScope.launch {
+			try {
+				val join = mVideoRoomAPI.join(
+					roomConnectionParameters.apiName,
+					sessionId(), pluginId(), message)
+				if ("event" == join.janus) {
 					if (DEBUG) Log.v(TAG, "多分ここにはこない, ackが返ってくるはず")
 					handlePluginEvent(message.transaction, join)
 				} else if ("ack" != join.janus && "keepalive" != join.janus) {
-					throw RuntimeException("unexpected response:$response,$join")
+					throw RuntimeException("unexpected result,$join")
 				}
-				// 実際の応答はlong pollで待機
-			} else {
-				throw RuntimeException("unexpected response:$response")
+				// 実際の待機はlong pollで行う
+			} catch (e: Exception) {
+				removeTransaction(message.transaction)
+				mScope.launch {
+					detach()
+				}
+				reportError(e)
 			}
-		} catch (e: Exception) {
-			removeTransaction(message.transaction)
-			cancelCall()
-			detach()
-			reportError(e)
 		}
 	}
 
@@ -480,33 +459,28 @@ internal abstract class VideoRoomPlugin(
 		) {
 			mRoomState = RoomState.CLOSED
 			if (DEBUG) Log.v(TAG, "detach:")
-			cancelCall()
-			val call = mVideoRoomAPI.detachPlugin(
-				roomConnectionParameters.apiName,
-				sessionId(), pluginId(),
-				Detach(session, mTransactionCallback)
-			)
-			addCall(call)
-			try {
-				call.execute()
-			} catch (e: IOException) {
-				if (DEBUG) Log.w(TAG, e)
+			mLastJob?.cancel()
+			mLastJob = mScope.launch {
+				try {
+					mVideoRoomAPI.detachPlugin(
+						roomConnectionParameters.apiName,
+						sessionId(), pluginId(),
+						Detach(session, mTransactionCallback)
+					)
+				} catch (e: Exception) {
+					if (DEBUG) Log.w(TAG, e)
+				}
 			}
-			removeCall(call)
 			if (DEBUG) Log.d(TAG, "Closing peer connection.")
 			mLock.withLock {
 				mRoom = null
 				info = null
 			}
-			if (dataChannel != null) {
-				dataChannel!!.dispose()
-				dataChannel = null
-			}
-			if (rtcEventLog != null) {
-				// RtcEventLog should stop before the peer connection is disposed.
-				rtcEventLog!!.stop()
-				rtcEventLog = null
-			}
+			dataChannel?.dispose()
+			dataChannel = null
+			// RtcEventLog should stop before the peer connection is disposed.
+			rtcEventLog?.stop()
+			rtcEventLog = null
 			peerConnection?.dispose()
 			peerConnection = null
 		}
@@ -526,50 +500,46 @@ internal abstract class VideoRoomPlugin(
 			reportError(IllegalStateException("Unexpectedly room is null"))
 			return
 		}
-		val call = mVideoRoomAPI.offer(
-			roomConnectionParameters.apiName,
-			sessionId(),
-			pluginId(),
-			Message(
-				roomCopy,
-				Offer(audio = true, video = true),
-				JsepSdp("offer", sdp.description),
-				mTransactionCallback
-			)
-		)
-		addCall(call)
-		try {
-			val response = call.execute()
-			if (DEBUG) Log.v(TAG, "sendOfferSdp:response=$response,${response.body()}".trimIndent())
-			if (response.isSuccessful && (response.body() != null)) {
-				removeCall(call)
-				val offer = response.body()
-				if ("event" == offer!!.janus) {
+		mLastJob?.cancel()
+		mLastJob = mScope.launch {
+			try {
+				val offer = mVideoRoomAPI.offer(
+					roomConnectionParameters.apiName,
+					sessionId(),
+					pluginId(),
+					Message(
+						roomCopy,
+						Offer(audio = true, video = true),
+						JsepSdp("offer", sdp.description),
+						mTransactionCallback
+					)
+				)
+				if ("event" == offer.janus) {
 					if (DEBUG) Log.v(TAG, "多分ここにはこない, ackが返ってくるはず")
 					val answerSdp = SessionDescription(
 						SessionDescription.Type.fromCanonicalForm("answer"),
 						offer.jsep?.sdp
 					)
-					mCallback.onRemoteDescription(this, answerSdp)
+					mCallback.onRemoteDescription(this@VideoRoomPlugin, answerSdp)
 				} else if ("ack" != offer.janus && "keepalive" != offer.janus) {
-					throw RuntimeException("unexpected response $response")
+					throw RuntimeException("unexpected result, $offer")
 				}
 				// 実際の待機はlong pollで行う
-			} else {
-				throw RuntimeException("failed to send offer sdp")
-			}
-			if (isLoopback) {
-				// In loopback mode rename this offer to answer and route it back.
-				mCallback.onRemoteDescription(
-					this, SessionDescription(
-						SessionDescription.Type.fromCanonicalForm("answer"),
-						sdp.description
+				if (isLoopback) {
+					// In loopback mode rename this offer to answer and route it back.
+					mCallback.onRemoteDescription(
+						this@VideoRoomPlugin, SessionDescription(
+							SessionDescription.Type.fromCanonicalForm("answer"),
+							sdp.description
+						)
 					)
-				)
+				}
+			} catch (e: Exception) {
+				mScope.launch {
+					detach()
+				}
+				reportError(e)
 			}
-		} catch (e: Exception) {
-			cancelCall()
-			reportError(e)
 		}
 	}
 
@@ -587,25 +557,27 @@ internal abstract class VideoRoomPlugin(
 			reportError(IllegalStateException("Unexpectedly room is null"))
 			return
 		}
-		val call = mVideoRoomAPI.send(
-			roomConnectionParameters.apiName,
-			sessionId(),
-			pluginId(),
-			Message(
-				roomCopy,
-				Start(roomConnectionParameters.roomId),
-				JsepSdp("answer", sdp.description),
-				mTransactionCallback
-			)
-		)
-		addCall(call)
-		try {
-			val response = call.execute()
-			if (DEBUG) Log.v(TAG, "sendAnswerSdpInternal:response=$response,${response.body()}".trimIndent())
-			removeCall(call)
-		} catch (e: IOException) {
-			cancelCall()
-			reportError(e)
+		mLastJob?.cancel()
+		mLastJob = mScope.launch {
+			try {
+				val answer = mVideoRoomAPI.send(
+					roomConnectionParameters.apiName,
+					sessionId(),
+					pluginId(),
+					Message(
+						roomCopy,
+						Start(roomConnectionParameters.roomId),
+						JsepSdp("answer", sdp.description),
+						mTransactionCallback
+					)
+				)
+				if (DEBUG) Log.v(TAG, "sendAnswerSdpInternal:response=$answer".trimIndent())
+			} catch (e: Exception) {
+				mScope.launch {
+					detach()
+				}
+				reportError(e)
+			}
 		}
 	}
 
@@ -620,30 +592,25 @@ internal abstract class VideoRoomPlugin(
 			reportError(IllegalStateException("Unexpectedly room is null"))
 			return
 		}
-		val call = if (candidate != null) {
-			mVideoRoomAPI.trickle(
-				roomConnectionParameters.apiName,
-				sessionId(),
-				pluginId(),
-				Trickle(roomCopy, candidate, mTransactionCallback)
-			)
-		} else {
-			mVideoRoomAPI.trickleCompleted(
-				roomConnectionParameters.apiName,
-				sessionId(),
-				pluginId(),
-				TrickleCompleted(roomCopy, mTransactionCallback)
-			)
-		}
-		addCall(call)
-		try {
-			val response = call.execute()
-//			if (DEBUG) Log.v(TAG, "sendLocalIceCandidate:response=" + response
-//					+ "\n" + response.body());
-			if (response.isSuccessful && (response.body() != null)) {
-				removeCall(call)
-				val join = response.body()
-				if ("event" == join!!.janus) {
+//		mLastJob?.cancel()	// FIXME なぜか下のlaunchがキャンセルされてしまう
+		mLastJob = mScope.launch {
+			try {
+				val join = if (candidate != null) {
+					mVideoRoomAPI.trickle(
+						roomConnectionParameters.apiName,
+						sessionId(),
+						pluginId(),
+						Trickle(roomCopy, candidate, mTransactionCallback)
+					)
+				} else {
+					mVideoRoomAPI.trickleCompleted(
+						roomConnectionParameters.apiName,
+						sessionId(),
+						pluginId(),
+						TrickleCompleted(roomCopy, mTransactionCallback)
+					)
+				}
+				if ("event" == join.janus) {
 					if (DEBUG) Log.v(TAG, "多分ここにはこない, ackが返ってくるはず")
 //					// FIXME 正常に処理できた…Roomの情報を更新する
 //					IceCandidate remoteCandidate = null;
@@ -654,25 +621,23 @@ internal abstract class VideoRoomPlugin(
 //						// FIXME remoteCandidateがなかった時
 //					}
 				} else if ("ack" != join.janus && "keepalive" != join.janus) {
-					throw RuntimeException("unexpected response $response")
+					throw RuntimeException("unexpected result $join")
 				}
 				// 実際の待機はlong pollで行う
-			} else {
-				throw RuntimeException("unexpected response $response")
+				if ((candidate != null) && isLoopback) {
+					mCallback.onRemoteIceCandidate(this@VideoRoomPlugin, candidate)
+				}
+			} catch (e: Exception) {
+				mScope.launch {
+					detach()
+				}
+				reportError(e)
 			}
-			if ((candidate != null) && isLoopback) {
-				mCallback.onRemoteIceCandidate(this, candidate)
-			}
-		} catch (e: IOException) {
-			cancelCall()
-			detach()
-			reportError(e)
 		}
 	}
 
-	fun kick(kick: Kick): Boolean {
+	suspend fun kick(kick: Kick): Boolean {
 		if (DEBUG) Log.v(TAG, "kick:")
-		cancelCall()
 		val roomCopy = mLock.withLock {
 			mRoom
 		}
@@ -685,25 +650,20 @@ internal abstract class VideoRoomPlugin(
 			kick, mTransactionCallback /* FIXME 無名オブジェクトにする */
 		)
 		if (DEBUG) Log.v(TAG, "kick:$message")
-		val call = mVideoRoomAPI.kick(
-			roomConnectionParameters.apiName,
-			sessionId(), pluginId(), message
-		)
-		addCall(call)
-		var result = false
-		try {
-			val response = call.execute()
-			if (DEBUG) Log.v(TAG, "configure:response=$response,body=${response.body()}".trimIndent())
-			val body = response.body()
-			result = (response.code() == 200)
-				&& "ack".equals(body!!.janus, ignoreCase = true)
-			// FIXME　実際の結果はTransactionManagerのコールバックで返ってくるみたい
-			removeCall(call)
-		} catch (e: IOException) {
-			if (DEBUG) Log.w(TAG, e)
-			cancelCall()
-			reportError(e)
+		val result = withContext(mScope.coroutineContext) {
+			try {
+				val body = mVideoRoomAPI.kick(
+					roomConnectionParameters.apiName,
+					sessionId(), pluginId(), message
+				)
+				// FIXME　実際の結果はTransactionManagerのコールバックで返ってくるみたい
+				"ack".equals(body.janus, ignoreCase = true)
+			} catch (e: Exception) {
+				reportError(e)
+				false
+			}
 		}
+
 		if (DEBUG) Log.d(TAG, "kick:finished.")
 		return result
 	}
@@ -1130,48 +1090,6 @@ internal abstract class VideoRoomPlugin(
 		return false // true: handled
 	}
 
-	//================================================================================
-	/**
-	 * set call that is currently in progress
-	 * @param call
-	 */
-	protected fun addCall(call: Call<*>) {
-		mCallLock.withLock {
-			mCurrentCalls.add(call)
-		}
-	}
-
-	protected fun removeCall(call: Call<*>) {
-		mCallLock.withLock {
-			mCurrentCalls.remove(call)
-		}
-		if (!call.isCanceled) {
-			try {
-				call.cancel()
-			} catch (e: Exception) {
-				Log.w(TAG, e)
-			}
-		}
-	}
-
-	/**
-	 * cancel call if call is in progress
-	 */
-	protected fun cancelCall() {
-		mCallLock.withLock {
-			for (call in mCurrentCalls) {
-				if (!call.isCanceled) {
-					try {
-						call.cancel()
-					} catch (e: Exception) {
-						Log.w(TAG, e)
-					}
-				}
-			}
-			mCurrentCalls.clear()
-		}
-	}
-
 	protected fun reportError(t: Throwable) {
 		try {
 			mCallback.onError(this, t)
@@ -1305,9 +1223,8 @@ internal abstract class VideoRoomPlugin(
 		 * publisher用のconfigure API呼び出しを実効
 		 * @param config
 		 */
-		fun configure(config: ConfigPublisher): Boolean {
+		suspend fun configure(config: ConfigPublisher): Boolean {
 			if (DEBUG) Log.v(TAG, "configure:$config")
-			cancelCall()
 			val roomCopy = mLock.withLock {
 				mRoom
 			}
@@ -1320,25 +1237,19 @@ internal abstract class VideoRoomPlugin(
 				config, mTransactionCallback /* FIXME 無名オブジェクトにする */
 			)
 			if (DEBUG) Log.v(TAG, "configure:$message")
-			val call = mVideoRoomAPI.configure(
-				roomConnectionParameters.apiName,
-				sessionId(), pluginId(), message
-			)
-			addCall(call)
-			var result = false
-			try {
-				val response = call.execute()
-				if (DEBUG) Log.v(TAG, "configure:response=$response,body=${response.body()}".trimIndent())
-				val body = response.body()
-				result = (response.code() == 200)
-					&& "ack".equals(body!!.janus, ignoreCase = true)
-				// FIXME　実際の結果はTransactionManagerのコールバックで返ってくるみたい
-				removeCall(call)
-			} catch (e: Exception) {
-				if (DEBUG) Log.w(TAG, e)
-				cancelCall()
-				reportError(e)
+			val result = withContext(mScope.coroutineContext) {
+				try {
+					val body = mVideoRoomAPI.configure(
+						roomConnectionParameters.apiName,
+						sessionId(), pluginId(), message)
+					// FIXME　実際の結果はTransactionManagerのコールバックで返ってくるみたい
+					"ack".equals(body.janus, ignoreCase = true)
+				} catch (e: Exception) {
+					reportError(e)
+					false
+				}
 			}
+
 			if (DEBUG) Log.d(TAG, "configure:finished.$result")
 			return result
 		}
@@ -1431,9 +1342,8 @@ internal abstract class VideoRoomPlugin(
 		 * @param config
 		 * @return true: 呼び出し成功
 		 */
-		fun configure(config: ConfigSubscriber): Boolean {
+		suspend fun configure(config: ConfigSubscriber): Boolean {
 			if (DEBUG) Log.v(TAG, "configure:$config")
-			cancelCall()
 			val roomCopy = mLock.withLock {
 				mRoom
 			}
@@ -1446,26 +1356,21 @@ internal abstract class VideoRoomPlugin(
 				config, mTransactionCallback /* FIXME 無名オブジェクトにする */
 			)
 			if (DEBUG) Log.v(TAG, "configure:$message")
-			val call = mVideoRoomAPI.configure(
-				roomConnectionParameters.apiName,
-				sessionId(), pluginId(), message
-			)
-			addCall(call)
-			var result = false
-			try {
-				val response = call.execute()
-				if (DEBUG) Log.v(TAG, "configure:response=$response,body=${response.body()}".trimIndent())
-				val body = response.body()
-				result = (response.code() == 200)
-					&& (body != null)
-					&& "ack".equals(body.janus, ignoreCase = true)
-				// FIXME　実際の結果はTransactionManagerのコールバックで返ってくるみたい
-				removeCall(call)
-			} catch (e: IOException) {
-				if (DEBUG) Log.w(TAG, e)
-				cancelCall()
-				reportError(e)
+			val result = withContext(mScope.coroutineContext) {
+				try {
+					val body = mVideoRoomAPI.configure(
+						roomConnectionParameters.apiName,
+						sessionId(), pluginId(), message
+					)
+					// FIXME　実際の結果はTransactionManagerのコールバックで返ってくるみたい
+					"ack".equals(body.janus, ignoreCase = true)
+				} catch (e: Exception) {
+					if (DEBUG) Log.w(TAG, e)
+					reportError(e)
+					false
+				}
 			}
+
 			if (DEBUG) Log.d(TAG, "configure:finished.$result")
 			return result
 		}

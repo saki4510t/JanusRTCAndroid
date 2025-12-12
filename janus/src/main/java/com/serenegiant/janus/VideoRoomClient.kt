@@ -54,7 +54,7 @@ interface VideoRoomClient : JanusClient {
 	 * @param config
 	 * @return
 	 */
-	fun configure(config: ConfigPublisher): Boolean
+	suspend fun configure(config: ConfigPublisher): Boolean
 
 	/**
 	 * 指定したプラグインIDが一致する最初のPublisherを設定する
@@ -62,14 +62,14 @@ interface VideoRoomClient : JanusClient {
 	 * @param config
 	 * @return
 	 */
-	fun configure(pluginId: Long, config: ConfigPublisher): Boolean
+	suspend fun configure(pluginId: Long, config: ConfigPublisher): Boolean
 
 	/**
 	 * 全てのSubscriberを設定する
 	 * @param config
 	 * @return
 	 */
-	fun configure(config: ConfigSubscriber): Boolean
+	suspend fun configure(config: ConfigSubscriber): Boolean
 
 	/**
 	 * 指定したプラグインIDが一致する最初のSubscriberを設定する
@@ -77,5 +77,5 @@ interface VideoRoomClient : JanusClient {
 	 * @param config
 	 * @return
 	 */
-	fun configure(pluginId: Long, config: ConfigSubscriber): Boolean
+	suspend fun configure(pluginId: Long, config: ConfigSubscriber): Boolean
 }

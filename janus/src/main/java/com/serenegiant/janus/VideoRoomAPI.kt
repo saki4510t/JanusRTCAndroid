@@ -39,74 +39,74 @@ import retrofit2.http.Path
  */
 interface VideoRoomAPI : JanusAPI {
 	@GET("{api}/{session_id}/{plugin_id}")
-	fun getRoomList(
+	suspend fun getRoomList(
 		@Path("api") api: String,
 		@Path("session_id") sessionId: Long,
 		@Path("plugin_id") pluginId: Long,
 		@Body list: List?
-	): Call<ListResponse<RoomInfo>>
+	): ListResponse<RoomInfo>
 
 	@POST("{api}/{session_id}/{plugin_id}")
-	fun join(
+	suspend fun join(
 		@Path("api") api: String,
 		@Path("session_id") sessionId: Long,
 		@Path("plugin_id") pluginId: Long,
 		@Body message: Message
-	): Call<RoomEvent>
+	): RoomEvent
 
 	@POST("{api}/{session_id}/{plugin_id}")
-	fun offer(
+	suspend fun offer(
 		@Path("api") api: String,
 		@Path("session_id") sessionId: Long,
 		@Path("plugin_id") pluginId: Long,
 		@Body message: Message
-	): Call<RoomEvent>
+	): RoomEvent
 
 	@POST("{api}/{session_id}/{plugin_id}")
-	fun trickle(
+	suspend fun trickle(
 		@Path("api") api: String,
 		@Path("session_id") sessionId: Long,
 		@Path("plugin_id") pluginId: Long,
 		@Body trickle: Trickle
-	): Call<RoomEvent>
+	): RoomEvent
 
 	@POST("{api}/{session_id}/{plugin_id}")
-	fun trickleCompleted(
+	suspend fun trickleCompleted(
 		@Path("api") api: String,
 		@Path("session_id") sessionId: Long,
 		@Path("plugin_id") pluginId: Long,
 		@Body trickle: TrickleCompleted
-	): Call<RoomEvent>
+	): RoomEvent
 
 	@POST("{api}/{session_id}/{plugin_id}")
-	fun send(
+	suspend fun send(
 		@Path("api") api: String,
 		@Path("session_id") sessionId: Long,
 		@Path("plugin_id") pluginId: Long,
 		@Body message: Message
-	): Call<ResponseBody>
+	): ResponseBody
 
 	@POST("{api}/{session_id}/{plugin_id}")
-	fun hangup(
+	suspend fun hangup(
 		@Path("api") api: String,
 		@Path("session_id") sessionId: Long,
 		@Path("plugin_id") pluginId: Long,
 		@Body hangup: Hangup
-	): Call<Void>
+	)
 
 	@POST("{api}/{session_id}/{plugin_id}")
-	fun configure(
+	suspend fun configure(
 		@Path("api") api: String,
 		@Path("session_id") sessionId: Long,
 		@Path("plugin_id") pluginId: Long,
 		@Body message: Message
-	): Call<RoomEvent>
+	): RoomEvent
 
 	@POST("{api}/{session_id}/{plugin_id}")
-	fun kick(
+	suspend fun kick(
 		@Path("api") api: String,
 		@Path("session_id") sessionId: Long,
 		@Path("plugin_id") pluginId: Long,
 		@Body message: Message
-	): Call<RoomEvent>
+	): RoomEvent
 }

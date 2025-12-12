@@ -35,11 +35,11 @@ class ServerInfo(
 	val transports: Transports,
 	val plugins: PluginInfos?
 ) {
-	class Transports(val transports: List<Transport>) {
+	class Transports(val transports: List<Transport>?) {
 		override fun toString(): String {
 			val sb = StringBuilder()
 			sb.append("Transports{")
-			if ((transports != null) && !transports.isEmpty()) {
+			if (!transports.isNullOrEmpty()) {
 				for (transport in transports) {
 					sb.append(transport).append(",")
 				}
@@ -67,11 +67,11 @@ class ServerInfo(
 		}
 	}
 
-	class PluginInfos(val plugins: List<PluginInfo>) {
+	class PluginInfos(val plugins: List<PluginInfo>?) {
 		override fun toString(): String {
 			val sb = StringBuilder()
 			sb.append("PluginInfos{")
-			if ((plugins != null) && !plugins.isEmpty()) {
+			if (!plugins.isNullOrEmpty()) {
 				for (plugin in plugins) {
 					sb.append(plugin).append(",")
 				}

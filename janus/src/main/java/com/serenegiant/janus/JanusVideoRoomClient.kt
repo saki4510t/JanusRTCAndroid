@@ -51,6 +51,7 @@ import com.serenegiant.webrtc.RtcEventLog
 import com.serenegiant.webrtc.audio.RecordedAudioToFileController
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
@@ -181,6 +182,7 @@ class JanusVideoRoomClient(
 	private var mLongPoll: LongPoll? = null
 	private val mCallLock = ReentrantLock()
 	private val mCurrentCalls = mutableListOf<Call<*>>()
+	private var mLastJob: Job? = null
 	private val mPluginLock = ReentrantLock()
 	private val mAttachedPlugins = mutableMapOf<Long, VideoRoomPlugin>()
 	private var mConnectionState: ConnectionState
@@ -382,15 +384,14 @@ class JanusVideoRoomClient(
 		}
 	}
 
+	/**
+	 * PublisherのプラグインID一覧を取得
+	 * 基本的にこれに入っているのは自分のパブリッシャーのプラグインIDのはず
+	 * @return
+	 */
 	override val publishers: Collection<Long>
-		/**
-		 * PublisherのプラグインID一覧を取得
-		 * 基本的にこれに入っているのは自分のパブリッシャーのプラグインIDのはず
-		 * @return
-		 */
 		get() {
-			val result: MutableList<Long> =
-				ArrayList()
+			val result: MutableList<Long> = ArrayList()
 			mPluginLock.withLock {
 				for (plugin in mAttachedPlugins.values) {
 					if (plugin is VideoRoomPlugin.Publisher) {
@@ -401,15 +402,14 @@ class JanusVideoRoomClient(
 			return result
 		}
 
+	/**
+	 * SubscriberのプラグインID一覧を取得
+	 * 基本的にこれに入っているのは自分がサブスクライブしているリモートに対応するプラグインIDのはず
+	 * @return
+	 */
 	override val subscribers: Collection<Long>
-		/**
-		 * SubscriberのプラグインID一覧を取得
-		 * 基本的にこれに入っているのは自分がサブスクライブしているリモートに対応するプラグインIDのはず
-		 * @return
-		 */
 		get() {
-			val result: MutableList<Long> =
-				ArrayList()
+			val result: MutableList<Long> = ArrayList()
 			mPluginLock.withLock {
 				for (plugin in mAttachedPlugins.values) {
 					if (plugin is VideoRoomPlugin.Subscriber) {
@@ -425,15 +425,16 @@ class JanusVideoRoomClient(
 	 * @param config
 	 * @return
 	 */
-	override fun configure(config: ConfigPublisher): Boolean {
+	override suspend fun configure(config: ConfigPublisher): Boolean {
 		if (DEBUG) Log.v(TAG, "configure:$config")
 		var result = false
 		if (mConnectionState == ConnectionState.CONNECTED) {
-			mPluginLock.withLock {
-				for (plugin in mAttachedPlugins.values) {
-					if (plugin is VideoRoomPlugin.Publisher) {
-						result = result or plugin.configure(config)
-					}
+			val plugins = mPluginLock.withLock {
+				mAttachedPlugins.values.toList()
+			}
+			for (plugin in plugins) {
+				if (plugin is VideoRoomPlugin.Publisher) {
+					result = result or plugin.configure(config)
 				}
 			}
 		}
@@ -446,17 +447,18 @@ class JanusVideoRoomClient(
 	 * @param config
 	 * @return
 	 */
-	override fun configure(pluginId: Long, config: ConfigPublisher): Boolean {
+	override suspend fun configure(pluginId: Long, config: ConfigPublisher): Boolean {
 		if (DEBUG) Log.v(TAG, "configure:id=$pluginId,$config"
 		)
 		if (mConnectionState == ConnectionState.CONNECTED) {
-			mPluginLock.withLock {
-				for (plugin in mAttachedPlugins.values) {
-					if ((plugin is VideoRoomPlugin.Publisher)
-						&& (plugin.pluginId() == pluginId)
-					) {
-						return plugin.configure(config)
-					}
+			val plugins = mPluginLock.withLock {
+				mAttachedPlugins.values.toList()
+			}
+			for (plugin in plugins) {
+				if ((plugin is VideoRoomPlugin.Publisher)
+					&& (plugin.pluginId() == pluginId)
+				) {
+					return plugin.configure(config)
 				}
 			}
 		}
@@ -468,15 +470,16 @@ class JanusVideoRoomClient(
 	 * @param config
 	 * @return
 	 */
-	override fun configure(config: ConfigSubscriber): Boolean {
+	override suspend fun configure(config: ConfigSubscriber): Boolean {
 		if (DEBUG) Log.v(TAG, "configure:$config")
 		var result = false
 		if (mConnectionState == ConnectionState.CONNECTED) {
-			mPluginLock.withLock {
-				for (plugin in mAttachedPlugins.values) {
-					if (plugin is VideoRoomPlugin.Subscriber) {
-						result = result or plugin.configure(config)
-					}
+			val plugins = mPluginLock.withLock {
+				mAttachedPlugins.values.toList()
+			}
+			for (plugin in plugins) {
+				if (plugin is VideoRoomPlugin.Subscriber) {
+					result = result or plugin.configure(config)
 				}
 			}
 		}
@@ -489,16 +492,17 @@ class JanusVideoRoomClient(
 	 * @param config
 	 * @return
 	 */
-	override fun configure(pluginId: Long, config: ConfigSubscriber): Boolean {
+	override suspend fun configure(pluginId: Long, config: ConfigSubscriber): Boolean {
 		if (DEBUG) Log.v(TAG, "configure:id=$pluginId,$config")
 		if (mConnectionState == ConnectionState.CONNECTED) {
-			mPluginLock.withLock {
-				for (plugin in mAttachedPlugins.values) {
-					if ((plugin is VideoRoomPlugin.Subscriber)
-						&& (plugin.pluginId() == pluginId)
-					) {
-						return plugin.configure(config)
-					}
+			val plugins = mPluginLock.withLock {
+				mAttachedPlugins.values.toList()
+			}
+			for (plugin in plugins) {
+				if ((plugin is VideoRoomPlugin.Subscriber)
+					&& (plugin.pluginId() == pluginId)
+				) {
+					return plugin.configure(config)
 				}
 			}
 		}
@@ -1317,8 +1321,7 @@ class JanusVideoRoomClient(
 		try {
 			mScope.launch {
 				if (mConnectionState != ConnectionState.ERROR) {
-					mConnectionState =
-						ConnectionState.ERROR
+					mConnectionState = ConnectionState.ERROR
 					mCallback.onChannelError(t)
 				}
 			}
@@ -1388,54 +1391,37 @@ class JanusVideoRoomClient(
 	//--------------------------------------------------------------------
 	private fun requestServerInfo(api: VideoRoomAPI) {
 		if (DEBUG) Log.v(TAG, "requestServerInfo:")
-		// Janus-gatewayサーバー情報を取得
-		val call = api.getInfo(roomConnectionParameters.apiName)
-		addCall(call)
-		call.enqueue(object : Callback<ServerInfo> {
-			override fun onResponse(
-				call: Call<ServerInfo>,
-				response: Response<ServerInfo>
-			) {
-				if (response.isSuccessful && (response.body() != null)) {
-					removeCall(call)
-					mServerInfo = response.body()
-					if (DEBUG) Log.v(TAG, "requestServerInfo:success")
-					mScope.launch {
-						createSession()
-					}
-				} else {
-					reportError(RuntimeException("unexpected response:$response"))
+		mLastJob?.cancel()
+		mLastJob = mScope.launch {
+			try {
+				// Janus-gatewayサーバー情報を取得
+				val info = api.getInfo(roomConnectionParameters.apiName)
+				mServerInfo = info
+				if (DEBUG) Log.v(TAG, "requestServerInfo:success,$info")
+				mScope.launch {
+					createSession()
 				}
+			} catch (e: Exception) {
+				reportError(e)
 			}
-
-			override fun onFailure(
-				call: Call<ServerInfo>,
-				t: Throwable
-			) {
-				reportError(t)
-			}
-		})
+		}
 	}
 
 	private fun createSession() {
 		if (DEBUG) Log.v(TAG, "createSession:")
-		// サーバー情報を取得できたらセッションを生成
-		val call = mJanus!!.createSession(
-			roomConnectionParameters.apiName, CreateSession()
-		)
-		addCall(call)
-		call.enqueue(object : Callback<Session?> {
-			override fun onResponse(
-				call: Call<Session?>,
-				response: Response<Session?>
-			) {
-				if (response.isSuccessful && (response.body() != null)) {
-					removeCall(call)
-					mSession = response.body()
+		val janus = mJanus
+		if (janus != null) {
+			mLastJob?.cancel()
+			mScope.launch {
+				try {
+					// サーバー情報を取得できたらセッションを生成
+					val session = mJanus!!.createSession(
+						roomConnectionParameters.apiName, CreateSession())
+					mSession = session
 					if ("success" == mSession!!.janus) {
 						mConnectionState = ConnectionState.READY
 						// セッションを生成できた＼(^o^)／
-						if (DEBUG) Log.v(TAG, "createSession:success")
+						if (DEBUG) Log.v(TAG, "createSession:success,$session")
 						// パブリッシャーをVideoRoomプラグインにアタッチ
 						mScope.launch {
 							longPoll()
@@ -1443,17 +1429,15 @@ class JanusVideoRoomClient(
 						}
 					} else {
 						mSession = null
-						reportError(RuntimeException("unexpected response:$response"))
+						reportError(RuntimeException("unexpected result:$session"))
 					}
-				} else {
-					reportError(RuntimeException("unexpected response:$response"))
+				} catch (e: Exception) {
+					reportError(e)
 				}
 			}
-
-			override fun onFailure(call: Call<Session?>, t: Throwable) {
-				reportError(t)
-			}
-		})
+		} else {
+			reportError(RuntimeException("Unexpectedly mJanus is null"))
+		}
 	}
 
 	/**
@@ -1478,20 +1462,22 @@ class JanusVideoRoomClient(
 		if (DEBUG) Log.v(TAG, "destroy:")
 		cancelCall()
 		detachAll()
-		if (mSession != null) {
-			val destroy = DestroySession(mSession!!, null)
-			val call = mJanus!!.destroySession(
-				roomConnectionParameters.apiName, mSession!!.id(), destroy
-			)
-			addCall(call)
+		val session = mSession
+		mSession = null
+		val janus = mJanus
+		if ((session != null) && (janus != null)) {
+			mLastJob?.cancel()
 			try {
-				call.execute()
-			} catch (e: IOException) {
+				mLastJob = mScope.launch {
+					janus.destroySession(
+						roomConnectionParameters.apiName, session.id(),
+						DestroySession(session, null)
+					)
+				}
+			} catch (e: Exception) {
 				reportError(e)
 			}
-			removeCall(call)
 		}
-		mSession = null
 		mServerInfo = null
 		mConnectionState = ConnectionState.CLOSED
 		clearTransactions()
@@ -1501,10 +1487,8 @@ class JanusVideoRoomClient(
 		cancelTimerTask()
 		statsTimer.cancel()
 		if (DEBUG) Log.d(TAG, "Closing audio source.")
-		if (audioSource != null) {
-			audioSource!!.dispose()
-			audioSource = null
-		}
+		audioSource?.dispose()
+		audioSource = null
 		mAudioDeviceModule = null
 		if (DEBUG) Log.d(TAG, "Stopping capture.")
 		if (videoCapturer != null) {
@@ -1518,32 +1502,26 @@ class JanusVideoRoomClient(
 			videoCapturer = null
 		}
 		if (DEBUG) Log.d(TAG, "Closing video source.")
-		if (videoSource != null) {
-			videoSource!!.dispose()
-			videoSource = null
-		}
+		videoSource?.dispose()
+		videoSource = null
 		if (saveRecordedAudioToFile != null) {
 			if (DEBUG) Log.d(TAG, "Closing audio file for recorded input audio.")
-			saveRecordedAudioToFile!!.stop()
+			saveRecordedAudioToFile?.stop()
 			saveRecordedAudioToFile = null
 		}
 		localRender = null
 		if (factory != null && peerConnectionParameters.aecDump) {
 			factory!!.stopAecDump()
 		}
-		if (surfaceTextureHelper != null) {
-			try {
-				surfaceTextureHelper!!.dispose()
-			} catch (e: Exception) {
-				if (DEBUG) Log.w(TAG, e)
-			}
-			surfaceTextureHelper = null
+		try {
+			surfaceTextureHelper?.dispose()
+		} catch (e: Exception) {
+			if (DEBUG) Log.w(TAG, e)
 		}
+		surfaceTextureHelper = null
 		if (DEBUG) Log.d(TAG, "Closing peer connection factory.")
-		if (factory != null) {
-			factory!!.dispose()
-			factory = null
-		}
+		factory?.dispose()
+		factory = null
 		rootEglBase.release()
 		if (DEBUG) Log.d(TAG, "Closing peer connection done.")
 		mCallback.onDisconnected()
@@ -1788,6 +1766,7 @@ class JanusVideoRoomClient(
 	private fun longPoll() {
 		if (DEBUG) Log.v(TAG, "longPoll:")
 		if (mSession == null) return
+		// XXX long pollは従来通りCallを使った実装のままにしておく
 		val call = mLongPoll!!.getEvent(
 			roomConnectionParameters.apiName, mSession!!.id()
 		)
@@ -1850,6 +1829,11 @@ class JanusVideoRoomClient(
 		if (response.isSuccessful && (responseBody != null)) {
 			try {
 				val body = JSONObject(responseBody.string())
+				try {
+					responseBody.close()
+				} catch (e: Exception) {
+					if (DEBUG) Log.w(TAG, e)
+				}
 				val transaction = body.optString("transaction")
 				val sender = body.optLong("sender")
 				if (!TextUtils.isEmpty(transaction)) {
