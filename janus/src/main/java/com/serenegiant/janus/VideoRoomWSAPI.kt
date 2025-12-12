@@ -19,68 +19,20 @@ package com.serenegiant.janus
 *
 */
 
-import com.serenegiant.janus.request.Attach
-import com.serenegiant.janus.request.CreateSession
-import com.serenegiant.janus.request.DestroySession
-import com.serenegiant.janus.request.Detach
 import com.serenegiant.janus.request.Hangup
 import com.serenegiant.janus.request.Message
 import com.serenegiant.janus.request.Trickle
 import com.serenegiant.janus.request.TrickleCompleted
 import com.serenegiant.janus.response.Event
-import com.serenegiant.janus.response.PluginInfo
-import com.serenegiant.janus.response.ServerInfo
-import com.serenegiant.janus.response.Session
 import com.serenegiant.janus.response.videoroom.RoomEvent
 import com.tinder.scarlet.ws.Receive
 import com.tinder.scarlet.ws.Send
 
 /**
  * API interface of videoroom plugin on janus-gateway over websocket
+ * videoroomプラグイン固有のエンドポイント定義
  */
-interface VideoRoomWSAPI {
-	@Send
-	suspend fun getInfo(): ServerInfo?
-
-	/**
-	 * セッションを作成
-	 * セッションエンドポイント
-	 * @param create
-	 * @return
-	 */
-	@Send
-	suspend fun createSession(create: CreateSession): Session?
-
-	/**
-	 * 指定したプラグインへ接続
-	 * セッションエンドポイント
-	 * @param attach
-	 * @return
-	 */
-	@Send
-	suspend fun attachPlugin(attach: Attach): PluginInfo?
-
-	/**
-	 * 指定したプラグインから切断
-	 * これ自体はプラグインエンドポイントだけど#attachPluginの対なのでセッションエンドポイントとしてここに入れておく
-	 * @param detach
-	 * @return
-	 */
-	@Send
-	suspend fun detachPlugin(detach: Detach)
-
-	/**
-	 * セッションを破棄
-	 * セッションエンドポイント
-	 * @param destroy
-	 * @return
-	 */
-	@Send
-	suspend fun destroySession(destroy: DestroySession)
-
-	//--------------------------------------------------------------------------------
-	// ここからしたがvideoroomプラグイン固有のエンドポイント定義
-	//--------------------------------------------------------------------------------
+interface VideoRoomWSAPI : JanusWSAPI {
 	@Send
 	suspend fun join(message: Message): RoomEvent?
 
