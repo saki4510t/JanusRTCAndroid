@@ -28,8 +28,8 @@ class RoomEvent(
 	@JvmField val janus: String,
 	@JvmField val sender: Long,
 	@JvmField val transaction: String,
-	@JvmField val plugindata: PluginData,
-	@JvmField val jsep: JsepSdp
+	@JvmField val plugindata: PluginData?,	// janus-gatewayから受け取ったデータなので念のためにnullableに
+	@JvmField val jsep: JsepSdp?			// janus-gatewayから受け取ったデータなので念のためにnullableに
 ) {
 	override fun toString(): String {
 		return "RoomEvent{" +
@@ -41,7 +41,7 @@ class RoomEvent(
 			'}'
 	}
 
-	class PluginData(val plugin: String, @JvmField val data: Data) {
+	class PluginData(val plugin: String, @JvmField val data: Data?) {
 		override fun toString(): String {
 			return "PluginData{" +
 				"plugin='" + plugin + '\'' +

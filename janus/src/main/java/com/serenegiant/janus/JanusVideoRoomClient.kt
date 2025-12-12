@@ -1913,7 +1913,9 @@ class JanusVideoRoomClient(
 		if (DEBUG) Log.v(TAG, "handleOnJoin:")
 		// roomにjoinできた
 		// Fire connection and signaling events.
-		mCallback.onConnectedToRoom(true, room.plugindata.data)
+		room.plugindata?.data?.let { data ->
+			mCallback.onConnectedToRoom(true, data)
+		}
 	}
 
 	/**
