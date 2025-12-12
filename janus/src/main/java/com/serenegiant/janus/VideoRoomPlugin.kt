@@ -49,6 +49,11 @@ import com.serenegiant.webrtc.RoomConnectionParameters
 import com.serenegiant.webrtc.RtcEventLog
 import com.serenegiant.webrtc.util.SdpUtils.preferCodec
 import com.serenegiant.webrtc.util.SdpUtils.setStartBitrate
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 import org.webrtc.DataChannel
 import org.webrtc.IceCandidate
@@ -67,7 +72,6 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.io.IOException
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -224,7 +228,8 @@ internal abstract class VideoRoomPlugin(
 	 */
 	private val queuedRemoteCandidates: MutableList<IceCandidate> = ArrayList()
 
-	protected val executor: ExecutorService = Utils.executor
+	// Executorのワーカースレッド上で実行するためのCoroutineScope
+	protected val mScope = CoroutineScope(SupervisorJob() + Utils.executor.asCoroutineDispatcher() +  CoroutineName("scope_$TAG"))
 	protected val mCurrentCalls: MutableList<Call<*>> = ArrayList()
 
 	private val isLoopback = peerConnectionParameters.loopback
@@ -259,7 +264,7 @@ internal abstract class VideoRoomPlugin(
 
 	fun createOffer() {
 		if (DEBUG) Log.v(TAG, "createOffer:")
-		executor.execute {
+		mScope.launch {
 			val connection = peerConnection
 			if (connection != null && !isError) {
 				if (DEBUG) Log.d(TAG, "PC Create OFFER")
@@ -271,7 +276,7 @@ internal abstract class VideoRoomPlugin(
 
 	fun createAnswer() {
 		if (DEBUG) Log.v(TAG, "createAnswer:")
-		executor.execute {
+		mScope.launch {
 			val connection = peerConnection
 			if (connection != null && !isError) {
 				if (DEBUG) Log.d(TAG, "PC create ANSWER")
@@ -294,7 +299,7 @@ internal abstract class VideoRoomPlugin(
 
 	fun addRemoteIceCandidate(candidate: IceCandidate) {
 		if (DEBUG) Log.v(TAG, "addRemoteIceCandidate:")
-		executor.execute {
+		mScope.launch {
 			if (peerConnection != null && !isError) {
 				queuedRemoteCandidates.add(candidate)
 			}
@@ -303,10 +308,10 @@ internal abstract class VideoRoomPlugin(
 
 	fun removeRemoteIceCandidates(candidates: Array<IceCandidate?>?) {
 		if (DEBUG) Log.v(TAG, "removeRemoteIceCandidates:")
-		executor.execute {
+		mScope.launch {
 			val connection = peerConnection
 			if (connection == null || isError) {
-				return@execute
+				return@launch
 			}
 			// Drain the queued remote candidates if there is any so that
 			// they are processed in the proper order.
@@ -316,10 +321,10 @@ internal abstract class VideoRoomPlugin(
 	}
 
 	fun setRemoteDescription(sdp: SessionDescription) {
-		executor.execute {
+		mScope.launch {
 			val connection = peerConnection
 			if (connection == null || isError) {
-				return@execute
+				return@launch
 			}
 			var sdpDescription = sdp.description
 			if (preferIsac) {
@@ -383,7 +388,7 @@ internal abstract class VideoRoomPlugin(
 						if (DEBUG) Log.v(TAG, "attach:success")
 						mCallback.onAttach(this@VideoRoomPlugin)
 						// ルームへjoin
-						executor.execute {
+						mScope.launch {
 							try {
 								join()
 							} catch (e: Exception) {
@@ -718,7 +723,7 @@ internal abstract class VideoRoomPlugin(
 	 * @param newState
 	 */
 	override fun onIceConnectionChange(newState: IceConnectionState) {
-		executor.execute {
+		mScope.launch {
 			if (DEBUG) Log.d(TAG, "IceConnectionState: $newState")
 			when (newState) {
 				IceConnectionState.CONNECTED -> mCallback.onIceConnected(this@VideoRoomPlugin)
@@ -745,7 +750,7 @@ internal abstract class VideoRoomPlugin(
 	override fun onIceGatheringChange(newState: IceGatheringState) {
 		if (DEBUG) Log.v(TAG, "onIceGatheringChange:$newState")
 		when (newState) {
-			IceGatheringState.COMPLETE -> executor.execute {
+			IceGatheringState.COMPLETE -> mScope.launch {
 				sendLocalIceCandidate(
 					null,
 					isLoopback
@@ -767,7 +772,7 @@ internal abstract class VideoRoomPlugin(
 		if ((mRoomState == RoomState.CONNECTED)
 			|| (mRoomState == RoomState.ATTACHED)
 		) {
-			executor.execute { sendLocalIceCandidate(candidate, isLoopback) }
+			mScope.launch { sendLocalIceCandidate(candidate, isLoopback) }
 		}
 	}
 
@@ -788,7 +793,7 @@ internal abstract class VideoRoomPlugin(
 	override fun onAddStream(stream: MediaStream) {
 		if (DEBUG) Log.v(TAG, "onAddStream:$stream")
 
-		executor.execute {
+		mScope.launch {
 			mCallback.onAddRemoteStream(
 				this@VideoRoomPlugin,
 				stream
@@ -803,7 +808,7 @@ internal abstract class VideoRoomPlugin(
 	override fun onRemoveStream(stream: MediaStream) {
 		if (DEBUG) Log.v(TAG, "onRemoveStream:$stream")
 
-		executor.execute { mCallback.onRemoveStream(this@VideoRoomPlugin, stream) }
+		mScope.launch { mCallback.onRemoveStream(this@VideoRoomPlugin, stream) }
 	}
 
 	/**
@@ -1073,7 +1078,7 @@ internal abstract class VideoRoomPlugin(
 
 			if (room.plugindata.data.leaving != null) {
 				// FIXME ここは即プラグインマップから削除してその上でonLeaveを呼ぶほうがよい？
-				executor.execute {
+				mScope.launch {
 					val roomCopy = mLock.withLock {
 						mRoom
 					}
@@ -1091,7 +1096,7 @@ internal abstract class VideoRoomPlugin(
 	private fun onLocalDescription(sdp: SessionDescription) {
 		if (DEBUG) Log.v(TAG, "onLocalDescription:")
 		mCallback.onLocalDescription(this, sdp)
-		executor.execute {
+		mScope.launch {
 			if (sdp.type == SessionDescription.Type.OFFER) {
 				sendOfferSdp(sdp, isLoopback)
 			} else {
@@ -1197,21 +1202,22 @@ internal abstract class VideoRoomPlugin(
 			}
 			val sdp = SessionDescription(origSdp.type, sdpDescription)
 			mLocalSdp = sdp
-			executor.execute {
+			val observer = this
+			mScope.launch {
 				val connection = peerConnection
 				if (connection != null && !isError) {
 					Log.d(TAG, "SdpObserver: Set local SDP from " + sdp.type)
-					connection.setLocalDescription(this, sdp)
+					connection.setLocalDescription(observer, sdp)
 				}
 			}
 		}
 
 		override fun onSetSuccess() {
 			if (DEBUG) Log.v(TAG, "SdpObserver#onSetSuccess:")
-			executor.execute {
+			mScope.launch {
 				val connection = peerConnection
 				if (connection == null || isError) {
-					return@execute
+					return@launch
 				}
 				if (isInitiator) {
 					// For offering peer connection we first create offer and set
@@ -1363,7 +1369,7 @@ internal abstract class VideoRoomPlugin(
 				if (changed.isNotEmpty()) {
 					if (DEBUG) Log.v(TAG, "checkPublishers:number of publishers changed")
 					for (info in changed) {
-						executor.execute {
+						mScope.launch {
 							if (DEBUG) Log.v(TAG, "checkPublishers:attach new Subscriber")
 							mCallback.createSubscriber(
 								this@Publisher, info

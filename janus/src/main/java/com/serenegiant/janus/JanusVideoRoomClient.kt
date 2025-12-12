@@ -49,6 +49,12 @@ import com.serenegiant.webrtc.PeerConnectionParameters
 import com.serenegiant.webrtc.RoomConnectionParameters
 import com.serenegiant.webrtc.RtcEventLog
 import com.serenegiant.webrtc.audio.RecordedAudioToFileController
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import okhttp3.ResponseBody
 import org.json.JSONException
 import org.json.JSONObject
@@ -126,6 +132,8 @@ class JanusVideoRoomClient(
 
 	private val mWeakContext = WeakReference(appContext)
 	private val dataChannelEnabled: Boolean
+	// Executorのワーカースレッド上で実行するためのCoroutineScope
+	private val mScope = CoroutineScope(SupervisorJob() + Utils.executor.asCoroutineDispatcher() +  CoroutineName("scope_$TAG"))
 
 	//--------------------------------------------------------------------------------
 	private val statsTimer = Timer()
@@ -210,6 +218,7 @@ class JanusVideoRoomClient(
 	 */
 	fun release() {
 		disconnectFromRoom()
+		mScope.cancel()
 	}
 
 	//================================================================================
@@ -222,7 +231,7 @@ class JanusVideoRoomClient(
 	) {
 		if (DEBUG) Log.v(TAG, "createPeerConnectionFactory:")
 		check(factory == null) { "PeerConnectionFactory has already been constructed" }
-		Utils.executor.execute { createPeerConnectionFactoryInternal(options) }
+		mScope.launch { createPeerConnectionFactoryInternal(options) }
 	}
 
 	/**
@@ -237,7 +246,7 @@ class JanusVideoRoomClient(
 		if (DEBUG) Log.v(TAG, "createPeerConnection:")
 		this.localRender = localRender
 		this.videoCapturer = videoCapturer
-		Utils.executor.execute {
+		mScope.launch {
 			try {
 				createMediaConstraintsInternal()
 				createPublisherInternal()
@@ -250,7 +259,7 @@ class JanusVideoRoomClient(
 
 	override fun startVideoSource() {
 		if (DEBUG) Log.v(TAG, "startVideoSource:")
-		Utils.executor.execute {
+		mScope.launch {
 			if (videoCapturer != null && videoCapturerStopped) {
 				if (DEBUG) Log.d(TAG, "Restart video source.")
 				videoCapturer!!.startCapture(videoWidth, videoHeight, videoFps)
@@ -261,7 +270,7 @@ class JanusVideoRoomClient(
 
 	override fun stopVideoSource() {
 		if (DEBUG) Log.v(TAG, "stopVideoSource:")
-		Utils.executor.execute {
+		mScope.launch {
 			if (videoCapturer != null && !videoCapturerStopped) {
 				if (DEBUG) Log.d(TAG, "Stop video source.")
 				try {
@@ -281,7 +290,7 @@ class JanusVideoRoomClient(
 			cancelTimerTask()
 			mTimerTask = object : TimerTask() {
 				override fun run() {
-					Utils.executor.execute { this@JanusVideoRoomClient.stats() }
+					mScope.launch { this@JanusVideoRoomClient.stats() }
 				}
 			}
 			try {
@@ -303,12 +312,12 @@ class JanusVideoRoomClient(
 
 	override fun switchCamera() {
 		if (DEBUG) Log.v(TAG, "switchCamera:")
-		Utils.executor.execute { this.switchCameraInternal() }
+		mScope.launch { this@JanusVideoRoomClient.switchCameraInternal() }
 	}
 
 	override fun changeCaptureFormat(width: Int, height: Int, framerate: Int) {
 		if (DEBUG) Log.v(TAG, "changeCaptureFormat:")
-		Utils.executor.execute {
+		mScope.launch {
 			changeCaptureFormatInternal(
 				width,
 				height,
@@ -319,7 +328,7 @@ class JanusVideoRoomClient(
 
 	override fun setAudioEnabled(enable: Boolean) {
 		if (DEBUG) Log.v(TAG, "setAudioEnabled:")
-		Utils.executor.execute {
+		mScope.launch {
 			enableAudio = enable
 			if (localAudioTrack != null) {
 				localAudioTrack!!.setEnabled(enableAudio)
@@ -329,7 +338,7 @@ class JanusVideoRoomClient(
 
 	override fun setVideoEnabled(enable: Boolean) {
 		if (DEBUG) Log.v(TAG, "setVideoEnabled:")
-		Utils.executor.execute {
+		mScope.launch {
 			renderVideo = enable
 			if (localVideoTrack != null) {
 				localVideoTrack!!.setEnabled(renderVideo)
@@ -346,7 +355,7 @@ class JanusVideoRoomClient(
 	 */
 	override fun requestRoomList(callback: ListCallback<List<RoomInfo?>?>) {
 		if (DEBUG) Log.v(TAG, "list:")
-		Utils.executor.execute {
+		mScope.launch {
 			listRoomInternal(
 				roomConnectionParameters.roomUrl,
 				roomConnectionParameters.apiName, callback
@@ -356,7 +365,7 @@ class JanusVideoRoomClient(
 
 	override fun connectToRoom(connectionParameters: RoomConnectionParameters) {
 		if (DEBUG) Log.v(TAG, "connectToRoom:")
-		Utils.executor.execute {
+		mScope.launch {
 			connectToRoomInternal()
 		}
 	}
@@ -367,7 +376,7 @@ class JanusVideoRoomClient(
 		if (mConnectionState != ConnectionState.CLOSED) {
 			if (DEBUG) Log.v(TAG, "disconnectFromRoom:")
 			cancelCall()
-			Utils.executor.execute {
+			mScope.launch {
 				disconnectFromRoomInternal()
 			}
 		}
@@ -1252,7 +1261,7 @@ class JanusVideoRoomClient(
 
 	private fun removePlugin(plugin: VideoRoomPlugin) {
 		val key = plugin.pluginId()
-		Utils.executor.execute {
+		mScope.launch {
 			mPluginLock.withLock {
 				mAttachedPlugins.remove(key)
 			}
@@ -1287,7 +1296,7 @@ class JanusVideoRoomClient(
 		found?.let {
 			// feederIdが一致するSubscriberが見つかった時はdetachする
 			val subscriber: VideoRoomPlugin = it
-			Utils.executor.execute {
+			mScope.launch {
 				subscriber.detach()
 				mCallback.onLeave(
 					(subscriber as VideoRoomPlugin.Subscriber).publisherInfo, numUsers
@@ -1306,7 +1315,7 @@ class JanusVideoRoomClient(
 		cancelCall()
 		clearTransactions()
 		try {
-			Utils.executor.execute {
+			mScope.launch {
 				if (mConnectionState != ConnectionState.ERROR) {
 					mConnectionState =
 						ConnectionState.ERROR
@@ -1391,7 +1400,7 @@ class JanusVideoRoomClient(
 					removeCall(call)
 					mServerInfo = response.body()
 					if (DEBUG) Log.v(TAG, "requestServerInfo:success")
-					Utils.executor.execute {
+					mScope.launch {
 						createSession()
 					}
 				} else {
@@ -1428,7 +1437,7 @@ class JanusVideoRoomClient(
 						// セッションを生成できた＼(^o^)／
 						if (DEBUG) Log.v(TAG, "createSession:success")
 						// パブリッシャーをVideoRoomプラグインにアタッチ
-						Utils.executor.execute {
+						mScope.launch {
 							longPoll()
 							mCallback.onConnectServer(this@JanusVideoRoomClient)
 						}
@@ -1544,20 +1553,20 @@ class JanusVideoRoomClient(
 
 	private fun setVideoMaxBitrate(maxBitrateKbps: Int) {
 		if (DEBUG) Log.v(TAG, "maxBitrateKbps:")
-		Utils.executor.execute {
+		mScope.launch {
 			if (localVideoSender == null || isError) {
-				return@execute
+				return@launch
 			}
 			if (DEBUG) Log.d(TAG, "Requested max video bitrate: $maxBitrateKbps")
 			if (localVideoSender == null) {
 				Log.w(TAG, "Sender is not ready.")
-				return@execute
+				return@launch
 			}
 
 			val parameters = localVideoSender!!.parameters
 			if (parameters.encodings.size == 0) {
 				Log.w(TAG, "RtpParameters are not ready.")
-				return@execute
+				return@launch
 			}
 
 			for (encoding in parameters.encodings) {
@@ -1621,7 +1630,7 @@ class JanusVideoRoomClient(
 		) {
 			if (DEBUG) Log.v(TAG, "onLeave:$plugin,leave=$pluginId")
 
-			Utils.executor.execute { leavePlugin(pluginId, numUsers) }
+			mScope.launch { leavePlugin(pluginId, numUsers) }
 		}
 
 		override fun onAddRemoteStream(
@@ -1630,7 +1639,7 @@ class JanusVideoRoomClient(
 		) {
 			if (DEBUG) Log.v(TAG, "onAddRemoteStream:$plugin")
 			if (plugin is VideoRoomPlugin.Subscriber) {
-				Utils.executor.execute {
+				mScope.launch {
 					this@JanusVideoRoomClient.onAddRemoteStream(
 						plugin.publisherInfo, stream
 					)
@@ -1644,7 +1653,7 @@ class JanusVideoRoomClient(
 		) {
 			if (DEBUG) Log.v(TAG, "onRemoveStream:$plugin")
 			if (plugin is VideoRoomPlugin.Subscriber) {
-				Utils.executor.execute {
+				mScope.launch {
 					this@JanusVideoRoomClient.onRemoveRemoteStream(
 						plugin.publisherInfo, stream
 					)
@@ -1657,14 +1666,14 @@ class JanusVideoRoomClient(
 			candidate: IceCandidate
 		) {
 			if (DEBUG) Log.v(TAG, ("onRemoteIceCandidate:$plugin$candidate".trimIndent()))
-			Utils.executor.execute { mCallback.onRemoteIceCandidate(candidate) }
+			mScope.launch { mCallback.onRemoteIceCandidate(candidate) }
 		}
 
 		override fun onIceConnected(plugin: VideoRoomPlugin) {
 			if (DEBUG) Log.v(TAG, "onIceConnected:$plugin")
 			if (plugin is VideoRoomPlugin.Publisher) {
 				// 複数のSubscriberが存在しうるのでPublisherからのイベントのみハンドリング
-				Utils.executor.execute { mCallback.onIceConnected() }
+				mScope.launch {	mCallback.onIceConnected() }
 			}
 		}
 
@@ -1672,7 +1681,7 @@ class JanusVideoRoomClient(
 			if (DEBUG) Log.v(TAG, "onIceDisconnected:$plugin")
 			if (plugin is VideoRoomPlugin.Publisher) {
 				// 複数のSubscriberが存在しうるのでPublisherからのイベントのみハンドリング
-				Utils.executor.execute { mCallback.onIceDisconnected() }
+				mScope.launch { mCallback.onIceDisconnected() }
 			}
 		}
 
@@ -1682,7 +1691,7 @@ class JanusVideoRoomClient(
 		) {
 			if (DEBUG) Log.v(TAG, "onLocalDescription:$plugin")
 //			final long delta = System.currentTimeMillis() - callStartedTimeMs;
-			Utils.executor.execute {
+			mScope.launch {
 //				logAndToast("Sending " + sdp.type + ", delay=" + delta + "ms");
 				if (peerConnectionParameters.videoMaxBitrate > 0) {
 					if (DEBUG) Log.d(TAG, "Set video maximum bitrate: ${peerConnectionParameters.videoMaxBitrate}")
@@ -1698,7 +1707,7 @@ class JanusVideoRoomClient(
 			info: PublisherInfo
 		) {
 			if (DEBUG) Log.v(TAG, "createSubscriber:$plugin")
-			Utils.executor.execute {
+			mScope.launch {
 				if (mCallback.onNewPublisher(info)) {
 					this@JanusVideoRoomClient.createSubscriber(info)
 				}
@@ -1711,14 +1720,14 @@ class JanusVideoRoomClient(
 		) {
 			if (DEBUG) Log.v(TAG, ("onRemoteDescription:$plugin$sdp".trimIndent()))
 
-			Utils.executor.execute { mCallback.onRemoteDescription(sdp) }
+			mScope.launch { mCallback.onRemoteDescription(sdp) }
 		}
 
 		override fun onPeerConnectionStatsReady(
 			plugin: VideoRoomPlugin,
 			report: RTCStatsReport
 		) {
-			Utils.executor.execute {
+			mScope.launch {
 				mCallback.onPeerConnectionStatsReady(
 					plugin is VideoRoomPlugin.Publisher, report
 				)
@@ -1761,7 +1770,7 @@ class JanusVideoRoomClient(
 		this.dataChannelEnabled = peerConnectionParameters.dataChannelParameters != null
 
 		val fieldTrials = peerConnectionParameters.fieldTrials
-		Utils.executor.execute {
+		mScope.launch {
 			if (DEBUG) Log.d(TAG, ("Initialize WebRTC. Field trials: $fieldTrials Enable video HW acceleration: ${peerConnectionParameters.videoCodecHwAcceleration}"))
 			PeerConnectionFactory.initialize(
 				PeerConnectionFactory.InitializationOptions.builder(appContext)
@@ -1794,7 +1803,7 @@ class JanusVideoRoomClient(
 					|| (mConnectionState == ConnectionState.CONNECTED)
 				) {
 					try {
-						Utils.executor.execute {
+						mScope.launch {
 							handleLongPoll(call, response)
 						}
 						recall(call)
