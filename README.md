@@ -5,7 +5,7 @@ Video chat sample app using videoroom plugin on [janus-gateway](https://github.c
 
 Communication between [janus-gateway](https://github.com/meetecho/janus-gateway) and app is proceeded over http/https protocol using [OkHttp3](https://github.com/square/okhttp/tree/master/okhttp/src/main/java/okhttp3) and [Retrofit2](https://github.com/square/retrofit).
 
-Copyright (c) 2018 saki t_saki@serenegiant.com
+Copyright (c) 2018 - 2025 saki t_saki@serenegiant.com
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
