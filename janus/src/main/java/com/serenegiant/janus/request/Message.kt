@@ -21,8 +21,8 @@ package com.serenegiant.janus.request
 
 import com.serenegiant.janus.Plugin
 import com.serenegiant.janus.Room
+import com.serenegiant.janus.TransactionCallback
 import com.serenegiant.janus.TransactionManager
-import com.serenegiant.janus.TransactionManager.TransactionCallback
 
 /**
  * プラグインメッセージ送信用のヘルパークラス

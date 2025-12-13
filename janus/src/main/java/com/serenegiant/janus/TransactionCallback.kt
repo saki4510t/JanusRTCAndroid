@@ -1,4 +1,4 @@
-package com.serenegiant.janus.request
+package com.serenegiant.janus
 /*
  * JanusRTCAndroid
  * Video chat sample app using videoroom plugin on janus-gateway server and WebRTC.
@@ -19,23 +19,17 @@ package com.serenegiant.janus.request
  *
  */
 
-import com.serenegiant.janus.TransactionCallback
-import com.serenegiant.janus.TransactionManager
-import com.serenegiant.janus.response.Session
+import org.json.JSONObject
 
-class DestroySession(
-	val session: Session,
-	val callback: TransactionCallback?
-) {
-	val janus = "destroy"
-	val transaction = TransactionManager.get(12, callback)
-	val session_id = session.id()
-
-	override fun toString(): String {
-		return "DestroySession{" +
-			"janus='" + janus + '\'' +
-			", transaction='" + transaction + '\'' +
-			", session_id=" + session_id +
-			'}'
-	}
+/**
+ * callback listener when app receives transaction message
+ */
+interface TransactionCallback {
+	/**
+	 * usually this is called from from long poll
+	 * @param transaction
+	 * @param body
+	 * @return true: handled, if return true, assignment will be removed.
+	 */
+	fun onReceived(transaction: String, body: JSONObject): Boolean
 }

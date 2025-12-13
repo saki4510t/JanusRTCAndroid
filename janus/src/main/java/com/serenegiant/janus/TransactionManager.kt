@@ -27,7 +27,7 @@ import java.util.concurrent.locks.ReentrantLock
 /**
  * manage relation ship between request and response over network connection
  */
-object TransactionManager {
+internal object TransactionManager {
 	/**
 	 * statically hold RandomString instance to generate random strings for transaction id
 	 */
@@ -118,16 +118,4 @@ object TransactionManager {
 		}
 	}
 
-	/**
-	 * callback listener when app receives transaction message
-	 */
-	interface TransactionCallback {
-		/**
-		 * usually this is called from from long poll
-		 * @param transaction
-		 * @param body
-		 * @return true: handled, if return true, assignment will be removed.
-		 */
-		fun onReceived(transaction: String, body: JSONObject): Boolean
-	}
 }

@@ -29,7 +29,6 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import com.google.gson.Gson
 import com.serenegiant.janus.JanusClient.ListCallback
-import com.serenegiant.janus.TransactionManager.TransactionCallback
 import com.serenegiant.janus.TransactionManager.clearTransactions
 import com.serenegiant.janus.TransactionManager.handleTransaction
 import com.serenegiant.janus.VideoRoomPlugin.VideoRoomCallback

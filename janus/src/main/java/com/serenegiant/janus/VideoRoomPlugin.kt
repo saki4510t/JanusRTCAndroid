@@ -24,7 +24,6 @@ import android.text.TextUtils
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
-import com.serenegiant.janus.TransactionManager.TransactionCallback
 import com.serenegiant.janus.TransactionManager.removeTransaction
 import com.serenegiant.janus.request.Attach
 import com.serenegiant.janus.request.Detach
