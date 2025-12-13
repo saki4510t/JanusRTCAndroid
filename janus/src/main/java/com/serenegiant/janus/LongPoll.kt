@@ -28,7 +28,7 @@ import retrofit2.http.Path
 /**
  * API interface of janus-gateway for long poll over http/https
  */
-interface LongPoll {
+internal interface LongPoll {
 	/**
 	 * janusの死活確認・イベント受信用のlogPoll
 	 * @param api

@@ -34,7 +34,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 
-object Utils {
+internal object Utils {
 	private const val DEBUG = false
 	private val TAG: String = Utils::class.java.simpleName
 
@@ -155,15 +155,5 @@ object Utils {
 				.addConverterFactory(GsonConverterFactory.create(gson))
 				.client(client)
 		).build()
-	}
-
-	interface BuilderCallback {
-		fun setupOkHttp(
-			builder: OkHttpClient.Builder,
-			isLongPoll: Boolean,
-			connectionTimeout: Long, readTimeoutMs: Long, writeTimeoutMs: Long
-		): OkHttpClient.Builder
-
-		fun setupRetrofit(builder: Retrofit.Builder): Retrofit.Builder
 	}
 }

@@ -37,7 +37,7 @@ import retrofit2.http.Path
 /**
  * API interface of videoroom plugin on janus-gateway over http://https
  */
-interface VideoRoomAPI : JanusAPI {
+internal interface VideoRoomAPI : JanusAPI {
 	@GET("{api}/{session_id}/{plugin_id}")
 	suspend fun getRoomList(
 		@Path("api") api: String,

@@ -34,7 +34,7 @@ import retrofit2.http.Path
 /**
  * API interface of janus-gateway over http://https
  */
-interface JanusAPI {
+internal interface JanusAPI {
 	/**
 	 * janus-gatewayサーバーの情報を取得
 	 * @param api

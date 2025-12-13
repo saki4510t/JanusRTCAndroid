@@ -19,7 +19,6 @@ package com.serenegiant.janus
  *
  */
 
-import com.serenegiant.janus.Utils.BuilderCallback
 import com.serenegiant.janus.response.videoroom.PublisherInfo
 import com.serenegiant.janus.response.videoroom.RoomEvent
 import org.json.JSONObject

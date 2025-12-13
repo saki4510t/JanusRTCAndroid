@@ -19,8 +19,15 @@ package com.serenegiant.janus
  *
  */
 
-/**
- * VideoRoomプラグインのアドミンAPIエンドポイントインターフェース
- * 今は単なるプレースホルダー
- */
-internal interface VideoRoomAdminAPI
+import okhttp3.OkHttpClient
+import retrofit2.Retrofit
+
+interface BuilderCallback {
+	fun setupOkHttp(
+		builder: OkHttpClient.Builder,
+		isLongPoll: Boolean,
+		connectionTimeout: Long, readTimeoutMs: Long, writeTimeoutMs: Long
+	): OkHttpClient.Builder
+
+	fun setupRetrofit(builder: Retrofit.Builder): Retrofit.Builder
+}
