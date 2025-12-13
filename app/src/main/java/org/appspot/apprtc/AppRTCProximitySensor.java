@@ -31,9 +31,7 @@ import com.serenegiant.webrtc.util.AppRTCUtils;
  * value i.e. the LUX value of the light sensor is compared with a threshold.
  * A LUX-value more than the threshold means the proximity sensor returns "FAR".
  * Anything less than the threshold value and the sensor  returns "NEAR".
- * @deprecated will remove from janus module
  */
-@Deprecated
 public class AppRTCProximitySensor implements SensorEventListener {
 	private static final boolean DEBUG = false; // set false on production
 	private static final String TAG = AppRTCProximitySensor.class.getSimpleName();

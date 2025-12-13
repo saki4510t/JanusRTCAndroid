@@ -38,12 +38,10 @@ import java.util.Set;
 
 /**
  * AppRTCAudioManager manages all audio related parts of the AppRTC demo.
- * @deprecated will remove from janus module
  */
-@Deprecated
-public class AppRTCAudioManager2 implements IAppRTCAudioManager {
+public class AppRTCAudioManager implements IAppRTCAudioManager {
 	private static final boolean DEBUG = false; // set false on production
-	private static final String TAG = AppRTCAudioManager2.class.getSimpleName();
+	private static final String TAG = AppRTCAudioManager.class.getSimpleName();
 
 	private final Context apprtcContext;
 	@Nullable
@@ -56,10 +54,6 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 	private boolean savedIsSpeakerPhoneOn = false;
 	private boolean savedIsMicrophoneMute = false;
 	private boolean hasWiredHeadset = false;
-	/**
-	 * Bluetoothヘッドセットが接続されたときに処理を１回だけ行うためのフラグ
-	 */
-	private boolean hasBTHeadset = false;
 
 	// Default audio device; speaker phone for video calls or earpiece for audio
 	// only calls.
@@ -89,16 +83,13 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 	private AppRTCProximitySensor proximitySensor;
 
 	// Handles all tasks related to Bluetooth headset devices.
-	@NonNull
 	private final AppRTCBluetoothManager bluetoothManager;
 
 	// Contains a list of available audio devices. A Set collection is used to
 	// avoid duplicate elements.
-	@NonNull
-	private final Set<AudioDevice> audioDevices = new HashSet<>();
+	private Set<AudioDevice> audioDevices = new HashSet<>();
 
 	// Broadcast receiver for wired headset intent broadcasts.
-	@NonNull
 	private final BroadcastReceiver wiredHeadsetReceiver;
 
 	// Callback method for changes in audio focus.
@@ -116,17 +107,16 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 
 		// The proximity sensor should only be activated when there are exactly two
 		// available audio devices.
-		if (audioDevices.size() == 2 && audioDevices.contains(AudioDevice.EARPIECE)
-			&& audioDevices.contains(AudioDevice.SPEAKER_PHONE)) {
-			if (DEBUG) Log.v(TAG, "onProximitySensorChangedState:");
+		if (audioDevices.size() == 2 && audioDevices.contains(AppRTCAudioManager.AudioDevice.EARPIECE)
+			&& audioDevices.contains(AppRTCAudioManager.AudioDevice.SPEAKER_PHONE)) {
 			if (proximitySensor.sensorReportsNearState()) {
 				// Sensor reports that a "handset is being held up to a person's ear",
 				// or "something is covering the light sensor".
-				setAudioDeviceInternal(AudioDevice.EARPIECE);
+				setAudioDeviceInternal(AppRTCAudioManager.AudioDevice.EARPIECE);
 			} else {
 				// Sensor reports that a "handset is removed from a person's ear", or
 				// "the light sensor is no longer covered".
-				setAudioDeviceInternal(AudioDevice.SPEAKER_PHONE);
+				setAudioDeviceInternal(AppRTCAudioManager.AudioDevice.SPEAKER_PHONE);
 			}
 		}
 	}
@@ -140,31 +130,27 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			final int state = intent.getIntExtra("state", STATE_UNPLUGGED);
-			if (DEBUG) {
-				final int microphone = intent.getIntExtra("microphone", HAS_NO_MIC);
-				final String name = intent.getStringExtra("name");
-				Log.d(TAG, "WiredHeadsetReceiver.onReceive" + AppRTCUtils.getThreadInfo() + ": "
+			int state = intent.getIntExtra("state", STATE_UNPLUGGED);
+			int microphone = intent.getIntExtra("microphone", HAS_NO_MIC);
+			String name = intent.getStringExtra("name");
+			if (DEBUG) Log.d(TAG, "WiredHeadsetReceiver.onReceive" + AppRTCUtils.getThreadInfo() + ": "
 				+ "a=" + intent.getAction() + ", s="
 				+ (state == STATE_UNPLUGGED ? "unplugged" : "plugged") + ", m="
 				+ (microphone == HAS_MIC ? "mic" : "no mic") + ", n=" + name + ", sb="
 				+ isInitialStickyBroadcast());
-			}
 			hasWiredHeadset = (state == STATE_PLUGGED);
-			onUpdateWiredHeadsetState();
+			updateAudioDeviceState();
 		}
 	}
 
 	/**
 	 * Construction.
 	 */
-	@UiThread
 	public static IAppRTCAudioManager create(Context context) {
-		return new AppRTCAudioManager2(context);
+		return new AppRTCAudioManager(context);
 	}
 
-	@UiThread
-	private AppRTCAudioManager2(Context context) {
+	private AppRTCAudioManager(Context context) {
 		if (DEBUG) Log.d(TAG, "ctor");
 		ThreadUtils.checkIsOnMainThread();
 		apprtcContext = context;
@@ -173,7 +159,7 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 		wiredHeadsetReceiver = new WiredHeadsetReceiver();
 		amState = AudioManagerState.UNINITIALIZED;
 
-		final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 		useSpeakerphone = sharedPreferences.getString(context.getString(R.string.pref_speakerphone_key),
 			context.getString(R.string.pref_speakerphone_default));
 		if (DEBUG) Log.d(TAG, "useSpeakerphone: " + useSpeakerphone);
@@ -197,8 +183,8 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 	}
 
 	@SuppressLint("WrongConstant")
+	@SuppressWarnings("deprecation")
 	// TODO(henrika): audioManager.requestAudioFocus() is deprecated.
-	@UiThread
 	@Override
 	public void start(@NonNull final AudioManagerEvents audioManagerEvents) {
 		if (DEBUG) Log.d(TAG, "start");
@@ -262,7 +248,7 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 		};
 
 		// Request audio playout focus (without ducking) and install listener for changes in focus.
-		final int result = audioManager.requestAudioFocus(audioFocusChangeListener,
+		int result = audioManager.requestAudioFocus(audioFocusChangeListener,
 			AudioManager.STREAM_VOICE_CALL, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
 		if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
 			if (DEBUG) Log.d(TAG, "Audio focus request granted for VOICE_CALL streams");
@@ -298,7 +284,6 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 			// Example: user holds his hand over the device (closer than ~5 cm),
 			// or removes his hand from the device.
 			this::onProximitySensorChangedState);
-
 		if (proximitySensor != null) {
 			proximitySensor.start();
 		}
@@ -406,12 +391,10 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 	@Override
 	public void selectAudioDevice(@NonNull final AudioDevice device) {
 		ThreadUtils.checkIsOnMainThread();
-		if ((device == AudioDevice.NONE) || audioDevices.contains(device)) {
-			userSelectedAudioDevice = device;
-		} else {
-			Log.w(TAG, "Can not select " + device + " from available " + audioDevices);
-			userSelectedAudioDevice = AudioDevice.NONE;
+		if (!audioDevices.contains(device)) {
+			Log.e(TAG, "Can not select " + device + " from available " + audioDevices);
 		}
+		userSelectedAudioDevice = device;
 		updateAudioDeviceState();
 	}
 
@@ -420,7 +403,6 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 	 */
 	@UiThread
 	@NonNull
-	@Override
 	public Set<AudioDevice> getAudioDevices() {
 		ThreadUtils.checkIsOnMainThread();
 		return Collections.unmodifiableSet(new HashSet<>(audioDevices));
@@ -456,7 +438,6 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 	 */
 	private void setSpeakerphoneOn(boolean on) {
 		boolean wasOn = audioManager.isSpeakerphoneOn();
-		if (DEBUG) Log.d(TAG, "setSpeakerphoneOn:" + wasOn + "=>" + on);
 		if (wasOn == on) {
 			return;
 		}
@@ -468,7 +449,6 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 	 */
 	private void setMicrophoneMute(boolean on) {
 		boolean wasMuted = audioManager.isMicrophoneMute();
-		if (DEBUG) Log.d(TAG, "setMicrophoneMute:" + wasMuted + "=>" + on);
 		if (wasMuted == on) {
 			return;
 		}
@@ -489,7 +469,7 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 	 * only use it as an early indicator (during initialization) of an attached
 	 * wired headset.
 	 */
-	@SuppressWarnings("deprecation")
+	@Deprecated
 	private boolean hasWiredHeadset() {
 		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
 			return audioManager.isWiredHeadsetOn();
@@ -511,98 +491,12 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 	}
 
 	@UiThread
-	private boolean updateDevices() {
-		ThreadUtils.checkIsOnMainThread();
-		if (DEBUG) Log.d(TAG, "updateDevices:");
-		// Check if any Bluetooth headset is connected. The internal BT state will
-		// change accordingly.
-		// TODO(henrika): perhaps wrap required state into BT manager.
-		if (AppRTCBluetoothManager.NEED_UPDATE.contains(bluetoothManager.getState())) {
-			bluetoothManager.updateDevice();
-		}
-
-		// Update the set of available audio devices.
-		final Set<AudioDevice> newAudioDevices = new HashSet<>();
-
-		if (bluetoothManager.hasBTSco()) {
-			// Bluetoothヘッドセットが接続されているとき
-			if (DEBUG) Log.d(TAG, "add BLUETOOTH");
-			newAudioDevices.add(AudioDevice.BLUETOOTH);
-		}
-		if (hasWiredHeadset) {
-			// 有線ヘッドセットが接続されているとき
-			if (DEBUG) Log.d(TAG, "add WIRED_HEADSET");
-			newAudioDevices.add(AudioDevice.WIRED_HEADSET);
-		}
-		// 有線ヘッドセット未接続またはAUTOでなければSPEAKER_PHONE(タブレットの場合)
-		// またはSPEAKER_PHONEとEARPIECE(モバイル)を追加する
-		// XXX 有線/無線ヘッドセットが接続されている時はEARPIECEを選択できなさそうなので除外
-		if (!hasWiredHeadset || !useSpeakerphone.equals(SPEAKERPHONE_AUTO)) {
-			if (DEBUG) Log.d(TAG, "add SPEAKER_PHONE");
-			newAudioDevices.add(AudioDevice.SPEAKER_PHONE);
-			if (hasEarpiece() && !hasWiredHeadset && !hasBTHeadset) {
-				if (DEBUG) Log.d(TAG, "add EARPIECE");
-				newAudioDevices.add(AudioDevice.EARPIECE);
-			}
-		}
-
-		// Store state which is set to true if the device list has changed.
-		boolean audioDeviceSetUpdated = !audioDevices.equals(newAudioDevices);
-		// Update the existing audio device set.
-		audioDevices.clear();
-		audioDevices.addAll(newAudioDevices);
-
-		return audioDeviceSetUpdated;
-	}
-
-	/**
-	 * 有線ヘッドセットの接続状態が変化したとき
-	 */
-	@UiThread
-	private void onUpdateWiredHeadsetState() {
-		ThreadUtils.checkIsOnMainThread();
-		if (DEBUG) Log.d(TAG, "updateWiredHeadsetState: userSelectedAudioDevice=" + userSelectedAudioDevice);
-		if (hasWiredHeadset
-			&& !useSpeakerphone.equals(SPEAKERPHONE_AS_POSSIBLE)	// asPossible時は自動切り替えしない
-			&& (userSelectedAudioDevice != AudioDevice.WIRED_HEADSET)) {
-			if (DEBUG) Log.d(TAG, "updateBluetoothHeadsetState: 有線ヘッドセットを選択");
-			userSelectedAudioDevice = AudioDevice.WIRED_HEADSET;
-		}
-		updateAudioDeviceState();
-	}
-
-	/**
-	 * Bluetoothヘッドセットの接続状態が変化したとき
-	 * AppRTCBluetoothManagerから呼び出される
-	 */
-	@UiThread
 	@Override
 	public void onUpdateBluetoothHeadsetState(
 		final AppRTCBluetoothManager.State prevState,
 		final AppRTCBluetoothManager.State newState) {
 		ThreadUtils.checkIsOnMainThread();
 		if (DEBUG) Log.d(TAG, "onUpdateBluetoothHeadsetState: userSelectedAudioDevice=" + userSelectedAudioDevice);
-		if (AppRTCBluetoothManager.INTERMEDIATE_STATE.contains(newState)) {
-			if (DEBUG) Log.v(TAG, "onUpdateBluetoothHeadsetState:skip intermediate state," + newState);
-			return;
-		}
-		final boolean hasBTSco = bluetoothManager.hasBTSco();
-		if ((newState == AppRTCBluetoothManager.State.SCO_DISCONNECTING)
-			&& (userSelectedAudioDevice == AudioDevice.BLUETOOTH)) {
-			// Bluetoothヘッドセット使用中に切断されたときはNONEにする
-			userSelectedAudioDevice = AudioDevice.NONE;
-		} else if (!hasBTSco) {
-			// Bluetoothヘッドセットが取り外された時
-			hasBTHeadset = false;
-		} else if (!hasBTHeadset && hasBTSco
-			&& !useSpeakerphone.equals(SPEAKERPHONE_AS_POSSIBLE)		// asPossible時は自動切り替えしない
-			&& (userSelectedAudioDevice != AudioDevice.WIRED_HEADSET)	// WIRED_HEADSETの時は自動切り替えしない
-			&& (userSelectedAudioDevice != AudioDevice.BLUETOOTH) ) {
-			// Bluetoothヘッドセットが接続されたとき
-			if (DEBUG) Log.d(TAG, "updateBluetoothHeadsetState: Bluetoothヘッドセットを選択");
-			hasBTHeadset = true;
-			userSelectedAudioDevice = AudioDevice.BLUETOOTH;
-		}
 		updateAudioDeviceState();
 	}
 
@@ -610,7 +504,6 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 	 * Updates list of possible audio devices and make new device selection.
 	 * TODO(henrika): add unit test to verify all state transitions.
 	 */
-	@UiThread
 	private void updateAudioDeviceState() {
 		ThreadUtils.checkIsOnMainThread();
 		if (DEBUG) Log.d(TAG, "--- updateAudioDeviceState: "
@@ -621,83 +514,100 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 			+ "selected=" + selectedAudioDevice + ", "
 			+ "user selected=" + userSelectedAudioDevice);
 
-		// 接続されている音声機器一覧を更新
-		boolean audioDeviceSetUpdated = updateDevices();
+		// Check if any Bluetooth headset is connected. The internal BT state will
+		// change accordingly.
+		// TODO(henrika): perhaps wrap required state into BT manager.
+		if (bluetoothManager.getState() == AppRTCBluetoothManager.State.HEADSET_AVAILABLE
+			|| bluetoothManager.getState() == AppRTCBluetoothManager.State.HEADSET_UNAVAILABLE
+			|| bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_DISCONNECTING) {
+			bluetoothManager.updateDevice();
+		}
 
-		// Bluetoothヘッドセットの接続状態を取得
-		final AppRTCBluetoothManager.State bluetoothState = bluetoothManager.getState();
-		final boolean hasBTSco = AppRTCBluetoothManager.HAS_BT_SCO.contains(bluetoothState);
-		// ユーザー選択状態が現在の状態と矛盾しないように調整
+		// Update the set of available audio devices.
+		Set<AudioDevice> newAudioDevices = new HashSet<>();
+
+		if (bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_CONNECTED
+			|| bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_CONNECTING
+			|| bluetoothManager.getState() == AppRTCBluetoothManager.State.HEADSET_AVAILABLE) {
+			newAudioDevices.add(AudioDevice.BLUETOOTH);
+		}
+
+		if (hasWiredHeadset) {
+			// If a wired headset is connected, then it is the only possible option.
+			newAudioDevices.add(AudioDevice.WIRED_HEADSET);
+		} else {
+			// No wired headset, hence the audio-device list can contain speaker
+			// phone (on a tablet), or speaker phone and earpiece (on mobile phone).
+			newAudioDevices.add(AudioDevice.SPEAKER_PHONE);
+			if (hasEarpiece()) {
+				newAudioDevices.add(AudioDevice.EARPIECE);
+			}
+		}
+		// Store state which is set to true if the device list has changed.
+		boolean audioDeviceSetUpdated = !audioDevices.equals(newAudioDevices);
+		// Update the existing audio device set.
+		audioDevices = newAudioDevices;
 		// Correct user selected audio devices if needed.
-		if (!hasBTSco
-			&& (userSelectedAudioDevice == AudioDevice.BLUETOOTH)) {
-			// Bluetoothヘッドセット使用中に取り外された時はユーザー選択を無しにする
+		if (bluetoothManager.getState() == AppRTCBluetoothManager.State.HEADSET_UNAVAILABLE
+			&& userSelectedAudioDevice == AudioDevice.BLUETOOTH) {
 			// If BT is not available, it can't be the user selection.
-			if (DEBUG) Log.d(TAG, "updateAudioDeviceState: Bluetoothヘッドセットが取り外された");
 			userSelectedAudioDevice = AudioDevice.NONE;
 		}
-		if (!hasWiredHeadset
-			&& (userSelectedAudioDevice == AudioDevice.WIRED_HEADSET)) {
-			// 有線ヘッドセット使用中に取り外された時はユーザー選択を無しにする
+		if (hasWiredHeadset && userSelectedAudioDevice == AudioDevice.SPEAKER_PHONE) {
+			// If user selected speaker phone, but then plugged wired headset then make
+			// wired headset as user selected device.
+			userSelectedAudioDevice = AudioDevice.WIRED_HEADSET;
+		}
+		if (!hasWiredHeadset && userSelectedAudioDevice == AudioDevice.WIRED_HEADSET) {
 			// If user selected wired headset, but then unplugged wired headset then make
 			// speaker phone as user selected device.
-			if (DEBUG) Log.d(TAG, "updateAudioDeviceState: 有線ヘッドセットが取り外された");
-			userSelectedAudioDevice = AudioDevice.NONE;
-		}
-		if (useSpeakerphone.equals(SPEAKERPHONE_AS_POSSIBLE)
-			&& (userSelectedAudioDevice == AudioDevice.NONE)) {
-			// asPossibleでユーザーが明示的に選択していないときは
-			// ユーザー選択をスピーカーフォンにする
 			userSelectedAudioDevice = AudioDevice.SPEAKER_PHONE;
 		}
-		if (DEBUG) Log.d(TAG, "userSelectedAudioDevice=" + userSelectedAudioDevice);
 
 		// Need to start Bluetooth if it is available and user either selected it explicitly or
 		// user did not select any output device.
-		final boolean needBluetoothAudioStart =
-			(bluetoothState == AppRTCBluetoothManager.State.HEADSET_AVAILABLE)
-			&& (userSelectedAudioDevice == AudioDevice.BLUETOOTH);
-		
+		boolean needBluetoothAudioStart =
+			bluetoothManager.getState() == AppRTCBluetoothManager.State.HEADSET_AVAILABLE
+				&& (userSelectedAudioDevice == AudioDevice.NONE
+				|| userSelectedAudioDevice == AudioDevice.BLUETOOTH);
+
 		// Need to stop Bluetooth audio if user selected different device and
 		// Bluetooth SCO connection is established or in the process.
-		final boolean needBluetoothAudioStop =
-			(bluetoothState == AppRTCBluetoothManager.State.SCO_CONNECTED
-				|| bluetoothState == AppRTCBluetoothManager.State.SCO_CONNECTING)
+		boolean needBluetoothAudioStop =
+			(bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_CONNECTED
+				|| bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_CONNECTING)
 				&& (userSelectedAudioDevice != AudioDevice.NONE
-					&& userSelectedAudioDevice != AudioDevice.BLUETOOTH);
+				&& userSelectedAudioDevice != AudioDevice.BLUETOOTH);
 
-		if (AppRTCBluetoothManager.HAS_BT_SCO.contains(bluetoothState)) {
+		if (bluetoothManager.getState() == AppRTCBluetoothManager.State.HEADSET_AVAILABLE
+			|| bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_CONNECTING
+			|| bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_CONNECTED) {
 			if (DEBUG) Log.d(TAG, "Need BT audio: start=" + needBluetoothAudioStart + ", "
 				+ "stop=" + needBluetoothAudioStop + ", "
-				+ "BT state=" + bluetoothState);
+				+ "BT state=" + bluetoothManager.getState());
 		}
 
 		// Start or stop Bluetooth SCO connection given states set earlier.
 		if (needBluetoothAudioStop) {
-			if (DEBUG) Log.d(TAG, "stop Bluetooth SCO audio");
 			bluetoothManager.stopScoAudio();
 			bluetoothManager.updateDevice();
 		}
-		
+
 		if (needBluetoothAudioStart && !needBluetoothAudioStop) {
 			// Attempt to start Bluetooth SCO audio (takes a few second to start).
-			if (DEBUG) Log.d(TAG, "start Bluetooth SCO audio");
 			if (!bluetoothManager.startScoAudio()) {
 				// Remove BLUETOOTH from list of available devices since SCO failed.
 				audioDevices.remove(AudioDevice.BLUETOOTH);
 				audioDeviceSetUpdated = true;
 			}
 		}
-		
+
 		// Update selected audio device.
 		final AudioDevice newAudioDevice;
-		if ((userSelectedAudioDevice != null)
-			&& (userSelectedAudioDevice != AudioDevice.NONE)) {
-			newAudioDevice = userSelectedAudioDevice;
-		} else if (useSpeakerphone.equals(SPEAKERPHONE_AS_POSSIBLE)
+		if (useSpeakerphone.equals(SPEAKERPHONE_AS_POSSIBLE)
 			&& audioDevices.contains(AudioDevice.SPEAKER_PHONE)) {
 			newAudioDevice = AudioDevice.SPEAKER_PHONE;
-		} else if (bluetoothState == AppRTCBluetoothManager.State.SCO_CONNECTED) {
+		} else if (bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_CONNECTED) {
 			// If a Bluetooth is connected, then it should be used as output audio
 			// device. Note that it is not sufficient that a headset is available;
 			// an active SCO channel must also be up and running.
@@ -716,11 +626,10 @@ public class AppRTCAudioManager2 implements IAppRTCAudioManager {
 		// Switch to new device but only if there has been any changes.
 		if (newAudioDevice != selectedAudioDevice || audioDeviceSetUpdated) {
 			// Do the required device switch.
-			if (DEBUG) Log.d(TAG, "set new audio device," + newAudioDevice);
 			setAudioDeviceInternal(newAudioDevice);
 			if (DEBUG) Log.d(TAG, "New device status: "
 				+ "available=" + audioDevices + ", "
-				+ "selected=" + selectedAudioDevice);
+				+ "selected=" + newAudioDevice);
 			if (audioManagerEvents != null) {
 				// Notify a listening client that audio device has been changed.
 				audioManagerEvents.onAudioDeviceChanged(selectedAudioDevice, audioDevices);

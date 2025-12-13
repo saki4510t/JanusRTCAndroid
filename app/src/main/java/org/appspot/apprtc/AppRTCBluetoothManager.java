@@ -40,9 +40,7 @@ import com.serenegiant.webrtc.util.AppRTCUtils;
 /**
  * AppRTCProximitySensor manages functions related to Bluetoth devices in the
  * AppRTC demo.
- * @deprecated will remove from janus module
  */
-@Deprecated
 @SuppressLint("MissingPermission")
 public class AppRTCBluetoothManager {
 	private static final boolean DEBUG = false; // set false on production

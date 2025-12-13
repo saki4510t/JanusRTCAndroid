@@ -29,9 +29,7 @@ import androidx.annotation.NonNull;
  * NOTE: almost always more useful to
  * Thread.setDefaultUncaughtExceptionHandler() rather than
  * Thread.setUncaughtExceptionHandler(), to apply to background threads as well.
- * @deprecated will remove from janus module
  */
-@Deprecated
 public class UnhandledExceptionHandler implements Thread.UncaughtExceptionHandler {
 	private static final String TAG = "AppRTCMobileActivity";
 	private final Activity activity;

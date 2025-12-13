@@ -11,9 +11,7 @@ import androidx.annotation.UiThread;
 /**
  * AppRTCAudioManagerとAppRTCAudioManager共通の定数等を定義するインターフェース
  * FIXME インターフェースの代わりに抽象クラスにして共通処理を実装した方がいいかも
- * @deprecated will remove from janus module
  */
-@Deprecated
 public interface IAppRTCAudioManager
 	extends AppRTCBluetoothManager.UpdateBluetoothStateListener {
 
