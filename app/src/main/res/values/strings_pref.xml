@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings strings. -->
+    <string name="pref_room_key" translatable="false">room_preference</string>
+    <string name="pref_room_list_key" translatable="false">room_list_preference</string>
+
+    <string name="pref_videosettings_key" translatable="false">video_settings_key</string>
+    <string name="pref_videosettings_title" translatable="false">WebRTC video settings.</string>
+
+    <string name="pref_videocall_key" translatable="false">videocall_preference</string>
+    <string name="pref_videocall_title" translatable="false">Video call.</string>
+    <string name="pref_videocall_dlg" translatable="false">Enable video in a call.</string>
+    <string name="pref_videocall_default" translatable="false">true</string>
+
+    <string name="pref_screencapture_key" translatable="false">screencapture_preference</string>
+    <string name="pref_screencapture_title" translatable="false">Use screencapture.</string>
+    <string name="pref_screencapture_default" translatable="false">false</string>
+
+    <string name="pref_camera2_key" translatable="false">camera2_preference</string>
+    <string name="pref_camera2_title" translatable="false">Use Camera2.</string>
+    <string name="pref_camera2_default" translatable="false">true</string>
+    <string name="pref_camera2_not_supported" translatable="false">Not supported on this device.</string>
+
+    <string name="pref_resolution_key" translatable="false">resolution_preference</string>
+    <string name="pref_resolution_title" translatable="false">Video resolution.</string>
+    <string name="pref_resolution_dlg" translatable="false">Enter AppRTC local video resolution.</string>
+    <string name="pref_resolution_default" translatable="false">Default</string>
+
+    <string name="pref_fps_key" translatable="false">fps_preference</string>
+    <string name="pref_fps_title" translatable="false">Camera fps.</string>
+    <string name="pref_fps_dlg" translatable="false">Enter local camera fps.</string>
+    <string name="pref_fps_default" translatable="false">Default</string>
+
+    <string name="pref_capturequalityslider_key" translatable="false">capturequalityslider_preference</string>
+    <string name="pref_capturequalityslider_title" translatable="false">Capture quality slider.</string>
+    <string name="pref_capturequalityslider_dlg" translatable="false">Enable slider for changing capture quality.</string>
+    <string name="pref_capturequalityslider_default" translatable="false">false</string>
+
+    <string name="pref_maxvideobitrate_key" translatable="false">maxvideobitrate_preference</string>
+    <string name="pref_maxvideobitrate_title" translatable="false">Maximum video bitrate setting.</string>
+    <string name="pref_maxvideobitrate_dlg" translatable="false">Maximum video bitrate setting.</string>
+    <string name="pref_maxvideobitrate_default" translatable="false">Default</string>
+
+    <string name="pref_maxvideobitratevalue_key" translatable="false">maxvideobitratevalue_preference</string>
+    <string name="pref_maxvideobitratevalue_title" translatable="false">Video encoder maximum bitrate.</string>
+    <string name="pref_maxvideobitratevalue_dlg" translatable="false">Enter video encoder maximum bitrate in kbps.</string>
+    <string name="pref_maxvideobitratevalue_default" translatable="false">1700</string>
+
+    <string name="pref_videocodec_key" translatable="false">videocodec_preference</string>
+    <string name="pref_videocodec_title" translatable="false">Default video codec.</string>
+    <string name="pref_videocodec_dlg" translatable="false">Select default video codec.</string>
+    <string name="pref_videocodec_default" translatable="false">VP8</string>
+
+    <string name="pref_hwcodec_key" translatable="false">hwcodec_preference</string>
+    <string name="pref_hwcodec_title" translatable="false">Video codec hardware acceleration.</string>
+    <string name="pref_hwcodec_dlg" translatable="false">Use hardware accelerated video codec (if available).</string>
+    <string name="pref_hwcodec_default" translatable="false">true</string>
+
+    <string name="pref_capturetotexture_key" translatable="false">capturetotexture_preference</string>
+    <string name="pref_capturetotexture_title" translatable="false">Video capture to surface texture.</string>
+    <string name="pref_capturetotexture_dlg" translatable="false">Capture video to textures (if available).</string>
+    <string name="pref_capturetotexture_default" translatable="false">true</string>
+
+    <string name="pref_flexfec_key" translatable="false">flexfec_preference</string>
+    <string name="pref_flexfec_title" translatable="false">Codec-agnostic Flexible FEC.</string>
+    <string name="pref_flexfec_dlg" translatable="false">Enable FlexFEC.</string>
+    <string name="pref_flexfec_default" translatable="false">false</string>
+
+    <string name="pref_value_enabled" translatable="false">Enabled</string>
+    <string name="pref_value_disabled" translatable="false">Disabled</string>
+
+    <string name="pref_audiosettings_key" translatable="false">audio_settings_key</string>
+    <string name="pref_audiosettings_title" translatable="false">WebRTC audio settings.</string>
+
+    <string name="pref_startaudiobitrate_key" translatable="false">startaudiobitrate_preference</string>
+    <string name="pref_startaudiobitrate_title" translatable="false">Audio bitrate setting.</string>
+    <string name="pref_startaudiobitrate_dlg" translatable="false">Audio bitrate setting.</string>
+    <string name="pref_startaudiobitrate_default" translatable="false">Default</string>
+
+    <string name="pref_startaudiobitratevalue_key" translatable="false">startaudiobitratevalue_preference</string>
+    <string name="pref_startaudiobitratevalue_title" translatable="false">Audio codec bitrate.</string>
+    <string name="pref_startaudiobitratevalue_dlg" translatable="false">Enter audio codec bitrate in kbps.</string>
+    <string name="pref_startaudiobitratevalue_default" translatable="false">32</string>
+
+    <string name="pref_audiocodec_key" translatable="false">audiocodec_preference</string>
+    <string name="pref_audiocodec_title" translatable="false">Default audio codec.</string>
+    <string name="pref_audiocodec_dlg" translatable="false">Select default audio codec.</string>
+    <string name="pref_audiocodec_default" translatable="false">OPUS</string>
+
+    <string name="pref_noaudioprocessing_key" translatable="false">audioprocessing_preference</string>
+    <string name="pref_noaudioprocessing_title" translatable="false">Disable audio processing.</string>
+    <string name="pref_noaudioprocessing_dlg" translatable="false">Disable audio processing pipeline.</string>
+    <string name="pref_noaudioprocessing_default" translatable="false">false</string>
+
+    <string name="pref_aecdump_key" translatable="false">aecdump_preference</string>
+    <string name="pref_aecdump_title" translatable="false">Create aecdump.</string>
+    <string name="pref_aecdump_dlg" translatable="false">Enable diagnostic audio recordings.</string>
+    <string name="pref_aecdump_default" translatable="false">false</string>
+
+    <string name="pref_enable_save_input_audio_to_file_key" translatable="false">enable_key</string>
+    <string name="pref_enable_save_input_audio_to_file_title" translatable="false">Save input audio to file.</string>
+    <string name="pref_enable_save_input_audio_to_file_dlg" translatable="false">Save input audio to file.</string>
+    <string name="pref_enable_save_input_audio_to_file_default" translatable="false">false</string>
+
+    <string name="pref_opensles_key" translatable="false">opensles_preference</string>
+    <string name="pref_opensles_title" translatable="false">Use OpenSL ES for audio playback.</string>
+    <string name="pref_opensles_dlg" translatable="false">Use OpenSL ES for audio playback.</string>
+    <string name="pref_opensles_default" translatable="false">false</string>
+
+    <string name="pref_disable_built_in_aec_key" translatable="false">disable_built_in_aec_preference</string>
+    <string name="pref_disable_built_in_aec_title" translatable="false">Disable hardware AEC.</string>
+    <string name="pref_disable_built_in_aec_dlg" translatable="false">Disable hardware AEC.</string>
+    <string name="pref_disable_built_in_aec_default" translatable="false">false</string>
+    <string name="pref_built_in_aec_not_available" translatable="false">Hardware AEC is not available</string>
+
+    <string name="pref_disable_built_in_agc_key" translatable="false">disable_built_in_agc_preference</string>
+    <string name="pref_disable_built_in_agc_title" translatable="false">Disable hardware AGC.</string>
+    <string name="pref_disable_built_in_agc_dlg" translatable="false">Disable hardware AGC.</string>
+    <string name="pref_disable_built_in_agc_default" translatable="false">false</string>
+    <string name="pref_built_in_agc_not_available" translatable="false">Hardware AGC is not available</string>
+
+    <string name="pref_disable_built_in_ns_key" translatable="false">disable_built_in_ns_preference</string>
+    <string name="pref_disable_built_in_ns_title" translatable="false">Disable hardware NS.</string>
+    <string name="pref_disable_built_in_ns_dlg" translatable="false">Disable hardware NS.</string>
+    <string name="pref_disable_built_in_ns_default" translatable="false">false</string>
+    <string name="pref_built_in_ns_not_available" translatable="false">Hardware NS is not available</string>
+
+    <string name="pref_disable_webrtc_agc_and_hpf_key" translatable="false">disable_webrtc_agc_and_hpf_preference</string>
+    <string name="pref_disable_webrtc_agc_and_hpf_title" translatable="false">Disable WebRTC AGC and HPF.</string>
+    <string name="pref_disable_webrtc_agc_default" translatable="false">false</string>
+
+    <string name="pref_speakerphone_key" translatable="false">speakerphone_preference</string>
+    <string name="pref_speakerphone_title" translatable="false">Speakerphone.</string>
+    <string name="pref_speakerphone_dlg" translatable="false">Speakerphone.</string>
+    <string name="pref_speakerphone_default" translatable="false">auto</string>
+
+    <string name="pref_datasettings_key" translatable="false">data_settings_key</string>
+    <string name="pref_datasettings_title" translatable="false">WebRTC data channel settings.</string>
+
+    <string name="pref_enable_datachannel_key" translatable="false">enable_datachannel_preference</string>
+    <string name="pref_enable_datachannel_title" translatable="false">Enable datachannel.</string>
+    <string name="pref_enable_datachannel_default" translatable="false">false</string>
+
+    <string name="pref_ordered_key" translatable="false">ordered_preference</string>
+    <string name="pref_ordered_title" translatable="false">Order messages.</string>
+    <string name="pref_ordered_default" translatable="false">true</string>
+
+    <string name="pref_data_protocol_key" translatable="false">Subprotocol</string>
+    <string name="pref_data_protocol_title" translatable="false">Subprotocol.</string>
+    <string name="pref_data_protocol_dlg" translatable="false">Enter subprotocol.</string>
+    <string name="pref_data_protocol_default" translatable="false" />
+
+    <string name="pref_negotiated_key" translatable="false">negotiated_preference</string>
+    <string name="pref_negotiated_title" translatable="false">Negotiated.</string>
+    <string name="pref_negotiated_default" translatable="false">false</string>
+
+    <string name="pref_max_retransmit_time_ms_key" translatable="false">max_retransmit_time_ms_preference</string>
+    <string name="pref_max_retransmit_time_ms_title" translatable="false">Max delay to retransmit.</string>
+    <string name="pref_max_retransmit_time_ms_dlg" translatable="false">Enter max delay to retransmit (in ms).</string>
+    <string name="pref_max_retransmit_time_ms_default" translatable="false">-1</string>
+
+    <string name="pref_max_retransmits_key" translatable="false">max_retransmits_preference</string>
+    <string name="pref_max_retransmits_title" translatable="false">Max attempts to retransmit.</string>
+    <string name="pref_max_retransmits_dlg" translatable="false">Enter max attempts to retransmit.</string>
+    <string name="pref_max_retransmits_default" translatable="false">-1</string>
+
+    <string name="pref_data_id_key" translatable="false">data_id_preference</string>
+    <string name="pref_data_id_title" translatable="false">Data id.</string>
+    <string name="pref_data_id_dlg" translatable="false">Enter data channel id.</string>
+    <string name="pref_data_id_default" translatable="false">-1</string>
+
+    <string name="pref_miscsettings_key" translatable="false">misc_settings_key</string>
+    <string name="pref_miscsettings_title" translatable="false">Miscellaneous settings.</string>
+
+    <string name="pref_room_server_url_key" translatable="false">room_server_url_preference</string>
+    <string name="pref_room_server_url_title" translatable="false">Room server URL.</string>
+    <string name="pref_room_server_url_dlg" translatable="false">Enter a room server URL.</string>
+    <string name="pref_room_server_url_default" translatable="false">http://192.168.1.33:8088/</string>
+
+    <string name="pref_displayhud_key" translatable="false">displayhud_preference</string>
+    <string name="pref_displayhud_title" translatable="false">Display call statistics.</string>
+    <string name="pref_displayhud_dlg" translatable="false">Display call statistics.</string>
+    <string name="pref_displayhud_default" translatable="false">false</string>
+
+    <string name="pref_tracing_key" translatable="false">tracing_preference</string>
+    <string name="pref_tracing_title" translatable="false">Debug performance tracing.</string>
+    <string name="pref_tracing_dlg" translatable="false">Debug performance tracing.</string>
+    <string name="pref_tracing_default" translatable="false">false</string>
+
+    <string name="pref_enable_rtceventlog_key" translatable="false">enable_rtceventlog_key</string>
+    <string name="pref_enable_rtceventlog_title" translatable="false">Enable RtcEventLog.</string>
+    <string name="pref_enable_rtceventlog_default" translatable="false">false</string>
+</resources>

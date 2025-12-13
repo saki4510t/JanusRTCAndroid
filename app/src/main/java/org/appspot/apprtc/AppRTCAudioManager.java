@@ -27,7 +27,7 @@ import androidx.annotation.UiThread;
 
 import android.util.Log;
 
-import com.serenegiant.janus.R;
+import com.serenegiant.janusrtcandroid.R;
 import com.serenegiant.webrtc.util.AppRTCUtils;
 
 import org.webrtc.ThreadUtils;
