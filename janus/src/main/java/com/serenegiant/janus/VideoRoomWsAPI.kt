@@ -32,7 +32,7 @@ import com.tinder.scarlet.ws.Send
  * API interface of videoroom plugin on janus-gateway over websocket
  * videoroomプラグイン固有のエンドポイント定義
  */
-interface VideoRoomWSAPI : JanusWSAPI {
+interface VideoRoomWsAPI : JanusWsAPI {
 	@Send
 	suspend fun join(message: Message): RoomEvent?
 

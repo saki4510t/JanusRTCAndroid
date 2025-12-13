@@ -31,7 +31,7 @@ import com.tinder.scarlet.ws.Send
 /**
  * API interface of videoroom plugin on janus-gateway over websocket
  */
-interface JanusWSAPI {
+interface JanusWsAPI {
 	@Send
 	suspend fun getInfo(): ServerInfo?
 
