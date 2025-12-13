@@ -1,4 +1,4 @@
-package com.serenegiant.janus
+package com.serenegiant.webrtc
 /*
  * JanusRTCAndroid
  * Video chat sample app using videoroom plugin on janus-gateway server and WebRTC.

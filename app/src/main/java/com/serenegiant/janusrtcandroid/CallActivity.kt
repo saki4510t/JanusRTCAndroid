@@ -32,7 +32,7 @@ import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.lifecycleScope
 import com.serenegiant.janus.JanusCallback
 import com.serenegiant.janus.JanusVideoRoomClient
-import com.serenegiant.janus.ProxyVideoSink
+import com.serenegiant.webrtc.ProxyVideoSink
 import com.serenegiant.janus.VideoRoomClient
 import com.serenegiant.janus.request.videoroom.ConfigPublisher
 import com.serenegiant.janus.response.videoroom.PublisherInfo
