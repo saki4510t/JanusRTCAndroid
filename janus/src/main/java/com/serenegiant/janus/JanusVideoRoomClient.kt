@@ -40,7 +40,7 @@ import com.serenegiant.janus.response.ServerInfo
 import com.serenegiant.janus.response.Session
 import com.serenegiant.janus.response.videoroom.PublisherInfo
 import com.serenegiant.janus.response.videoroom.RoomEvent
-import com.serenegiant.janus.response.videoroom.RoomInfo
+import com.serenegiant.janus.response.videoroom.RoomListData
 import com.serenegiant.system.BuildCheck
 import com.serenegiant.webrtc.AppRTCConst
 import com.serenegiant.webrtc.MediaStreamUtils
@@ -354,7 +354,7 @@ class JanusVideoRoomClient(
 	 * request list of available room
 	 * @param callback
 	 */
-	override fun requestRoomList(callback: ListCallback<List<RoomInfo?>?>) {
+	override fun requestRoomList(callback: ListCallback<List<RoomListData?>?>) {
 		if (DEBUG) Log.v(TAG, "list:")
 		mScope.launch {
 			listRoomInternal(
@@ -1332,7 +1332,7 @@ class JanusVideoRoomClient(
 	private fun listRoomInternal(
 		roomUrl: String,
 		apiName: String,
-		callback: ListCallback<List<RoomInfo?>?>
+		callback: ListCallback<List<RoomListData?>?>
 	) {
 		if (DEBUG) Log.v(TAG, "listRoomInternal:")
 //		final VideoRoomAPI api = setupRetrofit(

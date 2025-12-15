@@ -14,14 +14,14 @@ package com.serenegiant.janus
 import com.serenegiant.janus.JanusClient.ListCallback
 import com.serenegiant.janus.request.videoroom.ConfigPublisher
 import com.serenegiant.janus.request.videoroom.ConfigSubscriber
-import com.serenegiant.janus.response.videoroom.RoomInfo
+import com.serenegiant.janus.response.videoroom.RoomListData
 import com.serenegiant.webrtc.RoomConnectionParameters
 
 interface VideoRoomClient : JanusClient {
 	/**
 	 * request list of available room
 	 */
-	fun requestRoomList(callback: ListCallback<List<RoomInfo?>?>)
+	fun requestRoomList(callback: ListCallback<List<RoomListData?>?>)
 
 	/**
 	 * Asynchronously connect to an Janus-gateway room URL using supplied connection

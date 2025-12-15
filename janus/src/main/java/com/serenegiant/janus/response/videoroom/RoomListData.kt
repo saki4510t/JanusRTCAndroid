@@ -25,7 +25,7 @@ import android.os.Parcelable
 /**
  * listリクエストの結果
  */
-class RoomInfo : Parcelable {
+class RoomListData : Parcelable {
 	val room: Long? // <unique numeric ID>,
 	val description: String? // "<Name of the room>",
 	val pin_required: Boolean // <true|false, whether a PIN is required to join this room>,
@@ -219,12 +219,12 @@ class RoomInfo : Parcelable {
 
 	companion object {
 		@JvmField
-		val CREATOR = object : Parcelable.Creator<RoomInfo> {
-			override fun createFromParcel(src: Parcel): RoomInfo {
-				return RoomInfo(src)
+		val CREATOR = object : Parcelable.Creator<RoomListData> {
+			override fun createFromParcel(src: Parcel): RoomListData {
+				return RoomListData(src)
 			}
 
-			override fun newArray(size: Int): Array<RoomInfo?> {
+			override fun newArray(size: Int): Array<RoomListData?> {
 				return arrayOfNulls(size)
 			}
 		}

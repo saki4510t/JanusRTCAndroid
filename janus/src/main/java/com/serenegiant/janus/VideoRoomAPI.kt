@@ -26,9 +26,8 @@ import com.serenegiant.janus.request.TrickleCompleted
 import com.serenegiant.janus.request.videoroom.List
 import com.serenegiant.janus.response.videoroom.ListResponse
 import com.serenegiant.janus.response.videoroom.RoomEvent
-import com.serenegiant.janus.response.videoroom.RoomInfo
+import com.serenegiant.janus.response.videoroom.RoomListData
 import okhttp3.ResponseBody
-import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -44,7 +43,7 @@ internal interface VideoRoomAPI : JanusAPI {
 		@Path("session_id") sessionId: Long,
 		@Path("plugin_id") pluginId: Long,
 		@Body list: List?
-	): ListResponse<RoomInfo>
+	): ListResponse<RoomListData>
 
 	@POST("{api}/{session_id}/{plugin_id}")
 	suspend fun join(
