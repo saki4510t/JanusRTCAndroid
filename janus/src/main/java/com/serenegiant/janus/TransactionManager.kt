@@ -61,7 +61,6 @@ internal object TransactionManager {
 	 * @param body
 	 * @return true: handled
 	 */
-	@JvmStatic
 	fun handleTransaction(transaction: String, body: JSONObject): Boolean {
 		var callback: TransactionCallback? = null
 		val result = mLock.withLock {
@@ -77,7 +76,6 @@ internal object TransactionManager {
 	 * remove specific transaction
 	 * @param transaction
 	 */
-	@JvmStatic
 	fun removeTransaction(transaction: String) {
 		mLock.withLock {
 			sTransactions.remove(transaction)
@@ -87,7 +85,6 @@ internal object TransactionManager {
 	/**
 	 * clear transaction - callback mapping
 	 */
-	@JvmStatic
 	fun clearTransactions() {
 		mLock.withLock {
 			sTransactions.clear()

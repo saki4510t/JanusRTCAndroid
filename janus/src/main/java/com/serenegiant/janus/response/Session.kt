@@ -19,8 +19,8 @@ package com.serenegiant.janus.response
  *
  */
 
-class Session(
-	@JvmField val janus: String,
+internal class Session(
+	val janus: String,
 	val transaction: String,
 	val data: Data?) {
 

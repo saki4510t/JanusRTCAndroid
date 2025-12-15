@@ -31,7 +31,7 @@ import kotlin.concurrent.withLock
  * @param session
  * @param info
  */
-class Room(session: Session, info: PluginInfo)
+internal class Room(session: Session, info: PluginInfo)
 	: Plugin(session, info) {
 
 	/**
@@ -39,7 +39,6 @@ class Room(session: Session, info: PluginInfo)
 	 * EventRoom.plugindata.data.idの値
 	 * publisherとしての自id
 	 */
-	@JvmField
 	var publisherId: Long? = null
 
 	private val mLock = ReentrantLock()

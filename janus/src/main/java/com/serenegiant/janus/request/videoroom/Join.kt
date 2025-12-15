@@ -25,24 +25,24 @@ import com.serenegiant.janus.response.StreamInfo
  * VideoRoomプラグイン用メッセージボディー
  * ルームへ入室するとき
  */
-class Join @JvmOverloads constructor(
+internal class Join @JvmOverloads constructor(
 	/** ルームID  */
-	@JvmField val room: Long, // <unique ID of the room to join>...だけどroom設定だと<unique numeric ID>なので数字じゃないとだめ
+	val room: Long, // <unique ID of the room to join>...だけどroom設定だと<unique numeric ID>なので数字じゃないとだめ
 	/** 参加者の種類文字列  */
-	@JvmField val ptype: String,
-	@JvmField val username: String?,
-	@JvmField var display: String?, // <display name for the publisher; optional>
-	@JvmField var feed: Long?, // <unique ID of the publisher to subscribe to; mandatory>
+	val ptype: String,
+	val username: String?,
+	var display: String?, // <display name for the publisher; optional>
+	var feed: Long?, // <unique ID of the publisher to subscribe to; mandatory>
 	/** サブスクライバーのみ  */
-	@JvmField var private_id: Long? = null, // もしかするとStringかも // <unique ID of the publisher that originated this request; optional, unless mandated by the room configuration>,
+	var private_id: Long? = null, // もしかするとStringかも // <unique ID of the publisher that originated this request; optional, unless mandated by the room configuration>,
 	/** サブスクライバーのみ  */
-	@JvmField var streams: Array<StreamInfo>? = null,
+	var streams: Array<StreamInfo>? = null,
 	/** パブリッシャーのみ  */
-	@JvmField var id: String? = null, // <unique ID to register for the publisher; optional, will be chosen by the plugin if missing>
+	var id: String? = null, // <unique ID to register for the publisher; optional, will be chosen by the plugin if missing>
 	/** パブリッシャーのみ  */
-	@JvmField val token: String? = null,
+	val token: String? = null,
 ) {
-	@JvmField val request: String = "join"
+	val request: String = "join"
 
 	override fun toString(): String {
 		return "Join{" +

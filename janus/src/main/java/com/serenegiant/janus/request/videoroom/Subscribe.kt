@@ -26,7 +26,7 @@ import com.serenegiant.janus.response.StreamInfo
  * subscribeリクエスト用(受信するリモートストリーム設定を追加・変更する時)
  * ICEが再起動される
  */
-class Subscribe(val streams: Array<StreamInfo>) {
+internal class Subscribe(val streams: Array<StreamInfo>) {
 	val request: String = "subscribe"
 
 	override fun toString(): String {

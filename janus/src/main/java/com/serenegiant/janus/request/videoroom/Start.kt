@@ -23,7 +23,7 @@ package com.serenegiant.janus.request.videoroom
  * VideoRoomプラグイン用メッセージボディー
  * サブスクライバーでのデータ取得を再開する
  */
-class Start(val room: Long) {
+internal class Start(val room: Long) {
 	val request: String = "start"
 
 	override fun toString(): String {

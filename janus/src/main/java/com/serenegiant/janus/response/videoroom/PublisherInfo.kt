@@ -24,12 +24,10 @@ import android.os.Parcelable
 
 class PublisherInfo : Parcelable {
 	/** パブリッシャーのID, XXX これはStringの方がいいのかも  */
-	@JvmField
 	val id: Long?
 	val display: String?
 	val audio_codec: String?
 	val video_codec: String?
-	@JvmField
 	var talking: Boolean
 
 	constructor(
@@ -59,13 +57,13 @@ class PublisherInfo : Parcelable {
 
 	/**
 	 * 引数がPublisherの場合にidの比較のみを行う
-	 * @param o
+	 * @param other
 	 * @return
 	 */
-	override fun equals(o: Any?): Boolean {
-		if (this === o) return true
-		if (o == null || javaClass != o.javaClass) return false
-		val publisher = o as PublisherInfo
+	override fun equals(other: Any?): Boolean {
+		if (this === other) return true
+		if (other == null || javaClass != other.javaClass) return false
+		val publisher = other as PublisherInfo
 
 		return (id != null) && id == publisher.id
 	}

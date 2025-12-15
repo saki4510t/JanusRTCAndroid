@@ -21,7 +21,7 @@ package com.serenegiant.janus.response
 
 import org.json.JSONObject
 
-data class Event(
+internal data class Event(
 	val janus: String,
 	val sender: String,
 	val transaction: String,

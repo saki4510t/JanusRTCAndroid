@@ -19,7 +19,7 @@ package com.serenegiant.janus.response
  *
  */
 
-data class Transport(
+internal data class Transport(
 	val name: String,
 	val author: String,
 	val description: String,

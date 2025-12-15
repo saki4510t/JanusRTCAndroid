@@ -23,7 +23,7 @@ import com.serenegiant.janus.TransactionCallback
 import com.serenegiant.janus.TransactionManager
 import com.serenegiant.janus.response.Session
 
-class Attach(
+internal class Attach(
 	val session: Session,
 	val plugin: String,
 	val callback: TransactionCallback?

@@ -22,7 +22,7 @@ package com.serenegiant.janus.request.videoroom
 /**
  * VideoRoomプラグイン用メッセージボディー
  */
-class ListParticipants(val room: Long) {
+internal class ListParticipants(val room: Long) {
 	val request: String = "listparticipants"
 
 	override fun toString(): String {

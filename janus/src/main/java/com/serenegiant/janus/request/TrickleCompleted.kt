@@ -23,7 +23,7 @@ import com.serenegiant.janus.Room
 import com.serenegiant.janus.TransactionCallback
 import com.serenegiant.janus.TransactionManager
 
-class TrickleCompleted(
+internal class TrickleCompleted(
 	val room: Room,
 	val callback: TransactionCallback?
 ) {

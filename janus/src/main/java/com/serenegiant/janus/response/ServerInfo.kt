@@ -19,7 +19,7 @@ package com.serenegiant.janus.response
  *
  */
 
-class ServerInfo(
+internal class ServerInfo(
 	val janus: String,
 	val transaction: String,
 	val name: String,

@@ -23,7 +23,7 @@ package com.serenegiant.janus.request.videoroom
  * VideoRoomプラグイン用メッセージボディー
  * publishリクエスト用(伝送開始)
  */
-class Publish() {
+internal class Publish() {
 	val request: String = "publish" // "publish"
 	var audiocodec: String? = null // "<audio codec to prefer among the negotiated ones; optional>",
 	var videocodec: String? = null // "<video codec to prefer among the negotiated ones; optional>",

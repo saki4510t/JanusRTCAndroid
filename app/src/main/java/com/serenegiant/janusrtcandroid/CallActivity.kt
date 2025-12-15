@@ -36,7 +36,7 @@ import com.serenegiant.webrtc.ProxyVideoSink
 import com.serenegiant.janus.VideoRoomClient
 import com.serenegiant.janus.request.videoroom.ConfigPublisher
 import com.serenegiant.janus.response.videoroom.PublisherInfo
-import com.serenegiant.janus.response.videoroom.RoomEvent
+import com.serenegiant.janus.response.videoroom.RoomData
 import com.serenegiant.janusrtcandroid.CallFragment.OnCallEvents
 import com.serenegiant.janusrtcandroid.CpuMonitor.Companion.isSupported
 import com.serenegiant.webrtc.DataChannelParameters
@@ -714,7 +714,7 @@ class CallActivity : BaseActivity(), OnCallEvents {
 			return ArrayList()
 		}
 
-		override fun onConnectedToRoom(initiator: Boolean, room: RoomEvent.Data) {
+		override fun onConnectedToRoom(initiator: Boolean, room: RoomData) {
 			if (DEBUG) Log.v(TAG, "onConnectedToRoom:$room")
 			lifecycleScope.launch { onConnectedToRoomInternal(initiator) }
 		}

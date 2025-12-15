@@ -26,7 +26,7 @@ import com.serenegiant.janus.response.StreamInfo
  * switchリクエスト用(feed/mdi/sub_midを切り替える場合)
  * こちらはsubscribeと違ってICEが再起動されない
  */
-class Switch(val streams: Array<StreamInfo>) {
+internal class Switch(val streams: Array<StreamInfo>) {
 	val request: String = "switch"
 
 	override fun toString(): String {

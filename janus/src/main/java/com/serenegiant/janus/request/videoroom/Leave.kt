@@ -23,7 +23,7 @@ package com.serenegiant.janus.request.videoroom
  * VideoRoomプラグイン用メッセージボディー
  * ルームから退室するとき
  */
-class Leave {
+internal class Leave {
 	val request: String = "leave"
 
 	override fun toString(): String {

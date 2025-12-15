@@ -23,7 +23,7 @@ package com.serenegiant.janus.request.videoroom
  * VideoRoomプラグイン用メッセージボディー
  * listリクエスト用
  */
-class List(val admin_key: String?) {
+internal class List(val admin_key: String?) {
 	val request: String = "list"
 
 	override fun toString(): String {

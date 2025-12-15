@@ -23,7 +23,7 @@ import com.serenegiant.janus.TransactionCallback
 import com.serenegiant.janus.TransactionManager
 import com.serenegiant.janus.response.Session
 
-class Hangup(
+internal class Hangup(
 	val session: Session,
 	val callback: TransactionCallback
 ) {

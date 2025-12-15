@@ -23,7 +23,7 @@ package com.serenegiant.janus.request.videoroom
  * VideoRoomプラグイン用メッセージボディー
  * unpublishリクエスト用(送信するストリームを解除するとき)
  */
-class UnPublish {
+internal class UnPublish {
 	val request: String = "unpublish"
 
 	override fun toString(): String {

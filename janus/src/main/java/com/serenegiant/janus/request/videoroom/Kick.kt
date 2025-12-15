@@ -25,7 +25,7 @@ package com.serenegiant.janus.request.videoroom
  * @param id
  * @param secret
  */
-class Kick(
+internal class Kick(
 	/**
 	 * unique numeric ID of the room
 	 */

@@ -23,7 +23,7 @@ import com.serenegiant.janus.TransactionCallback
 import com.serenegiant.janus.TransactionManager
 import com.serenegiant.janus.response.Session
 
-class DestroySession(
+internal class DestroySession(
 	val session: Session,
 	val callback: TransactionCallback?
 ) {

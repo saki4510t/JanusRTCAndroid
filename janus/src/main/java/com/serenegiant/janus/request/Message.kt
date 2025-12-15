@@ -27,23 +27,15 @@ import com.serenegiant.janus.TransactionManager
 /**
  * プラグインメッセージ送信用のヘルパークラス
  */
-class Message(
-	@JvmField
+internal class Message(
 	val plugin: Plugin,
-	@JvmField
 	val body: Any,
-	@JvmField
 	val jsep: Any?,
-	@JvmField
 	val callback: TransactionCallback
 ) {
-	@JvmField
 	val janus = "message"
-	@JvmField
 	val transaction = TransactionManager.get(12, callback)
-	@JvmField
 	val session_id = plugin.sessionId()
-	@JvmField
 	val handle_id = plugin.pluginId()
 
 	constructor(

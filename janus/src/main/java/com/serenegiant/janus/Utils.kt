@@ -64,7 +64,6 @@ internal object Utils {
 	 * peer connection API calls to ensure new peer connection factory is
 	 * created on the same thread as previously destroyed factory.
 	 */
-	@JvmField
 	val executor = Executors.newSingleThreadExecutor()
 
 	/**

@@ -26,7 +26,7 @@ import com.serenegiant.janus.response.StreamInfo
  * unsubscribeリクエスト用(受信するリモートストリーム設定を削除する時)
  * ICEが再起動される
  */
-class UnSubscribe(val streams: Array<StreamInfo>) {
+internal class UnSubscribe(val streams: Array<StreamInfo>) {
 	val request: String = "unsubscribe"
 
 	override fun toString(): String {

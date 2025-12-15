@@ -20,7 +20,7 @@ package com.serenegiant.janus
  */
 
 import com.serenegiant.janus.response.videoroom.PublisherInfo
-import com.serenegiant.janus.response.videoroom.RoomEvent
+import com.serenegiant.janus.response.videoroom.RoomData
 import org.json.JSONObject
 import org.webrtc.IceCandidate
 import org.webrtc.PeerConnection.IceServer
@@ -46,7 +46,7 @@ interface JanusCallback : BuilderCallback {
 	 * Callback fired once the room's signaling parameters
 	 * SignalingParameters are extracted.
 	 */
-	fun onConnectedToRoom(initiator: Boolean, room: RoomEvent.Data)
+	fun onConnectedToRoom(initiator: Boolean, room: RoomData)
 
 	/**
 	 * Callback fired once remote SDP is received.

@@ -21,7 +21,7 @@ package com.serenegiant.janus.request
 
 import com.serenegiant.janus.TransactionManager
 
-class CreateSession {
+internal class CreateSession {
 	val janus = "create"
 	val transaction = TransactionManager.get(12, null)
 

@@ -23,7 +23,7 @@ package com.serenegiant.janus.request.videoroom
  * VideoRoomプラグイン用メッセージボディー
  * サブスクライバーでのデータ取得を停止する
  */
-class Pause {
+internal class Pause {
 	val request: String = "pause"
 
 	override fun toString(): String {

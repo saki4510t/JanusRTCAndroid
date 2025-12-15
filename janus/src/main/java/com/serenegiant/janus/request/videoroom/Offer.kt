@@ -24,7 +24,7 @@ package com.serenegiant.janus.request.videoroom
  * XXX https://janus.conf.meetecho.com/docs/rest.htmlだとrequestは無いんだけど
  * 実際にはrequest="configure"を含めないとエラーが出て接続できない
  */
-class Offer(val audio: Boolean, val video: Boolean) {
+internal class Offer(val audio: Boolean, val video: Boolean) {
 	val request: String = "configure"
 
 	override fun toString(): String {

@@ -22,7 +22,7 @@ package com.serenegiant.janus.request
 /**
  * offer時のjsep用
  */
-data class JsepSdp(
-	@JvmField val type: String,
-	@JvmField val sdp: String
+internal data class JsepSdp(
+	val type: String,
+	val sdp: String
 )

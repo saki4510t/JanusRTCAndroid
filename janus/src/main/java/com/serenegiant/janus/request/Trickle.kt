@@ -24,7 +24,7 @@ import com.serenegiant.janus.TransactionCallback
 import com.serenegiant.janus.TransactionManager
 import org.webrtc.IceCandidate
 
-class Trickle(
+internal class Trickle(
 	val room: Room,
 	val candidate: Candidate,
 	val callback: TransactionCallback?

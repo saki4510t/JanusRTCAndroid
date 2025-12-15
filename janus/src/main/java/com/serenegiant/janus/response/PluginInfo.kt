@@ -19,8 +19,8 @@ package com.serenegiant.janus.response
  *
  */
 
-class PluginInfo(
-	@JvmField val janus: String,
+internal class PluginInfo(
+	val janus: String,
 	val transaction: String,
 	val data: Data?) {
 

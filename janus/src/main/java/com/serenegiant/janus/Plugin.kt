@@ -27,7 +27,7 @@ import com.serenegiant.janus.response.Session
  * @param session セッション
  * @param info プラグイン
  */
-open class Plugin(
+internal open class Plugin(
 	private val session: Session,
 	private val info: PluginInfo
 ) {
