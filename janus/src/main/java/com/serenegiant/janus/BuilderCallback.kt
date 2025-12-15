@@ -27,7 +27,11 @@ interface BuilderCallback {
 		builder: OkHttpClient.Builder,
 		isLongPoll: Boolean,
 		connectionTimeout: Long, readTimeoutMs: Long, writeTimeoutMs: Long
-	): OkHttpClient.Builder
+	): OkHttpClient.Builder {
+		return builder;
+	}
 
-	fun setupRetrofit(builder: Retrofit.Builder): Retrofit.Builder
+	fun setupRetrofit(builder: Retrofit.Builder): Retrofit.Builder {
+		return builder
+	}
 }

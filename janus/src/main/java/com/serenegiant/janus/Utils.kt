@@ -39,27 +39,6 @@ internal object Utils {
 	private val TAG: String = Utils::class.java.simpleName
 
 	/**
-	 * default implementation of BuilderCallback
-	 * do nothing additional
-	 */
-	val DEFAULT_BUILDER_CALLBACK = object : BuilderCallback {
-		override fun setupOkHttp(
-			builder: OkHttpClient.Builder,
-			isLongPoll: Boolean,
-			connectionTimeout: Long,
-			readTimeoutMs: Long, writeTimeoutMs: Long
-		): OkHttpClient.Builder {
-			if (DEBUG) Log.v(TAG, "setupOkHttp:")
-			return builder
-		}
-
-		override fun setupRetrofit(builder: Retrofit.Builder): Retrofit.Builder {
-			if (DEBUG) Log.v(TAG, "setupRetrofit:")
-			return builder
-		}
-	}
-
-	/**
 	 * Executor thread is started once in private ctor and is used for all
 	 * peer connection API calls to ensure new peer connection factory is
 	 * created on the same thread as previously destroyed factory.
