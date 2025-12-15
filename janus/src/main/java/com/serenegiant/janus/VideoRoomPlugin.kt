@@ -840,7 +840,7 @@ internal abstract class VideoRoomPlugin(
 	/**
 	 * TransactionManagerからのコールバックインターフェースの実装
 	 */
-	protected val mTransactionCallback: TransactionCallback = object : TransactionCallback {
+	protected val mTransactionCallback = object : TransactionCallback {
 		/**
 		 * usually this is called from from long poll
 		 * 実際の処理は上位クラスの#onReceivedへ移譲
@@ -1099,7 +1099,7 @@ internal abstract class VideoRoomPlugin(
 	/**
 	 * PeerConnectionからのコールバック
 	 */
-	private val mSdpObserver: SdpObserver = object : SdpObserver {
+	private val mSdpObserver = object : SdpObserver {
 		override fun onCreateSuccess(origSdp: SessionDescription) {
 			if (DEBUG) Log.v(TAG, "SdpObserver#onCreateSuccess:")
 			if (mLocalSdp != null) {
