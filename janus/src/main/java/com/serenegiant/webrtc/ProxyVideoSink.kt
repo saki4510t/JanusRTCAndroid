@@ -3,7 +3,7 @@ package com.serenegiant.webrtc
  * JanusRTCAndroid
  * Video chat sample app using videoroom plugin on janus-gateway server and WebRTC.
  *
- * Copyright (c) 2018 - 2025 saki t_saki@serenegiant.com
+ * Copyright (c) 2018 - 2026 saki t_saki@serenegiant.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
