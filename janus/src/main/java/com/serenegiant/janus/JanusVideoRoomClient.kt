@@ -642,8 +642,7 @@ class JanusVideoRoomClient(
 
 
 		// Set audio record error callbacks.
-		val audioRecordErrorCallback
-			: AudioRecordErrorCallback = object : AudioRecordErrorCallback {
+		val audioRecordErrorCallback = object : AudioRecordErrorCallback {
 			override fun onWebRtcAudioRecordInitError(errorMessage: String) {
 				Log.e(TAG, "onWebRtcAudioRecordInitError: $errorMessage")
 				reportError(RuntimeException(errorMessage))
@@ -663,8 +662,7 @@ class JanusVideoRoomClient(
 			}
 		}
 
-		val audioTrackErrorCallback
-			: AudioTrackErrorCallback = object : AudioTrackErrorCallback {
+		val audioTrackErrorCallback = object : AudioTrackErrorCallback {
 			override fun onWebRtcAudioTrackInitError(errorMessage: String) {
 				Log.e(TAG, "onWebRtcAudioTrackInitError: $errorMessage")
 				reportError(RuntimeException(errorMessage))
@@ -1562,8 +1560,7 @@ class JanusVideoRoomClient(
 	/**
 	 * JanusPluginからのコールバックリスナーの実装
 	 */
-	private val mVideoRoomCallback
-		: VideoRoomCallback = object : VideoRoomCallback {
+	private val mVideoRoomCallback = object : VideoRoomCallback {
 		override fun onAttach(plugin: JanusPlugin) {
 			if (DEBUG) Log.v(TAG, "onAttach:$plugin" )
 			if (plugin is VideoRoomPlugin) {
@@ -1731,8 +1728,7 @@ class JanusVideoRoomClient(
 	/**
 	 * TransactionManagerからのコールバック
 	 */
-	private val mTransactionCallback
-		: TransactionCallback = object : TransactionCallback {
+	private val mTransactionCallback = object : TransactionCallback {
 		override fun onReceived(
 			transaction: String,
 			json: JSONObject
