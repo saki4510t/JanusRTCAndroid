@@ -1658,7 +1658,15 @@ class JanusVideoRoomClient(
 			if (DEBUG) Log.v(TAG, "onIceDisconnected:$plugin")
 			if (plugin is VideoRoomPlugin.Publisher) {
 				// 複数のSubscriberが存在しうるのでPublisherからのイベントのみハンドリング
-				mScope.launch { mCallback.onIceDisconnected() }
+				mScope.launch { mCallback.onIceDisconnected(false) }
+			}
+		}
+
+		override fun onIceFailed(plugin: VideoRoomPlugin) {
+			if (DEBUG) Log.v(TAG, "onIceFailed:$plugin")
+			if (plugin is VideoRoomPlugin.Publisher) {
+				// 複数のSubscriberが存在しうるのでPublisherからのイベントのみハンドリング
+				mScope.launch { mCallback.onIceDisconnected(true) }
 			}
 		}
 

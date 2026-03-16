@@ -680,7 +680,7 @@ class CallActivity : BaseActivity(), OnCallEvents {
 		}
 	}
 
-	private val mJanusCallback: JanusCallback = object : JanusCallback {
+	private val mJanusCallback = object : JanusCallback {
 		override fun setupOkHttp(
 			builder: OkHttpClient.Builder,
 			isLongPoll: Boolean,
@@ -734,8 +734,8 @@ class CallActivity : BaseActivity(), OnCallEvents {
 			}
 		}
 
-		override fun onIceDisconnected() {
-			if (DEBUG) Log.v(TAG, "onIceDisconnected:")
+		override fun onIceDisconnected(failed: Boolean) {
+			if (DEBUG) Log.v(TAG, "onIceDisconnected:failed=$failed")
 			lifecycleScope.launch {
 				logAndToast("ICE disconnected")
 				iceConnected = false

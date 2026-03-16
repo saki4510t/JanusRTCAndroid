@@ -159,6 +159,12 @@ internal abstract class VideoRoomPlugin(
 		fun onIceDisconnected(plugin: VideoRoomPlugin)
 
 		/**
+		 * Callback fired once connection is closed (IceConnectionState is
+		 * FAILED).
+		 */
+		fun onIceFailed(plugin: VideoRoomPlugin)
+
+		/**
 		 * Callback fired once local SDP is created and set.
 		 */
 		fun onLocalDescription(
@@ -686,7 +692,10 @@ internal abstract class VideoRoomPlugin(
 			when (newState) {
 				IceConnectionState.CONNECTED -> mCallback.onIceConnected(this@VideoRoomPlugin)
 				IceConnectionState.DISCONNECTED -> mCallback.onIceDisconnected(this@VideoRoomPlugin)
-				IceConnectionState.FAILED -> Log.w(TAG, "ICE connection failed.")
+				IceConnectionState.FAILED -> {
+					Log.w(TAG, "ICE connection failed.")
+					mCallback.onIceFailed(this@VideoRoomPlugin)
+				}
 				else -> {}
 			}
 		}

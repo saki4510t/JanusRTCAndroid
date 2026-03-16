@@ -71,9 +71,9 @@ interface JanusCallback : BuilderCallback {
 
 	/**
 	 * Callback fired once connection is closed (IceConnectionState is
-	 * DISCONNECTED).
+	 * DISCONNECTED/FAILED).
 	 */
-	fun onIceDisconnected()
+	fun onIceDisconnected(failed: Boolean)
 
 	/**
 	 * 新しいパブリッシャーが見つかったときのコールバック
