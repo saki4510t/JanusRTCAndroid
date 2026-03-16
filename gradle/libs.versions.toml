@@ -2,7 +2,6 @@
 # plugin
 agp = "8.9.3"
 kotlin = "1.9.24"
-kotlinKapt = "2.0.21"
 dokka = "1.9.20"
 devtoolsKsp = "2.0.21-1.0.27"
 
@@ -167,7 +166,6 @@ composeprefs3 = { module = "com.github.JamalMulla:ComposePrefs3", version.ref = 
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-jetbrains-kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlinKapt" }
 jetbrains-kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 jetbrains-kotlin-dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 dagger-hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "daggerHilt" }
